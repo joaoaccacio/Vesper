@@ -1,8 +1,7 @@
-// Local development preview. The delivered index.html also opens directly offline.
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const routes = new Set(['index.html', 'qa.html', 'vesper-engine.js', 'vesper-ui.js']);
+const routes = new Set(['index.html', 'VESPER/index.html', 'qa.html', 'vesper-engine.js', 'vesper-ui.js', 'vesper-arena.js', 'vesper-online.js']);
 const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, 'http://127.0.0.1').pathname;
   const name = pathname === '/' ? 'index.html' : pathname.slice(1);

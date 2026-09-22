@@ -1,11 +1,8 @@
-/* Run: node test-vesper.cjs
-   Deterministic headless checks for the actual engine. No external dependencies. */
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-
 const root = __dirname;
 const isMain = require.main === module;
 const failures = [];
@@ -57,7 +54,22 @@ function harness({ width = 1200, height = 800, dpr = 1, seed = 1707, source = 'm
   const raf = new Map();
   let rafId = 0;
   let now = 0;
-  const events = { states: [], hud: [], levels: [], over: [], victories: [] };
+  const events = { states: [], hud: [], levels: [], over: [], victories: [], joined: [], results: [], errors: [] };
+  const sockets = [];
+  class FakeSocket {
+    constructor(url) {
+      this.url = url;
+      this.readyState = 0;
+      this.sent = [];
+      sockets.push(this);
+    }
+    send(data) { this.sent.push(JSON.parse(data)); }
+    close() { this.readyState = 3; if (this.onclose) this.onclose(); }
+    open() { this.readyState = 1; if (this.onopen) this.onopen(); }
+    deliver(message) { if (this.onmessage) this.onmessage({ data: JSON.stringify(message) }); }
+    fail() { if (this.onerror) this.onerror({}); }
+  }
+  const memory = new Map();
   const sandbox = {
     console, Math: seededMath,
     devicePixelRatio: dpr, innerWidth: width, innerHeight: height,
@@ -66,6 +78,9 @@ function harness({ width = 1200, height = 800, dpr = 1, seed = 1707, source = 'm
     cancelAnimationFrame: id => raf.delete(id),
     setTimeout, clearTimeout,
     matchMedia: () => ({ matches: false, addEventListener() {} }),
+    WebSocket: FakeSocket,
+    sessionStorage: { getItem: key => (memory.has(key) ? memory.get(key) : null), setItem: (key, value) => memory.set(key, String(value)) },
+    localStorage: { getItem: key => (memory.has(key) ? memory.get(key) : null), setItem: (key, value) => memory.set(key, String(value)) },
     addEventListener: (name, fn) => listeners.set(name, fn),
     removeEventListener: name => listeners.delete(name),
     document: {
@@ -89,13 +104,31 @@ function harness({ width = 1200, height = 800, dpr = 1, seed = 1707, source = 'm
     ? fs.readFileSync(path.join(root, 'index.html'), 'utf8').match(/<script\s+data-module="characters"[^>]*>([\s\S]*?)<\/script>/)?.[1]
     : fs.existsSync(path.join(root, 'vesper-characters.js')) ? fs.readFileSync(path.join(root, 'vesper-characters.js'), 'utf8') : '';
   if (charactersCode) vm.runInContext(charactersCode, sandbox, { filename: 'vesper-characters.js' });
+  const enemiesCode = source === 'standalone'
+    ? fs.readFileSync(path.join(root, 'index.html'), 'utf8').match(/<script\s+data-module="enemies"[^>]*>([\s\S]*?)<\/script>/)?.[1]
+    : fs.readFileSync(path.join(root, 'vesper-enemies.js'), 'utf8');
+  if (!enemiesCode) throw new Error('Enemy art module was not found');
+  vm.runInContext(enemiesCode, sandbox, { filename: 'vesper-enemies.js' });
+  const arenaCode = source === 'standalone'
+    ? fs.readFileSync(path.join(root, 'index.html'), 'utf8').match(/<script\s+data-module="arena"[^>]*>([\s\S]*?)<\/script>/)?.[1]
+    : fs.readFileSync(path.join(root, 'vesper-arena.js'), 'utf8');
+  if (!arenaCode) throw new Error('Arena core module was not found');
+  vm.runInContext(arenaCode, sandbox, { filename: 'vesper-arena.js' });
+  const onlineCode = source === 'standalone'
+    ? fs.readFileSync(path.join(root, 'index.html'), 'utf8').match(/<script\s+data-module="online"[^>]*>([\s\S]*?)<\/script>/)?.[1]
+    : fs.readFileSync(path.join(root, 'vesper-online.js'), 'utf8');
+  if (!onlineCode) throw new Error('Online mode module was not found');
+  vm.runInContext(onlineCode, sandbox, { filename: 'vesper-online.js' });
   const Game = sandbox.VesperGame || vm.runInContext('VesperGame', sandbox);
   const game = new Game(canvas, {
     onState: state => events.states.push(state),
     onHud: data => events.hud.push({ ...data }),
     onLevelUp: choices => events.levels.push(choices.map(choice => ({ ...choice }))),
     onGameOver: data => events.over.push({ ...data }),
-    onVictory: data => events.victories.push({ ...data })
+    onVictory: data => events.victories.push({ ...data }),
+    onOnlineJoined: data => events.joined.push({ ...data }),
+    onOnlineResults: data => events.results.push({ ...data }),
+    onOnlineError: reason => events.errors.push(reason)
   });
   const frame = (milliseconds = 1000 / 60) => {
     now += milliseconds;
@@ -103,9 +136,28 @@ function harness({ width = 1200, height = 800, dpr = 1, seed = 1707, source = 'm
     raf.clear();
     for (const callback of callbacks) callback(now);
   };
-  return { game, events, canvas, box, sandbox, raf, frame, context };
+  const online = (options = {}) => {
+    game.startOnline({ name: options.name || 'Guino', skin: options.skin || 'alien', server: 'ws://teste:1' });
+    const socket = sockets[sockets.length - 1];
+    socket.open();
+    const roster = options.roster || [
+      { id: 1, name: options.name || 'Guino', skin: options.skin || 'alien', bot: false },
+      { id: 2, name: 'Ashley', skin: 'orc', bot: true },
+      { id: 3, name: 'Amiga', skin: 'cyborg', bot: false }
+    ];
+    const arena = sandbox.VesperArena;
+    socket.deliver({
+      t: 'joined', id: 1, room: 7, capacity: arena.CONFIG.capacity, remaining: arena.CONFIG.matchSeconds,
+      token: 'abc', roster, crates: [{ index: 0, x: 120, y: 60, broken: 0 }]
+    });
+    return socket;
+  };
+  const snapshot = (socket, rows, extra = {}) => socket.deliver({
+    t: 's', k: 1, r: extra.remaining === undefined ? 280 : extra.remaining,
+    f: rows, c: extra.crates || [1], e: extra.events
+  });
+  return { game, events, canvas, box, sandbox, raf, frame, context, sockets, online, snapshot };
 }
-
 test('UI references only real element IDs and valid SVG icons', () => {
   const fullHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const html = fullHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
@@ -117,8 +169,16 @@ test('UI references only real element IDs and valid SVG icons', () => {
   for (const match of html.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.includes(match[1]), `Missing SVG symbol #${match[1]}`);
   assert.ok(html.includes('charset="UTF-8"'));
   assert.ok(!/<(?:script|link)\b[^>]*(?:src|href)="https?:/i.test(fullHtml), 'Game must not require network assets');
+  assert.ok(/id="online-btn"/.test(html) && /id="online-form"/.test(html), 'The Online mode needs its entry button and its name form');
+  for (const id of ['online-loading-view', 'online-hud', 'online-board-list', 'online-results-overlay', 'coin-grid']) {
+    assert.ok(ids.includes(id), `Missing #${id}`);
+  }
+  const onlineCss = fs.readFileSync(path.join(root, 'vesper-online.css'), 'utf8');
+  assert.ok(fullHtml.includes(onlineCss.trim()), 'Rebuild index.html: embedded Online stylesheet is stale');
+  assert.ok(/id="coin-grid"|PERSONAGENS POR MOEDAS|skins com moedas/i.test(html), 'Restored coin skins must remain available');
+  assert.ok(/id="difficulty-view"/.test(html), 'Difficulty selection screen is required');
+  assert.equal((html.match(/id="characters-back-btn"/g) || []).length, 1, 'Character screen needs one visible back button');
 });
-
 function isolated(h = harness()) {
   h.game.start();
   h.game.enemies.length = 0;
@@ -140,7 +200,6 @@ function shot(game, values = {}) {
   game.projectiles.push(result);
   return result;
 }
-
 test('constructor creates menu and one RAF; menu frame leaves simulation untouched', () => {
   const h = harness();
   assert.equal(h.game.state, 'menu');
@@ -158,7 +217,6 @@ test('constructor creates menu and one RAF; menu frame leaves simulation untouch
     assert.ok(Number.isFinite(h.events.hud.at(-1)[field]), `HUD field ${field} must be finite`);
   }
 });
-
 test('movement is time based at 20, 60 and 144 Hz and capped diagonally', () => {
   for (const hz of [20, 60, 144]) {
     const { game } = isolated();
@@ -176,7 +234,6 @@ test('movement is time based at 20, 60 and 144 Hz and capped diagonally', () => 
   game.setMovement(NaN, Infinity);
   close(game._movement.x, 0); close(game._movement.y, 0);
 });
-
 test('actual RAF freezes simulation on pause and clamps a long frame on resume', () => {
   const h = isolated();
   const g = h.game;
@@ -194,7 +251,6 @@ test('actual RAF freezes simulation on pause and clamps a long frame on resume',
   close(g.elapsed - elapsed, 0.05);
   assert.equal(g.state, 'playing');
 });
-
 test('enemies spawn beyond all four viewport borders and move directly toward player', () => {
   const { game } = isolated();
   game.player.x = 800; game.player.y = -200;
@@ -216,7 +272,6 @@ test('enemies spawn beyond all four viewport borders and move directly toward pl
     close(oldDx * (e.y - game.player.y) - oldDy * (e.x - game.player.x), 0, 1e-7);
   });
 });
-
 test('continuous waves spawn over time and stronger enemies become available', () => {
   const { game } = isolated();
   game._spawnTimer = 0;
@@ -228,7 +283,6 @@ test('continuous waves spawn over time and stronger enemies become available', (
   for (let i = 0; i < 100; ++i) game._spawnEnemy();
   assert.ok(game.enemies.some(e => e.type === 'brute'));
 });
-
 test('auto-fire selects closest enemy and adds the configured number of projectiles', () => {
   const { game } = isolated();
   enemy(game, { id: 1, x: 300, y: 0 });
@@ -244,7 +298,6 @@ test('auto-fire selects closest enemy and adds the configured number of projecti
   game.projectiles.length = game.enemies.length = 0;
   assert.equal(game._shoot(), false);
 });
-
 test('swept collision deals HP damage and lethal hits award one kill and one XP drop', () => {
   const { game } = isolated();
   const victim = enemy(game, { x: 50, hp: 40, maxHp: 40 });
@@ -265,7 +318,6 @@ test('swept collision deals HP damage and lethal hits award one kill and one XP 
   assert.equal(game.kills, 1);
   assert.equal(game.gems.length, 1);
 });
-
 test('swept collision chooses the nearer hit even if farther enemy is listed first', () => {
   const { game } = isolated();
   const far = enemy(game, { id: 2, x: 120, hp: 50, maxHp: 50 });
@@ -275,7 +327,6 @@ test('swept collision chooses the nearer hit even if farther enemy is listed fir
   assert.equal(near.hp, 40);
   assert.equal(far.hp, 50);
 });
-
 test('gem attraction conserves XP and opens two distinct upgrades while RAF is frozen', () => {
   const h = isolated();
   const g = h.game;
@@ -301,7 +352,6 @@ test('gem attraction conserves XP and opens two distinct upgrades while RAF is f
   assert.equal(g.chooseUpgrade('invalid'), false);
   assert.equal(g.state, 'upgrade');
 });
-
 test('every offered upgrade changes its promised stat and a choice can only apply once', () => {
   const seen = new Set();
   for (let seed = 1; seed <= 60 && seen.size < 6; ++seed) {
@@ -326,7 +376,6 @@ test('every offered upgrade changes its promised stat and a choice can only appl
   }
   assert.equal(seen.size, 6, `Upgrade coverage: ${[...seen]}`);
 });
-
 test('large XP pickup resolves sequential level choices and preserves leftover experience', () => {
   const { game, events } = isolated();
   const awarded = 105;
@@ -348,7 +397,6 @@ test('large XP pickup resolves sequential level choices and preserves leftover e
   assert.ok(game.xp >= 0 && game.xp < game.nextXp);
   assert.equal(game.state, 'playing');
 });
-
 test('gem cap merges without losing awarded experience', () => {
   const { game } = isolated();
   let awarded = 0;
@@ -360,7 +408,6 @@ test('gem cap merges without losing awarded experience', () => {
   assert.equal(game.gems.length, game._limits.gems);
   assert.equal(game.gems.reduce((sum, gem) => sum + gem.value, 0), awarded);
 });
-
 test('contact invulnerability prevents per-frame damage; zero HP ends once and restart resets', () => {
   const h = isolated();
   const g = h.game;
@@ -392,7 +439,6 @@ test('contact invulnerability prevents per-frame damage; zero HP ends once and r
   assert.equal(g.gems.length, 0); assert.equal(g.projectiles.length, 0); assert.equal(g.enemies.length, 5);
   assert.equal(h.raf.size, 1);
 });
-
 test('mobile resize caps DPR while preserving world positions, combat stats and progression', () => {
   const h = isolated();
   const g = h.game;
@@ -409,7 +455,6 @@ test('mobile resize caps DPR while preserving world positions, combat stats and 
   h.frame();
   assert.equal(h.raf.size, 1);
 });
-
 test('long simulation keeps entity budgets and finite values until victory or five minutes', () => {
   const { game } = harness();
   game.start();
@@ -430,10 +475,10 @@ test('long simulation keeps entity budgets and finite values until victory or fi
   assert.ok(upgrades > 2);
   assert.ok(game.player.hp > 0);
 });
-
 test('standalone HTML embeds the exact tested engine and UI and runs independently', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  for (const name of ['engine', 'characters', 'ui']) {
+  assert.equal(html, fs.readFileSync(path.join(root, 'VESPER', 'index.html'), 'utf8'), 'The requested VESPER folder must contain the complete current game');
+  for (const name of ['engine', 'characters', 'enemies', 'online', 'ui']) {
     const expression = new RegExp(`<script\\s+data-module="${name}"[^>]*>([\\s\\S]*?)<\\/script>`);
     const embedded = html.match(expression)?.[1];
     assert.ok(embedded, `Missing embedded ${name}`);
@@ -446,7 +491,6 @@ test('standalone HTML embeds the exact tested engine and UI and runs independent
   assert.equal(game.state, 'playing');
   assert.ok(game.elapsed > 0);
 });
-
 test('base movement and enemy speed increase moderately; XP thresholds require more collection', () => {
   const { game } = isolated();
   assert.equal(game.player.speed, 215);
@@ -469,17 +513,47 @@ test('base movement and enemy speed increase moderately; XP thresholds require m
     game.chooseUpgrade(game._options[0].id);
   }
 });
-
 function bosses(game) { return game.enemies.filter(e => e.boss && !e.dead); }
 function atTime(game, seconds) { game.elapsed = seconds; game._update(0); }
-
 const mapIds = ['castle', 'egypt', 'swamp', 'halloween'];
 const mapReward = { castle: 'vampire', egypt: 'mummy', swamp: 'zombie', halloween: 'jack' };
 function within(entity, bounds, radius = entity.radius || 0) {
   assert.ok(entity.x >= bounds.left + radius - 1e-7 && entity.x <= bounds.right - radius + 1e-7, `x=${entity.x} outside world`);
   assert.ok(entity.y >= bounds.top + radius - 1e-7 && entity.y <= bounds.bottom - radius + 1e-7, `y=${entity.y} outside world`);
 }
-
+test('easy, medium and hard scale every enemy while preserving rewards', () => {
+  const samples = {};
+  for (const id of ['easy','medium','hard']) {
+    const { game } = harness();
+    assert.equal(game.start('castle', id), true);
+    game.enemies.length = 0;
+    game._spawnEnemy('shade');
+    samples[id] = game.enemies[0];
+    assert.equal(game.difficultyId, id);
+    assert.equal(samples[id].xp, game._templates.shade.xp);
+  }
+  assert.ok(samples.easy.hp < samples.medium.hp && samples.medium.hp < samples.hard.hp);
+  assert.ok(samples.easy.speed < samples.medium.speed && samples.medium.speed < samples.hard.speed);
+  assert.ok(samples.easy.damage < samples.medium.damage && samples.medium.damage < samples.hard.damage);
+  const { game } = harness();
+  assert.equal(game.start('castle', 'impossible'), false);
+  assert.equal(game.state, 'menu');
+  assert.equal(game.setDifficulty('hard'), true);
+  assert.equal(game.start('castle'), true);
+  assert.equal(game.difficultyId, 'hard');
+});
+test('walking makes small capped dust particles and standing still does not', () => {
+  const { game } = isolated();
+  game.setMovement(1, 0);
+  game._update(0.16);
+  const dust = game.particles.filter(particle => particle.dust);
+  assert.ok(dust.length >= 1 && dust.length <= 2);
+  assert.ok(dust.every(particle => particle.size < 3 && particle.maxLife <= 0.36));
+  const count = dust.length;
+  game.setMovement(0, 0);
+  game._update(0.05);
+  assert.equal(game.particles.filter(particle => particle.dust).length, count);
+});
 test('four selectable finite maps have stable identities and safe map changes', () => {
   const { game } = harness();
   const maps = game.constructor.MAPS;
@@ -502,7 +576,6 @@ test('four selectable finite maps have stable identities and safe map changes', 
   game.toMenu();
   assert.equal(game.setMap('castle'), true);
 });
-
 test('player, camera, enemies and gems stay inside all map boundaries on desktop and mobile', () => {
   for (const id of mapIds) for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 844 }]) {
     const h = harness(viewport), g = h.game;
@@ -535,7 +608,6 @@ test('player, camera, enemies and gems stay inside all map boundaries on desktop
     h.frame();
   }
 });
-
 test('each map spawns exactly its mini boss at 150 seconds and final character at 240 seconds', () => {
   for (const id of mapIds) {
     const { game: g } = isolated();
@@ -556,7 +628,6 @@ test('each map spawns exactly its mini boss at 150 seconds and final character a
     assert.ok(g.enemies.includes(mini), 'An undefeated mini boss remains present');
   }
 });
-
 test('pause and upgrades freeze map encounter deadlines', () => {
   for (const state of ['paused','upgrade']) for (const deadline of [150,240]) {
     const h = isolated(), g = h.game;
@@ -569,7 +640,6 @@ test('pause and upgrades freeze map encounter deadlines', () => {
     h.frame(20);assert.equal(bosses(g).length,count+1);
   }
 });
-
 test('encounters ignore the ordinary mob cap and preserve boss health/reward scaling', () => {
   const { game:g }=isolated();
   for(let i=0;i<g._limits.enemies;i++)g._spawnEnemy('shade');
@@ -589,7 +659,6 @@ test('encounters ignore the ordinary mob cap and preserve boss health/reward sca
   assert.equal(g.gems.reduce((sum,gem)=>sum+gem.value,0),21);
   assert.equal(g.state,'playing','Defeating the mini boss does not finish the map');
 });
-
 test('only final-boss defeat awards one victory, cancels same-frame XP, and freezes gameplay', () => {
   for(const id of mapIds){
     const h=harness(),g=h.game;
@@ -620,7 +689,6 @@ test('only final-boss defeat awards one victory, cancels same-frame XP, and free
     assert.equal(h.events.victories.length,1,'Restart alone never awards a completion');
   }
 });
-
 test('game over and abandoning a run never award map victory', () => {
   const h=isolated(),g=h.game;
   g.player.hp=1;enemy(g,{x:1,y:0,damage:2,speed:0});g._update(0.01);
@@ -628,7 +696,6 @@ test('game over and abandoning a run never award map victory', () => {
   g.start('swamp');g.elapsed=250;g.pause();g.toMenu();
   assert.equal(g.state,'menu');assert.equal(h.events.victories.length,0);
 });
-
 test('mini boss reward remains seven separate gems when old gem capacity is full', () => {
   const {game:g}=isolated();
   for(let i=0;i<g._limits.gems;i++)g._dropGem(i*3,1000,3);
@@ -638,12 +705,6 @@ test('mini boss reward remains seven separate gems when old gem capacity is full
   assert.equal(g.gems.reduce((sum,gem)=>sum+gem.value,0),before+21);
   assert.ok(g.gems.slice(-7).every(gem=>gem.value===3));
 });
-
-
-
-
-
-
 
 test('normal waves naturally offer six visually typed enemies, with later types unlocked over time', () => {
   const collect = wave => {
@@ -667,7 +728,6 @@ test('normal waves naturally offer six visually typed enemies, with later types 
   assert.ok(new Set([...late.templates.values()].map(e => e.radius)).size >= 4);
   assert.ok(new Set([...late.templates.values()].map(e => e.speed)).size >= 5);
 });
-
 test('boss dash visibly waits, locks its direction, and applies swept contact damage without retargeting', () => {
   const { game } = isolated();
   atTime(game, 150);
@@ -687,8 +747,6 @@ test('boss dash visibly waits, locks its direction, and applies swept contact da
   game._updateEnemies(0.05);
   assert.ok(boss.x < x);
   close(boss.y, 0, 1e-9, 'Dash direction must remain locked after the player sidesteps');
-  // Deliberately large direct simulation step verifies the collision segment;
-  // the production RAF additionally limits dt to 0.05 seconds.
   game.player.x = game.player.y = 0;
   boss.x = -100; boss.y = 0;
   boss.dashState = 'dash'; boss.dashX = 1; boss.dashY = 0; boss.dashTimer = 0.52;
@@ -699,7 +757,6 @@ test('boss dash visibly waits, locks its direction, and applies swept contact da
   game._updateEnemies(0.05);
   assert.equal(boss.dashState, 'recover');
 });
-
 
 function uiHarness(stored = {}, { blocked = false } = {}) {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -739,17 +796,28 @@ function uiHarness(stored = {}, { blocked = false } = {}) {
   for (const match of html.matchAll(/\bid="([^"]+)"/g)) nodes.set(match[1], new Element(match[1]));
   const microtasks = [];
   const frames = new Map();
+  const timers = new Map();
   let frameId = 0;
+  let timerId = 0;
   doc = new Element('document');
   doc.getElementById = id => nodes.get(id);
   doc.createElement = tag => Object.assign(new Element(), { tag });
   doc.querySelector = () => null;
   doc.documentElement = new Element('html');
   doc.activeElement = null;
-  const ui = { nodes, doc, microtasks, frames, stored, game: null };
+  const ui = {
+    nodes, doc, microtasks, frames, timers, stored, game: null,
+    flush(rounds = 10) {
+      for (let round = 0; round < rounds && timers.size; round++) {
+        const pending = [...timers.values()];
+        timers.clear();
+        for (const timer of pending) timer.callback();
+      }
+    }
+  };
   class FakeGame {
-    constructor(canvas, callbacks) { ui.game = this; this.callbacks = callbacks; this.state = 'menu'; this.moves = []; this.level = 1; this.elapsed = 0; this.previews = []; this.character = null; this.mapId = 'castle'; }
-    setMovement(x, y) { this.moves.push({ x, y }); }
+    constructor(canvas, callbacks) { ui.game = this; this.callbacks = callbacks; this.state = 'menu'; this.moves = []; this._movement = { x: 0, y: 0 }; this.level = 1; this.elapsed = 0; this.previews = []; this.character = null; this.mapId = 'castle'; }
+    setMovement(x, y) { this._movement = { x, y }; this.moves.push({ x, y }); }
     setMuted() {}
     resize() {}
     setCharacter(id) { this.character = id; return true; }
@@ -758,36 +826,55 @@ function uiHarness(stored = {}, { blocked = false } = {}) {
     drawCharacterPreview(canvas, id, locked) { this.previews.push({ id, locked, size: canvas.width }); }
     drawMapPreview() {}
     drawMinimap() {}
-    start(id) { if(id)this.mapId=id; this.starts = (this.starts || 0) + 1; this.state = 'playing'; this.callbacks.onState(this.state); }
+    start(id, difficultyId) { if(id)this.mapId=id; this.difficultyId=difficultyId || this.difficultyId || 'medium'; this.starts = (this.starts || 0) + 1; this.state = 'playing'; this.callbacks.onState(this.state); }
     pause() { this.state = 'paused'; this.callbacks.onState(this.state); }
     resume() { this.state = 'playing'; this.callbacks.onState(this.state); }
     toMenu() { this.state = 'menu'; this.elapsed = 0; this.callbacks.onState(this.state); }
     chooseUpgrade(id) { this.chosen = id; this.state = 'playing'; this.callbacks.onState(this.state); }
   }
-  // The UI reads the real engine's roster, so thresholds cannot drift between modules.
   FakeGame.CHARACTERS = harness().game.constructor.CHARACTERS;
   FakeGame.MAPS = harness().game.constructor.MAPS;
+  FakeGame.DIFFICULTIES = harness().game.constructor.DIFFICULTIES;
   const browser = new Element('window');
   ui.browser = browser;
   const sandbox = {
     window: browser, document: doc, HTMLElement: Element, VesperGame: FakeGame,
     ResizeObserver: class { observe() {} },
     localStorage: { getItem: key => { if(blocked)throw new Error('Storage unavailable'); return key in stored ? stored[key] : null; }, setItem: (key, value) => { if(blocked)throw new Error('Storage unavailable'); stored[key] = String(value); } },
+    sessionStorage: { getItem: () => null, setItem() {} },
+    WebSocket: class { constructor() { this.readyState = 0; } send() {} close() {} },
     queueMicrotask: callback => microtasks.push(callback),
     requestAnimationFrame: callback => { frames.set(++frameId, callback); return frameId; },
     cancelAnimationFrame: id => frames.delete(id),
-    setTimeout: () => 1, clearTimeout() {}, console
+    setTimeout: (callback, delay) => { timers.set(++timerId, { callback, delay }); return timerId; },
+    clearTimeout: id => timers.delete(id), console
   };
-  vm.runInNewContext(fs.readFileSync(path.join(root, 'vesper-ui.js'), 'utf8'), sandbox, { filename: 'vesper-ui.js' });
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(root, 'vesper-arena.js'), 'utf8'), sandbox, { filename: 'vesper-arena.js' });
+  vm.runInContext(fs.readFileSync(path.join(root, 'vesper-online.js'), 'utf8'), sandbox, { filename: 'vesper-online.js' });
+  FakeGame.prototype.startOnline = function (options) {
+    this.onlineStarts = (this.onlineStarts || 0) + 1;
+    this.onlineOptions = options;
+    this._mode = 'online';
+    this.state = 'playing';
+    this.callbacks.onState('playing');
+    this.callbacks.onOnlineJoined({ server: 3, capacity: 15, players: 15, humans: 2, bots: 13, address: options.server });
+    return { server: options.server, connecting: true };
+  };
+  FakeGame.prototype.leaveOnline = function () { this._mode = null; this.toMenu(); };
+  FakeGame.prototype.setFiring = function (firing) { this.firing = Boolean(firing); };
+  vm.runInContext(fs.readFileSync(path.join(root, 'vesper-ui.js'), 'utf8'), sandbox, { filename: 'vesper-ui.js' });
   return ui;
 }
-
 test('real UI handles keyboard/touch and independently maintains all live boss health bars', () => {
   const { nodes, browser, microtasks, ...ui } = uiHarness();
   const game = ui.game;
   nodes.get('start-btn').fire('click');
   nodes.get('map-grid').children[0].fire('click');
+  assert.equal(nodes.get('menu').dataset.view, 'difficulty');
+  nodes.get('difficulty-choices').children[1].fire('click');
   assert.equal(game.state, 'playing');
+  assert.equal(game.difficultyId, 'medium');
   assert.equal(nodes.get('menu').hidden, true);
   assert.equal(nodes.get('hud').hidden, false);
   const stick = nodes.get('joystick');
@@ -809,6 +896,12 @@ test('real UI handles keyboard/touch and independently maintains all live boss h
   close(game.moves.at(-1).y, -1);
   stick.fire('pointercancel', { pointerId: 8 });
   close(game.moves.at(-1).x, 0); close(game.moves.at(-1).y, 0);
+  stick.getBoundingClientRect = () => ({ left:0, top:0, width:0, height:0 });
+  const zeroSizeMoves = game.moves.length;
+  stick.fire('pointerdown', { pointerId: 10, clientX: 0, clientY: 0 });
+  assert.equal(game.moves.length, zeroSizeMoves, 'A hidden zero-size joystick must not create NaN movement');
+  stick.fire('pointercancel', { pointerId: 10 });
+  assert.ok(game.moves.every(({x,y}) => Number.isFinite(x) && Number.isFinite(y)));
   browser.fire('keydown', { code: 'KeyW' });
   browser.fire('keydown', { code: 'ArrowRight' });
   close(game.moves.at(-1).x, 1 / Math.sqrt(2));
@@ -862,9 +955,12 @@ test('real UI handles keyboard/touch and independently maintains all live boss h
   assert.equal(nodes.get('boss-hud').hidden, true);
   game.callbacks.onGameOver({ elapsed: 181, kills: 200, level: 9, bossKills: 2 });
   assert.equal(nodes.get('final-bosses').textContent, 2);
+  game.state = 'gameover'; game.callbacks.onState('gameover');
+  nodes.get('gameover-menu-btn').fire('click');
+  assert.equal(game.state, 'menu');
+  assert.equal(nodes.get('menu').dataset.view, 'main', 'Game over returns to the restored main menu');
   for (const callback of microtasks) callback();
 });
-
 test('contact damage is a little gentler for every enemy type and both bosses at every stage', () => {
   const previous = { shade: 11, bat: 8, brute: 20, crawler: 7, skeleton: 13, wraith: 10 };
   const { game } = isolated();
@@ -879,9 +975,7 @@ test('contact damage is a little gentler for every enemy type and both bosses at
       assert.ok(ratio >= 0.75 && ratio <= 0.92, `${type} wave ${wave}: ${game.enemies[0].damage} vs ${oldTotal}`);
     }
   }
-
 });
-
 
 test('every hero draws in the arena and as locked or unlocked portraits with balanced canvas state', () => {
   const h = harness();
@@ -912,7 +1006,6 @@ test('every hero draws in the arena and as locked or unlocked portraits with bal
     }
   }
 });
-
 test('returning to the menu abandons the run, clears progress and keeps the chosen hero', () => {
   const h = harness();
   const g = h.game;
@@ -935,7 +1028,6 @@ test('returning to the menu abandons the run, clears progress and keeps the chos
   assert.equal(g.enemies.length, 5);
   assert.equal(h.raf.size, 1);
 });
-
 test('resuming a paused run or unmuting wakes audio that the browser suspended', () => {
   const h = harness();
   let resumed = 0;
@@ -962,8 +1054,6 @@ test('resuming a paused run or unmuting wakes audio that the browser suspended',
   assert.equal(resumed, 2, 'Resume outside a pause does nothing');
 });
 
-
-
 test('offline menu selects each map before starting and character selection returns to that menu', () => {
   const ui = uiHarness(), n = ui.nodes;
   n.get('start-btn').fire('click');
@@ -980,7 +1070,11 @@ test('offline menu selects each map before starting and character selection retu
   assert.equal(n.get('map-character-name').textContent, 'Fantasma');
   for (const card of n.get('map-grid').children) {
     card.fire('click');
+    assert.equal(n.get('menu').dataset.view, 'difficulty');
+    const hard = n.get('difficulty-choices').children.find(button => button.dataset.mode === 'hard');
+    hard.fire('click');
     assert.equal(ui.game.mapId, card.dataset.mapId);
+    assert.equal(ui.game.difficultyId, 'hard');
     assert.equal(ui.game.state, 'playing');
     n.get('pause-btn').fire('click');
     n.get('pause-restart-btn').fire('click');
@@ -989,7 +1083,6 @@ test('offline menu selects each map before starting and character selection retu
     n.get('pause-btn').fire('click'); n.get('pause-menu-btn').fire('click'); n.get('start-btn').fire('click');
   }
 });
-
 test('minimap changes corner only when it would cover the player', () => {
   const ui = uiHarness(), n = ui.nodes;
   n.get('arena').getBoundingClientRect = () => ({left:0,top:0,width:1000,height:800});
@@ -1001,26 +1094,33 @@ test('minimap changes corner only when it would cover the player', () => {
   ui.game.player.x = ui.game.player.y = 0; ui.game.callbacks.onHud(data);
   assert.equal(n.get('minimap').classList.contains('is-obscuring'), false);
 });
-
-test('campaign starts with three free heroes and legacy records cannot unlock any reward or coin skin', () => {
-  for (const selected of ['alien', 'vampire', 'skeleton', 'unknown']) {
+test('campaign keeps eight heroes while the Online mode adds eight paid skins', () => {
+  const earned = ['human', 'ghost', 'hooded', 'vampire', 'mummy', 'zombie', 'jack', 'survivor'];
+  const skins = ['alien', 'spider', 'skeleton', 'orc', 'invisible', 'cyborg', 'plague', 'frankenstein'];
+  const roster = harness().game.constructor.CHARACTERS;
+  assert.deepEqual(Array.from(roster, character => character.id), earned.concat(skins));
+  const paid = roster.filter(character => character.unlockType === 'coins');
+  assert.equal(paid.length, 8, 'Oito skins pagas no catalogo da campanha');
+  for (const selected of [...skins, 'vampire', 'unknown']) {
     const ui = uiHarness({ 'vesper.best.v1': '999999', 'vesper.character.v1': selected });
     ui.nodes.get('characters-btn').fire('click');
-    const earned = ui.nodes.get('character-grid').children, coins = ui.nodes.get('coin-grid').children;
-    assert.equal(earned.length, 8); assert.equal(coins.length, 4);
-    assert.deepEqual(earned.filter(card => !card.classList.contains('is-locked')).map(card => card.dataset.characterId), ['human','ghost','hooded']);
+    const cards = ui.nodes.get('character-grid').children;
+    const coinCards = ui.nodes.get('coin-grid').children;
+    assert.deepEqual(cards.map(card => card.dataset.characterId), earned);
+    assert.deepEqual(coinCards.map(card => card.dataset.characterId), skins);
+    assert.deepEqual(cards.filter(card => !card.classList.contains('is-locked')).map(card => card.dataset.characterId), ['human', 'ghost', 'hooded']);
     assert.equal(ui.game.character, 'human');
-    for (const card of coins) { assert.equal(card.getAttribute('aria-disabled'), 'true'); card.fire('click'); assert.equal(ui.game.character, 'human'); }
-    assert.equal(ui.nodes.get('characters-new').hidden, true);
+    assert.ok(coinCards[0].classList.contains('is-using'), 'O Alien começa em uso no Online');
+    assert.ok(coinCards.slice(1).every(card => card.classList.contains('is-locked')));
   }
 });
-
 test('each campaign victory persists only its own reward; fourth victory grants survivor and gold frames', () => {
   const stored = {}, ui = uiHarness(stored), n = ui.nodes;
   const rewards = ['vampire','mummy','zombie','jack'];
   for (const [index, id] of ['castle','egypt','swamp','halloween'].entries()) {
     n.get('start-btn').fire('click');
     n.get('map-grid').children.find(card => card.dataset.mapId === id).fire('click');
+    n.get('difficulty-choices').children[1].fire('click');
     ui.game.state = 'victory'; ui.game.callbacks.onState('victory');
     ui.game.callbacks.onVictory({ mapId:id, elapsed:265, kills:300, level:12, bossKills:2 });
     assert.equal(n.get('victory-overlay').hidden, false);
@@ -1034,7 +1134,6 @@ test('each campaign victory persists only its own reward; fourth victory grants 
       assert.equal(card.getAttribute('aria-disabled'), String(rewardIndex > index));
     }
     assert.equal(cards.find(card => card.dataset.characterId === 'survivor').classList.contains('is-earned'), index === 3);
-    for (const card of n.get('coin-grid').children) assert.equal(card.getAttribute('aria-disabled'), 'true');
     n.get('characters-back-btn').fire('click');
     assert.equal(n.get('map-grid').children.filter(card => card.classList.contains('is-completed')).length, index + 1);
     n.get('maps-back-btn').fire('click');
@@ -1048,7 +1147,6 @@ test('each campaign victory persists only its own reward; fourth victory grants 
   assert.equal(JSON.parse(stored['vesper.progress.v2']).completedMaps.length, 4, 'Repeat clears never duplicate progression');
   assert.equal(reload.nodes.get('victory-unlocks').children[0].className, 'reward-repeat');
 });
-
 test('corrupt, unknown, disabled and failed-run storage cases do not grant campaign rewards', () => {
   for (const value of ['{', 'null', '{"version":1,"completedMaps":["castle"]}', '{"version":2,"completedMaps":["unknown",null,3]}']) {
     const ui = uiHarness({'vesper.progress.v2':value});
@@ -1061,7 +1159,6 @@ test('corrupt, unknown, disabled and failed-run storage cases do not grant campa
   ui.nodes.get('victory-characters-btn').fire('click');
   assert.equal(ui.nodes.get('character-grid').children.find(card => card.dataset.characterId === 'zombie').getAttribute('aria-disabled'), 'false', 'Session unlocks work even if saving is unavailable');
 });
-
 test('all maps render their landmarks and cache full-world overviews; minimap red dot tracks world corners', () => {
   const h = harness(), g = h.game;
   for (const map of g.constructor.MAPS) {
@@ -1082,10 +1179,491 @@ test('all maps render their landmarks and cache full-world overviews; minimap re
     assert.ok(dots.every(dot => dot.r >= 6), 'Red marker stays legible at high pixel density');
   }
 });
+test('all 24 themed enemies and four mini bosses render distinctly without corrupting canvas state', () => {
+  const h = harness(), g = h.game, appearances = new Set(), drawings = new Set();
+  const methods = ['beginPath','moveTo','lineTo','closePath','ellipse','arc','fillRect','fill','stroke','scale','translate'];
+  let depth = 0, operations = [];
+  h.context.save = () => depth++;
+  h.context.restore = () => { depth--; assert.ok(depth >= 0); };
+  for (const method of methods) h.context[method] = (...args) => {
+    for (const value of args) if (typeof value === 'number') assert.ok(Number.isFinite(value), `${method} received a non-finite coordinate`);
+    operations.push([method, ...args]);
+  };
+  for (const map of g.constructor.MAPS) {
+    g.start(map.id); g.enemies.length = 0;
+    for (const type of Object.keys(g._templates)) g._spawnEnemy(type);
+    g._spawnBoss(g._bossStages[0]);
+    for (const enemy of g.enemies) {
+      assert.equal(enemy.mapId, map.id);
+      assert.ok(enemy.appearance && !appearances.has(enemy.appearance), 'Each map needs its own artwork');
+      appearances.add(enemy.appearance);
+      const saved = JSON.stringify(enemy); operations = [];
+      g._drawEnemy(h.context, { ...enemy, x:0, y:0, phase:0 });
+      drawings.add(JSON.stringify(operations));
+      for (const clock of [0.2,1,2.5]) {
+        g._clock = clock;
+        g._drawEnemy(h.context, { ...enemy, hit:0.12, hp:enemy.maxHp/2 });
+      }
+      assert.equal(JSON.stringify(enemy), saved, 'Drawing must not alter combat state');
+      assert.equal(depth, 0, 'Every sprite must restore canvas transforms');
+    }
+  }
+  assert.equal(appearances.size, 28); assert.equal(drawings.size, 28);
+});
+test('theme animations preserve combat randomness and base enemy balance on all four maps', () => {
+  for (const map of ['castle','egypt','swamp','halloween']) {
+    const rendered = harness({seed:701}), idle = harness({seed:701});
+    for (const h of [rendered,idle]) {
+      h.game.start(map); h.game.enemies.length = 0;
+      for (const type of Object.keys(h.game._templates)) h.game._spawnEnemy(type);
+      h.game._spawnBoss(h.game._bossStages[0]);
+    }
+    for (let frame=0;frame<60;frame++) {
+      rendered.game._clock = frame/30;
+      for (const enemy of rendered.game.enemies) rendered.game._drawEnemy(rendered.context,enemy);
+    }
+    for (const h of [rendered,idle]) for (let i=0;i<20;i++) h.game._spawnEnemy();
+    assert.equal(JSON.stringify(rendered.game.enemies), JSON.stringify(idle.game.enemies), `${map}: rendering must not change spawns, HP, damage, speed, positions or rewards`);
+    for (const enemy of rendered.game.enemies.filter(e=>!e.boss)) {
+      const base = rendered.game._templates[enemy.type];
+      for (const key of ['hp','radius','speed','damage','xp']) assert.equal(enemy[key],base[key], `${map}: cosmetic variants retain ${key}`);
+    }
+  }
+});
+
+test('the Online client mirrors the server snapshot instead of simulating the match', () => {
+  const h = harness();
+  const arena = h.sandbox.VesperArena;
+  const socket = h.online({ name: 'Guino', skin: 'orc' });
+  assert.equal(socket.url, 'ws://teste:1');
+  assert.deepEqual({ ...socket.sent[0] }, { t: 'join', name: 'Guino', skin: 'orc', token: '' });
+  assert.equal(h.game.state, 'playing');
+  assert.equal(h.game.onlineActive, true);
+  assert.equal(h.game.fighters.length, 3);
+  assert.equal(h.game.me.name, 'Guino');
+  assert.equal(h.game.me.skin, 'orc');
+  assert.equal(h.events.joined.at(-1).humans, 2);
+  assert.equal(h.events.joined.at(-1).bots, 1);
+  h.snapshot(socket, [
+    [1, 300, -200, 0.5, 4, 210, 300, 3, 1, 0, 12],
+    [2, -500, 400, 1.2, 9, 100, 500, 7, 1, 0, 5],
+    [3, 800, 900, 0, 2, 0, 220, 1, 0, 2.5, 0]
+  ], { remaining: 244 });
+  const me = h.game.me;
+  assert.equal(me.level, 4);
+  assert.equal(me.maxHp, 300);
+  assert.equal(me.kills, 3);
+  close(h.game.matchRemaining, 244, 1e-6, 'relogio do servidor');
+  const dead = h.game.fighters.find(fighter => fighter.id === 3);
+  assert.equal(dead.alive, false);
+  close(dead.respawn, 2.5, 1e-6, 'renascimento');
+  assert.equal(h.game.fighters.find(fighter => fighter.id === 2).level, 9);
+  for (const method of ['_onlineHurt', '_onlineKill', '_updateOnlineBot', '_onlineGrantXp', '_onlineFire']) {
+    assert.equal(typeof h.game[method], 'undefined', method + ' saiu do cliente');
+  }
+  h.game._emitOnlineHud();
+  const hud = h.events.hud.at(-1);
+  assert.equal(hud.online, true);
+  assert.equal(hud.humans, 2);
+  assert.equal(hud.bots, 1);
+  assert.equal(hud.leaderboard[0].bot, true, 'O ranking marca quem e bot');
+});
+test('the client predicts its own movement and accepts the server correction', () => {
+  const h = harness({ width: 1200, height: 800 });
+  const arena = h.sandbox.VesperArena;
+  const socket = h.online();
+  const me = h.game.me;
+  h.snapshot(socket, [[1, 0, 0, 0, 1, 180, 180, 0, 1, 0, 0]]);
+  me.x = 0; me.y = 0;
+  h.game.setMovement(1, 0);
+  h.game._updateOnline(0.06);
+  assert.ok(me.x > 8, 'A predicao local anda na hora, sem esperar o servidor');
+  assert.ok(me.x < arena.CONFIG.speed * 0.06 + 1, 'E nunca anda mais que a velocidade do servidor');
+  h.snapshot(socket, [[1, 900, 0, 0, 1, 180, 180, 0, 1, 0, 0]]);
+  h.game._updateOnline(0.016);
+  assert.equal(me.x, 900, 'Divergencia grande e corrigida de uma vez');
+  h.snapshot(socket, [[1, 906, 0, 0, 1, 180, 180, 0, 1, 0, 0]]);
+  h.game.setMovement(0, 0);
+  h.game._updateOnline(0.1);
+  assert.ok(me.x > 900 && me.x <= 906, 'Divergencia pequena entra suave');
+  const input = socket.sent.filter(message => message.t === 'in');
+  assert.ok(input.length > 0, 'O cliente manda a entrada para o servidor');
+  assert.ok(input.every(message => Math.hypot(message.x, message.y) <= 1.001));
+});
+test('server events drive feed, damage numbers, level up and crates on the client', () => {
+  const h = harness();
+  const socket = h.online();
+  h.snapshot(socket, [
+    [1, 0, 0, 0, 1, 180, 180, 0, 1, 0, 0],
+    [2, 100, 0, 0, 1, 180, 180, 0, 1, 0, 0]
+  ], { events: [
+    { e: 'shot', id: 2, x: 100, y: 0, a: 3.14, s: 620, t: 1, p: 0 },
+    { e: 'hit', id: 1, by: 2, damage: 18 },
+    { e: 'kill', id: 2, by: 1 },
+    { e: 'level', id: 1, level: 3 },
+    { e: 'crate', index: 0, by: 1 }
+  ] });
+  assert.equal(h.game.shots.length, 1, 'O tiro do servidor vira bala visivel');
+  assert.ok(h.game.numbers.some(number => number.text === '18'), 'O dano aparece na tela');
+  assert.equal(h.game.me.level, 3);
+  assert.equal(h.game.crates[0].broken, true);
+  assert.ok(h.game.feed.some(line => line.includes('eliminou')), 'O aviso de abate entra no feed');
+  h.game._updateOnline(1);
+  assert.equal(h.game.shots.length, 0, 'A bala some depois do tempo de voo');
+  socket.deliver({ t: 's', k: 2, r: 100, f: [[1, 0, 0, 0, 3, 260, 260, 1, 1, 0, 0]], c: [1], e: [{ e: 'crate', index: 0, x: 500, y: 500 }] });
+  assert.equal(h.game.crates[0].broken, false);
+  assert.equal(h.game.crates[0].x, 500);
+});
+test('the client shows the final ranking from the server and banks the coins', () => {
+  const h = harness();
+  const socket = h.online();
+  socket.deliver({ t: 'over', room: 7, ranking: [
+    { rank: 1, id: 1, name: 'Guino', level: 9, kills: 8, deaths: 2, bot: false, coins: 120 },
+    { rank: 2, id: 2, name: 'Ashley', level: 7, kills: 5, deaths: 4, bot: true, coins: 60 }
+  ] });
+  assert.equal(h.game.state, 'results');
+  const results = h.game.onlineResults;
+  assert.equal(results.you.rank, 1);
+  assert.equal(results.coins, 120);
+  assert.equal(results.humans, 1);
+  assert.equal(results.bots, 1);
+  assert.equal(h.events.results.at(-1).coins, 120);
+  assert.equal(h.sandbox.VesperGame.OnlineProfile.load().coins, 120, 'As moedas ficam guardadas');
+});
+test('a broken connection returns to the menu with a reason', () => {
+  const h = harness();
+  h.game.startOnline({ name: 'Guino', skin: 'alien', server: 'ws://teste:1' });
+  const socket = h.sockets.at(-1);
+  socket.open();
+  socket.fail();
+  assert.equal(h.game.state, 'menu');
+  assert.equal(h.game.onlineActive, false);
+  assert.equal(h.events.errors.at(-1), 'conexao');
+  const second = harness();
+  const live = second.online();
+  live.close();
+  assert.equal(second.game.state, 'menu');
+  assert.equal(second.events.errors.at(-1), 'queda');
+});
+test('the server address accepts short forms and falls back to the page origin', () => {
+  const online = harness().sandbox.VesperGame.ONLINE;
+  assert.equal(online.normalizeServer('meu-servidor.com:9000'), 'ws://meu-servidor.com:9000');
+  assert.equal(online.normalizeServer('http://192.168.0.7:8080/'), 'ws://192.168.0.7:8080');
+  assert.equal(online.normalizeServer('https://vesper.exemplo.com'), 'wss://vesper.exemplo.com');
+  assert.equal(online.normalizeServer('ws://127.0.0.1:8080'), 'ws://127.0.0.1:8080');
+  assert.equal(online.normalizeServer('   '), '');
+  assert.equal(online.defaultServer(), 'ws://127.0.0.1:8080');
+});
+test('ten single shot weapons carry their own art in the fighter hand', () => {
+  const h = harness();
+  const arena = h.sandbox.VesperArena;
+  assert.ok(arena.WEAPONS.every(weapon => weapon.projectiles === 1), 'Nenhuma arma dispara mais de um tiro');
+  assert.equal(new Set(arena.WEAPONS.map(weapon => weapon.name)).size, 10);
+  const socket = h.online();
+  const me = h.game.me;
+  const drawings = new Set();
+  let operations = [];
+  let depth = 0;
+  const context = h.context;
+  context.save = () => { depth++; };
+  context.restore = () => { depth--; };
+  for (const method of ['fillRect', 'beginPath', 'moveTo', 'lineTo', 'ellipse', 'fill', 'stroke', 'closePath', 'translate', 'rotate', 'scale']) {
+    context[method] = (...args) => {
+      for (const value of args) if (typeof value === 'number' && !Number.isFinite(value)) throw new Error(method + ' recebeu valor invalido');
+      operations.push([method, ...args]);
+    };
+  }
+  for (let level = 1; level <= 10; level++) {
+    me.level = level;
+    operations = [];
+    h.game._drawFighterWeapon(context, me);
+    assert.ok(operations.length > 6, 'A arma do nivel ' + level + ' tem desenho proprio');
+    drawings.add(JSON.stringify(operations));
+    assert.equal(depth, 0);
+  }
+  assert.equal(drawings.size, 10, 'Os dez desenhos sao diferentes');
+  me.level = 9;
+  me.aim = Math.PI;
+  operations = [];
+  h.game._drawFighterWeapon(context, me);
+  assert.ok(operations.some(([method, x, y]) => method === 'scale' && x === 1 && y === -1), 'Arma espelhada ao mirar para a esquerda');
+  h.game.drawOnlineWeapon({ width: 168, height: 60, getContext: () => context }, 7);
+  assert.equal(depth, 0);
+  assert.ok(socket.sent.length > 0);
+});
+test('every Online skin keeps its own skill and price in the shared arena core', () => {
+  const arena = harness().sandbox.VesperArena;
+  assert.deepEqual(Array.from(arena.SKINS, skin => skin.id),
+    ['alien', 'spider', 'skeleton', 'orc', 'invisible', 'cyborg', 'plague', 'frankenstein']);
+  assert.deepEqual(Array.from(arena.SKINS, skin => skin.price), [0, 150, 220, 300, 380, 450, 520, 600]);
+  assert.deepEqual({ ...arena.bonusOf('alien') }, { damage: 1, cadence: 1, speed: 1, projectile: 0, poison: 0 });
+  close(arena.bonusOf('spider').cadence, 1.1, 1e-9, 'aranha');
+  close(arena.bonusOf('skeleton').cadence, 1.15, 1e-9, 'esqueleto');
+  close(arena.bonusOf('orc').damage, 1.2, 1e-9, 'orc');
+  close(arena.bonusOf('invisible').speed, 1.25, 1e-9, 'homem invisivel');
+  close(arena.bonusOf('frankenstein').damage, 1.3, 1e-9, 'frankenstein');
+  assert.equal(arena.bonusOf('cyborg').projectile, 1);
+  assert.ok(arena.bonusOf('plague').poison > 0);
+  const match = new arena.Arena();
+  const cyborg = match.join({ name: 'C', skin: 'cyborg' });
+  const plain = match.join({ name: 'A', skin: 'alien' });
+  match.shots.length = 0;
+  match.fire(cyborg);
+  const withSkill = match.shots.length;
+  match.shots.length = 0;
+  match.fire(plain);
+  assert.equal(withSkill, match.shots.length + 1, 'O cyborg lanca um projetil a mais');
+  const orc = match.join({ name: 'O', skin: 'orc' });
+  match.shots.length = 0;
+  match.fire(orc);
+  const orcDamage = match.shots[0].damage;
+  match.shots.length = 0;
+  match.fire(plain);
+  close(orcDamage, match.shots[0].damage * 1.2, 1e-6, 'dano do orc');
+});
+test('Online skins stay in the Online mode and campaign heroes stay in the campaign', () => {
+  const h = harness();
+  const roster = Array.from(h.game.constructor.CHARACTERS);
+  const skins = roster.filter(character => character.unlockType === 'coins').map(character => character.id);
+  const heroes = roster.filter(character => character.unlockType !== 'coins').map(character => character.id);
+  h.game.setCharacter('ghost');
+  const socket = h.online({ skin: 'frankenstein' });
+  assert.equal(h.game.character, 'frankenstein');
+  assert.equal(h.game.setCharacter('vampire'), false, 'Heroi da campanha nao entra na arena');
+  h.game.leaveOnline();
+  assert.equal(h.game.character, 'ghost', 'A campanha recupera o personagem escolhido');
+  assert.equal(h.game.setCharacter('orc'), false, 'Skin paga nao entra na campanha');
+  assert.equal(socket.readyState, 3, 'O socket fecha ao sair');
+  const ui = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 2, coins: 9000, owned: skins, skin: 'orc', name: 'Guino' }) });
+  ui.nodes.get('characters-btn').fire('click');
+  assert.deepEqual(ui.nodes.get('character-grid').children.map(card => card.dataset.characterId), heroes);
+  for (const skin of skins) {
+    const card = ui.nodes.get('coin-grid').children.find(item => item.dataset.characterId === skin);
+    card.fire('click');
+    assert.equal(ui.game.character, 'human', 'Usar uma skin do Online nao troca o personagem da campanha');
+  }
+});
+test('Online coins buy skins in the shop and the chosen skin enters the match', () => {
+  const wallet = JSON.stringify({ version: 2, coins: 400, owned: ['alien'], skin: 'alien', name: '', server: '' });
+  const ui = uiHarness({ 'vesper.online.v1': wallet });
+  ui.nodes.get('characters-btn').fire('click');
+  const cards = ui.nodes.get('coin-grid').children;
+  const orc = cards.find(card => card.dataset.characterId === 'orc');
+  const cyborg = cards.find(card => card.dataset.characterId === 'cyborg');
+  orc.fire('click');
+  assert.ok(!orc.classList.contains('is-locked'), 'A skin comprada destrava');
+  assert.ok(orc.classList.contains('is-using'));
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins, 100);
+  cyborg.fire('click');
+  assert.ok(cyborg.classList.contains('is-locked'), 'Sem moedas a skin continua travada');
+  ui.nodes.get('online-btn').fire('click');
+  assert.equal(ui.nodes.get('online-skin-name').textContent, 'Orc');
+  ui.nodes.get('online-name').value = 'G';
+  ui.nodes.get('online-form').fire('submit');
+  assert.equal(ui.nodes.get('online-error').hidden, false);
+  ui.nodes.get('online-name').value = 'Guino';
+  ui.nodes.get('online-server').value = '192.168.0.10:8080';
+  ui.nodes.get('online-form').fire('submit');
+  assert.equal(ui.nodes.get('online-loading-view').hidden, false);
+  assert.deepEqual({ ...ui.game.onlineOptions }, { name: 'Guino', skin: 'orc', server: '192.168.0.10:8080' });
+  assert.equal(ui.nodes.get('online-loading-server').textContent, 'ws://192.168.0.10:8080');
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).server, '192.168.0.10:8080');
+  assert.equal(ui.game.state, 'playing');
+});
+test('the Online HUD separates humans from bots and fires on the space bar', () => {
+  const ui = uiHarness();
+  ui.nodes.get('online-btn').fire('click');
+  ui.nodes.get('online-name').value = 'Guino';
+  ui.nodes.get('online-form').fire('submit');
+  const hud = respawn => ({
+    online: true, hp: 210, maxHp: 300, xp: 5, nextXp: 35, level: 4, kills: 4, elapsed: 120,
+    remaining: 120, weapon: 'Escopeta', weaponTier: 4, bosses: [], mapName: 'Catedral em Ruínas',
+    players: 15, humans: 3, bots: 12, alive: 13, respawn, rank: 2, stageBossStatus: 'Servidor #3',
+    leaderboard: [
+      { rank: 1, name: 'Ashley', level: 6, kills: 6, you: false, bot: true },
+      { rank: 2, name: 'Guino', level: 4, kills: 4, you: true, bot: false }
+    ],
+    feed: ['Guino eliminou Ashley']
+  });
+  ui.game.callbacks.onHud(hud(0));
+  assert.equal(ui.nodes.get('online-hud').hidden, false);
+  assert.equal(ui.nodes.get('online-weapon').textContent, 'Escopeta');
+  assert.equal(ui.nodes.get('online-board-count').textContent, '3H · 12B');
+  assert.equal(ui.nodes.get('timer').textContent, '02:00');
+  const rows = ui.nodes.get('online-board-list').children;
+  assert.equal(rows[0].children[1].textContent, 'Ashley [BOT]');
+  assert.equal(rows[0].className, 'is-bot');
+  assert.equal(rows[1].className, 'is-you');
+  ui.browser.fire('keydown', { code: 'Space' });
+  assert.equal(ui.game.firing, true);
+  ui.browser.fire('keyup', { code: 'Space' });
+  assert.equal(ui.game.firing, false);
+  ui.game.callbacks.onHud(hud(2.4));
+  assert.equal(ui.nodes.get('online-respawn').hidden, false);
+  assert.equal(ui.nodes.get('online-respawn-time').textContent, 3);
+  ui.game.callbacks.onHud({ hp: 1, maxHp: 1, xp: 0, nextXp: 1, level: 1, kills: 0, elapsed: 0, bosses: [] });
+  assert.equal(ui.nodes.get('online-hud').hidden, true);
+});
+test('the final ranking screen pays the coins, marks bots and starts another match', () => {
+  const ui = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 2, coins: 70, owned: ['alien'], skin: 'alien', name: 'Guino', server: '' }) });
+  ui.nodes.get('online-btn').fire('click');
+  ui.nodes.get('online-name').value = 'Guino';
+  ui.nodes.get('online-form').fire('submit');
+  assert.equal(ui.nodes.get('pause-restart-btn').hidden, true);
+  const you = { rank: 1, name: 'Guino', level: 9, kills: 11, you: true, bot: false };
+  ui.game.callbacks.onOnlineResults({
+    server: 3, players: 15, coins: 96, balance: 166, humans: 3, bots: 12, you,
+    ranking: [you, { rank: 2, name: 'Ashley', level: 8, kills: 9, you: false, bot: true }]
+  });
+  ui.game.state = 'results';
+  ui.game.callbacks.onState('results');
+  assert.equal(ui.nodes.get('online-results-overlay').hidden, false);
+  const rows = ui.nodes.get('online-results-list').children;
+  assert.equal(rows.length, 2);
+  assert.ok(rows[0].className.includes('is-you'));
+  assert.ok(rows[1].className.includes('is-bot'));
+  assert.equal(rows[1].children[1].textContent, 'Ashley [BOT]');
+  assert.ok(ui.nodes.get('online-results-server').textContent.includes('3 humanos'));
+  assert.ok(ui.nodes.get('online-results-reward').children[0].textContent.startsWith('+96'));
+  ui.nodes.get('online-again-btn').fire('click');
+  assert.equal(ui.game.onlineStarts, 2, 'Jogar novamente entra em outra partida');
+  ui.nodes.get('online-menu-btn').fire('click');
+  assert.equal(ui.game.state, 'menu');
+});
+test('a connection opened before the first animation frame keeps the loop alive', () => {
+  const h = harness();
+  assert.equal(h.game._view, undefined);
+  const socket = h.online();
+  h.game.drawMinimap({ width: 174, height: 131, getContext: () => h.context });
+  h.game._draw();
+  h.frame();
+  h.frame(1000 / 60);
+  assert.equal(h.game.state, 'playing');
+  assert.equal(h.raf.size, 1, 'O laco continua pedindo quadros');
+  assert.ok(socket.sent.some(message => message.t === 'in'), 'A entrada comeca a ser enviada');
+});
+test('the arena draws its own scenario and minimap without corrupting canvas state', () => {
+  const h = harness();
+  let depth = 0;
+  const context = h.context;
+  context.save = () => { depth++; };
+  context.restore = () => { depth--; };
+  const socket = h.online();
+  h.snapshot(socket, [
+    [1, 0, 0, 0.4, 5, 300, 340, 2, 1, 0, 3],
+    [2, 60, 40, 1, 3, 200, 260, 1, 1, 0, 1],
+    [3, -80, 30, 2, 7, 300, 420, 4, 1, 0, 2]
+  ], { events: [{ e: 'shot', id: 2, x: 60, y: 40, a: 0.2, s: 700, t: 5, p: 0 }] });
+  for (const clock of [0, 0.5, 2.2]) {
+    h.game._clock = clock;
+    h.game._draw();
+    assert.equal(depth, 0, 'Todo desenho devolve as transformacoes');
+  }
+  h.game.drawMinimap({ width: 174, height: 131, getContext: () => context });
+  assert.equal(depth, 0);
+  assert.ok(h.game._getArenaFeatures().length > 30, 'A catedral em ruinas tem cenario proprio');
+  assert.equal(h.game.mapDefinition.name, 'Catedral em Ruínas');
+  const drawn = new Set();
+  const original = h.game._drawCharacter.bind(h.game);
+  h.game._drawCharacter = (ctx, id, steps) => { drawn.add(id); original(ctx, id, steps); };
+  h.game._draw();
+  assert.ok(drawn.size >= 3, 'Cada lutador aparece com a sua skin');
+  assert.equal(depth, 0);
+});
+test('the client refuses a room that does not list the player instead of crashing', () => {
+  const h = harness();
+  h.game.startOnline({ name: 'Guino', skin: 'alien', server: 'ws://teste:1' });
+  const socket = h.sockets.at(-1);
+  socket.open();
+  socket.deliver({ t: 'joined', id: 99, room: 1, capacity: 15, remaining: 300, token: 'x', roster: [{ id: 1, name: 'Outro', skin: 'alien', bot: true }], crates: [] });
+  assert.equal(h.game.state, 'menu');
+  assert.equal(h.game.onlineActive, false);
+  assert.equal(h.events.errors.at(-1), 'sala');
+  h.game._draw();
+  h.frame();
+  assert.equal(h.raf.size, 1, 'O laco de desenho continua vivo depois da recusa');
+});
+
+test('the results screen survives a room that closes right after the match', () => {
+  const h = harness();
+  const socket = h.online();
+  socket.deliver({ t: 'over', room: 7, ranking: [{ rank: 1, id: 1, name: 'Guino', level: 5, kills: 3, deaths: 1, bot: false, coins: 80 }] });
+  assert.equal(h.game.state, 'results');
+  socket.deliver({ t: 'closed' });
+  assert.equal(h.game.state, 'results', 'O resumo da partida fica na tela');
+  h.snapshot(socket, [[1, 10, 10, 0, 5, 100, 340, 3, 1, 0, 0]]);
+  assert.equal(h.game.state, 'results');
+  assert.equal(h.game.onlineResults.coins, 80);
+});
+
+test('an error after joining does not throw the player out of a running match', () => {
+  const h = harness();
+  const socket = h.online();
+  socket.deliver({ t: 'error', reason: 'rate' });
+  assert.equal(h.game.state, 'playing', 'Erro no meio da partida nao encerra a partida');
+  assert.equal(h.events.errors.length, 0);
+  const other = harness();
+  other.game.startOnline({ name: 'Guino', skin: 'alien', server: 'ws://teste:1' });
+  const fresh = other.sockets.at(-1);
+  fresh.open();
+  fresh.deliver({ t: 'error', reason: 'full' });
+  assert.equal(other.events.errors.at(-1), 'full', 'Erro antes de entrar avisa o jogador');
+});
+
+test('losing the player in a snapshot leaves the match instead of drawing dead data', () => {
+  const h = harness();
+  const socket = h.online();
+  h.snapshot(socket, [[2, 0, 0, 0, 1, 180, 180, 0, 1, 0, 0]]);
+  assert.equal(h.game.state, 'menu');
+  assert.equal(h.events.errors.at(-1), 'sala');
+});
+
+test('the reconnection token is remembered per server address', () => {
+  const h = harness();
+  const first = h.online();
+  h.game.leaveOnline();
+  h.game.startOnline({ name: 'Guino', skin: 'alien', server: 'ws://outro:2' });
+  const second = h.sockets.at(-1);
+  second.open();
+  assert.equal(second.sent[0].token, '', 'Servidor novo nao recebe o token do servidor antigo');
+  h.game.leaveOnline();
+  h.game.startOnline({ name: 'Guino', skin: 'alien', server: 'ws://teste:1' });
+  const back = h.sockets.at(-1);
+  back.open();
+  assert.equal(back.sent[0].token, 'abc', 'O mesmo servidor recebe o token guardado');
+  assert.ok(first.sent.length > 0);
+});
+
+test('walking keeps predicting under latency instead of snapping every packet', () => {
+  const h = harness({ width: 1200, height: 800 });
+  const arena = h.sandbox.VesperArena;
+  const socket = h.online();
+  assert.ok(arena.CONFIG.snapDistance >= 400, 'O limiar de correcao aguenta latencia comum');
+  h.snapshot(socket, [[1, 0, 0, 0, 1, 180, 180, 0, 1, 0, 0]]);
+  h.game.me.x = 0;
+  h.game.setMovement(1, 0);
+  for (let i = 0; i < 10; i++) h.game._updateOnline(0.016);
+  const predicted = h.game.me.x;
+  h.snapshot(socket, [[1, 20, 0, 0, 1, 180, 180, 0, 1, 0, 0]]);
+  h.game._updateOnline(0.016);
+  assert.ok(Math.abs(h.game.me.x - predicted) < 6, 'A correcao entra suave, sem teleporte');
+});
+
+test('the input goes out the moment the direction changes, including the stop', () => {
+  const h = harness();
+  const socket = h.online();
+  const before = socket.sent.filter(message => message.t === 'in').length;
+  h.game.setMovement(1, 0);
+  const moving = socket.sent.filter(message => message.t === 'in');
+  assert.equal(moving.length, before + 1, 'Mudar de direcao envia na hora');
+  h.game.setMovement(0, 0);
+  const stopped = socket.sent.filter(message => message.t === 'in');
+  assert.equal(stopped.length, before + 2);
+  assert.deepEqual({ x: stopped.at(-1).x, y: stopped.at(-1).y }, { x: 0, y: 0 }, 'A parada tambem e avisada');
+});
 
 if (isMain) process.on('beforeExit', () => {
   process.stdout.write(`\n${passed} passed; ${failures.length} failed.\n`);
   if (failures.length) process.exitCode = 1;
 });
-
 module.exports = { harness };

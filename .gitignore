@@ -1,0 +1,6 @@
+# Arquivos gerados sob demanda durante desenvolvimento
+/qa.html
+/balance-report.json
+
+# O projeto deve permanecer em pasta, sem pacotes ZIP
+/*.zip

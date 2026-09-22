@@ -1,7 +1,3 @@
-/* VESPER — independent, dependency-free Canvas game engine.
- * All simulation coordinates are world units. The renderer owns the camera and
- * resolution; resizing therefore never changes combat positions or progression.
- */
 class VesperGame {
   constructor(canvas, callbacks = {}) {
     this.canvas = canvas;
@@ -26,8 +22,9 @@ class VesperGame {
       skeleton: { hp: 34, radius: 17, speed: 73 * 1.18, damage: 11, xp: 4 },
       wraith: { hp: 26, radius: 15, speed: 105 * 1.18, damage: 9, xp: 4 }
     };
-    // Boss health is a multiple of its gem value, so longer fights keep the same reward.
     this._bossHealth = { boss: 3, superBoss: 3 };
+    this._difficultyId = 'medium';
+    this._reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
     this._character = 'human';
     this._mapId = 'castle';
     this._mapTileCache = new Map();
@@ -39,21 +36,20 @@ class VesperGame {
     this._frame = this._frame.bind(this);
     this._raf = requestAnimationFrame(this._frame);
   }
-
   get state() { return this._state; }
   get character() { return this._character; }
   get mapId() { return this._mapId; }
+  get difficultyId() { return this._difficultyId; }
+  get difficultyDefinition() { return VesperGame.DIFFICULTIES.find(mode => mode.id === this._difficultyId) || VesperGame.DIFFICULTIES[1]; }
   get mapDefinition() { return VesperGame.MAPS.find(map => map.id === this._mapId); }
   get worldBounds() {
     const { width, height } = this.mapDefinition;
     return { left: -width / 2, right: width / 2, top: -height / 2, bottom: height / 2, width, height };
   }
   get bosses() { return this.enemies.filter(enemy => enemy.boss && !enemy.dead); }
-
   getBosses() {
     return this.bosses.map(({ id, name, hp, maxHp, superBoss, finalBoss, characterId }) => ({ id, name, hp: Math.max(0, hp), maxHp, superBoss, finalBoss, characterId }));
   }
-
   _reset() {
     this.player = {
       x: 0, y: 0, radius: 14, hp: 100, maxHp: 100, speed: 215,
@@ -79,15 +75,16 @@ class VesperGame {
     this.camera = { x: 0, y: 0 };
     this._spawnTimer = 0.1;
     this._attackTimer = 0.25;
+    this._dustTimer = 0;
     this._hudTimer = 0;
     this._shake = 0;
     this._options = [];
     this._movement.x = this._movement.y = 0;
   }
-
-  start(mapId = this.mapId) {
-    if (!VesperGame.MAPS.some(map => map.id === mapId)) return false;
+  start(mapId = this.mapId, difficultyId = this.difficultyId) {
+    if (!VesperGame.MAPS.some(map => map.id === mapId) || !VesperGame.DIFFICULTIES.some(mode => mode.id === difficultyId)) return false;
     this._mapId = mapId;
+    this._difficultyId = difficultyId;
     this._reset();
     this._initAudio();
     this._setState('playing');
@@ -95,26 +92,21 @@ class VesperGame {
     this._emitHud();
     return true;
   }
-
   pause() {
     if (this._state !== 'playing') return;
     this.setMovement(0, 0);
     this._setState('paused');
   }
-
   resume() {
     if (this._state !== 'paused') return;
-    // Mobile browsers suspend audio in the background; resuming is a user gesture.
+
     this._initAudio();
     this._setState('playing');
   }
-
   toMenu() {
-    // Abandons any run; the menu backdrop shows a clean ritual circle again.
     this._reset();
     this._setState('menu');
   }
-
   setMap(id) {
     if (!['menu', 'victory', 'gameover'].includes(this._state) || !VesperGame.MAPS.some(map => map.id === id)) return false;
     this._mapId = id;
@@ -122,7 +114,11 @@ class VesperGame {
     this._clampCamera();
     return true;
   }
-
+  setDifficulty(id) {
+    if (!['menu', 'victory', 'gameover'].includes(this._state) || !VesperGame.DIFFICULTIES.some(mode => mode.id === id)) return false;
+    this._difficultyId = id;
+    return true;
+  }
   _clampEntity(entity, padding = entity.radius || 0) {
     const bounds = this.worldBounds;
     const inset = padding + 24;
@@ -130,20 +126,17 @@ class VesperGame {
     entity.y = Math.max(bounds.top + inset, Math.min(bounds.bottom - inset, entity.y));
     return entity;
   }
-
   _clampCamera() {
     if (!this.camera || !this.width || !this.height) return;
     const bounds = this.worldBounds;
     this.camera.x = this.width >= bounds.width ? 0 : Math.max(bounds.left + this.width / 2, Math.min(bounds.right - this.width / 2, this.camera.x));
     this.camera.y = this.height >= bounds.height ? 0 : Math.max(bounds.top + this.height / 2, Math.min(bounds.bottom - this.height / 2, this.camera.y));
   }
-
   setCharacter(id) {
     if (!VesperGame.CHARACTERS.some(character => character.id === id)) return false;
     this._character = id;
     return true;
   }
-
   setMovement(x, y) {
     x = Number.isFinite(x) ? x : 0;
     y = Number.isFinite(y) ? y : 0;
@@ -152,19 +145,16 @@ class VesperGame {
     this._movement.x = x / divisor;
     this._movement.y = y / divisor;
   }
-
   setMuted(muted) {
     this._muted = Boolean(muted);
     if (this._master) this._master.gain.value = this._muted ? 0 : 0.12;
     if (!this._muted && this._audio) this._initAudio();
   }
-
   resize() {
     const bounds = this.canvas.getBoundingClientRect();
     const cssWidth = Math.max(1, bounds.width || window.innerWidth);
     const cssHeight = Math.max(1, bounds.height || window.innerHeight);
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-    // Small touch screens see a useful play area without changing game speeds.
     this.scale = Math.min(1, cssWidth / 680);
     this.width = cssWidth / this.scale;
     this.height = cssHeight / this.scale;
@@ -172,12 +162,10 @@ class VesperGame {
     this.canvas.height = Math.round(cssHeight * this.dpr);
     this._clampCamera();
   }
-
   _setState(state) {
     this._state = state;
     if (this.callbacks.onState) this.callbacks.onState(state);
   }
-
   _emitHud() {
     if (!this.callbacks.onHud) return;
     const p = this.player;
@@ -188,10 +176,10 @@ class VesperGame {
       attackInterval: p.attackInterval, speed: p.speed,
       bosses: this._state === 'victory' ? [] : this.getBosses(), bossKills: this.bossKills,
       mapId: this.mapId, mapName: this.mapDefinition.name,
-      stageBossStatus: this._stageDefeated.final ? 'Área purificada' : this._bossStageCursor > 1 ? 'Derrote o chefe final' : this._bossStageCursor === 0 ? 'Minichefe em 02:30' : this._stageDefeated.mini ? 'Chefe final em 04:00' : 'Derrote o minichefe'
+      difficultyId: this.difficultyId, difficultyName: this.difficultyDefinition.name,
+      stageBossStatus: this._stageDefeated.final ? 'Mapa concluído' : this._bossStageCursor > 1 ? 'Derrote o chefe final' : this._bossStageCursor === 0 ? 'Minichefe em 02:30' : this._stageDefeated.mini ? 'Chefe final em 04:00' : 'Derrote o minichefe'
     });
   }
-
   _frame(timestamp) {
     const dt = this._lastFrame ? Math.min(0.05, Math.max(0, (timestamp - this._lastFrame) / 1000)) : 0;
     this._lastFrame = timestamp;
@@ -200,7 +188,6 @@ class VesperGame {
     this._draw();
     this._raf = requestAnimationFrame(this._frame);
   }
-
   _update(dt) {
     if (this._state !== 'playing') return;
     const p = this.player;
@@ -212,20 +199,26 @@ class VesperGame {
     p.y += this._movement.y * p.speed * dt;
     this._clampEntity(p);
     if (Math.abs(this._movement.x) > 0.08) p.facing = this._movement.x > 0 ? 1 : -1;
-    p.steps += Math.hypot(this._movement.x, this._movement.y) * dt * 10;
+    const movementAmount = Math.hypot(this._movement.x, this._movement.y);
+    p.steps += movementAmount * dt * 10;
+    if (movementAmount > 0.08 && !this._reducedMotion) {
+      this._dustTimer -= dt;
+      if (this._dustTimer <= 0) {
+        this._spawnStepDust();
+        this._dustTimer = 0.13 + Math.random() * 0.05;
+      }
+    } else this._dustTimer = 0;
     this.camera.x += (p.x - this.camera.x) * Math.min(1, dt * 9);
     this.camera.y += (p.y - this.camera.y) * Math.min(1, dt * 9);
     this._clampCamera();
-
     this._spawnTimer -= dt;
     if (this._spawnTimer <= 0) {
       const count = Math.min(4, 1 + Math.floor((this.wave - 1) / 3));
       for (let i = 0; i < count; i++) this._spawnEnemy();
-      this._spawnTimer = Math.max(0.23, 0.69 - (this.wave - 1) * 0.043) / 1.06;
+      this._spawnTimer = Math.max(0.23, 0.69 - (this.wave - 1) * 0.043) / 1.06 * this.difficultyDefinition.spawnInterval;
     }
     this._attackTimer -= dt;
     if (this._attackTimer <= 0 && this._shoot()) this._attackTimer = p.attackInterval;
-
     this._updateEnemies(dt);
     if (this._state !== 'playing') return;
     this._updateProjectiles(dt);
@@ -239,7 +232,22 @@ class VesperGame {
       this._emitHud();
     }
   }
-
+  _spawnStepDust() {
+    if (this.particles.length >= this._limits.particles) return;
+    const p = this.player;
+    const side = Math.sin(p.steps) >= 0 ? 1 : -1;
+    const sideX = -this._movement.y * side * 5;
+    const sideY = this._movement.x * side * 3;
+    const life = 0.24 + Math.random() * 0.12;
+    this.particles.push({
+      x: p.x - this._movement.x * 8 + sideX,
+      y: p.y + 13 - this._movement.y * 5 + sideY,
+      vx: -this._movement.x * (5 + Math.random() * 7) + (Math.random() - 0.5) * 8,
+      vy: -this._movement.y * (4 + Math.random() * 5) - 3 - Math.random() * 5,
+      life, maxLife: life, color: 'rgba(180,164,123,.28)',
+      size: 1.2 + Math.random() * 1.5, dust: true
+    });
+  }
   _edgePosition(margin = 55, radius = 32) {
     const bounds = this.worldBounds;
     const inset = radius + 26;
@@ -257,8 +265,6 @@ class VesperGame {
       add(x, view.top - margin); add(x, view.bottom + margin);
     }
     if (candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
-    // If the entire map is visible, use its far perimeter. Never spawn on the
-    // player simply because an edge is unavailable on a very large viewport.
     const perimeter = [];
     for (let i = 0; i <= 8; i++) {
       const t = i / 8;
@@ -267,52 +273,53 @@ class VesperGame {
     perimeter.sort((a, b) => Math.hypot(b.x - this.player.x, b.y - this.player.y) - Math.hypot(a.x - this.player.x, a.y - this.player.y));
     return perimeter[Math.floor(Math.random() * 6)];
   }
-
   _spawnEnemy(forcedType) {
-    // The ordinary-mob cap never consumes a scheduled boss slot.
     if (this.enemies.filter(enemy => !enemy.boss && !enemy.dead).length >= this._limits.enemies) return;
     const { x, y } = this._edgePosition();
     const roll = Math.random();
     const rolledType = roll < 0.31 ? 'shade' : roll < 0.48 ? 'bat' : roll < 0.65 ? 'crawler' : roll < 0.80 ? 'skeleton' : roll < 0.94 ? 'wraith' : this.wave >= 2 ? 'brute' : 'shade';
     const type = Object.prototype.hasOwnProperty.call(this._templates, forcedType) ? forcedType : rolledType;
     const template = this._templates[type];
+    const appearance = VesperGame.ENEMY_THEMES[this.mapId].enemies[type];
     const growth = 1 + (this.wave - 1) * 0.2;
+    const difficulty = this.difficultyDefinition;
+    const health = template.hp * growth * difficulty.enemyHealth;
     this.enemies.push({
       id: ++this._entityId, x, y, type, kind: type, boss: false, superBoss: false,
-      hp: template.hp * growth, maxHp: template.hp * growth,
-      radius: template.radius, speed: template.speed * Math.min(1.85, 1 + (this.wave - 1) * 0.045),
-      damage: template.damage + Math.floor((this.wave - 1) * 1.2),
+      mapId: this.mapId, appearance: appearance.id, name: appearance.name,
+      hp: health, maxHp: health,
+      radius: template.radius, speed: template.speed * Math.min(1.85, 1 + (this.wave - 1) * 0.045) * difficulty.enemySpeed,
+      damage: Math.max(1, Math.round((template.damage + Math.floor((this.wave - 1) * 1.2)) * difficulty.enemyDamage)),
       xp: template.xp, phase: Math.random() * Math.PI * 2,
       hit: 0, knockX: 0, knockY: 0, dead: false
     });
   }
-
   _scheduleBosses() {
-    // Offline maps have exactly two encounters. Elapsed simulation time freezes
-    // in every modal; a living mini-boss is not replaced by the final encounter.
+
     while (this._bossStageCursor < this._bossStages.length && this.elapsed >= this._bossStages[this._bossStageCursor].at) {
       const stage = this._bossStages[this._bossStageCursor++];
       this._spawnBoss(stage);
     }
   }
-
   _spawnBoss(stage) {
     const superBoss = stage.finalBoss;
     const spawnWave = 1 + Math.floor(stage.at / 30);
-    const shadeHp = this._templates.shade.hp * (1 + (spawnWave - 1) * 0.2);
+    const difficulty = this.difficultyDefinition;
+    const shadeHp = this._templates.shade.hp * (1 + (spawnWave - 1) * 0.2) * difficulty.enemyHealth;
     const gemCount = superBoss ? 14 : 7;
     const health = shadeHp * gemCount * (superBoss ? this._bossHealth.superBoss : this._bossHealth.boss);
     const { x, y } = this._edgePosition(superBoss ? 98 : 80, superBoss ? 42 : 34);
-    const miniNames = { castle: 'GUARDIÃO DA CRIPTA', egypt: 'GUARDIÃO DO OBELISCO', swamp: 'GUARDIÃO DO LODO', halloween: 'GUARDIÃO DA COLHEITA' };
+    const mini = VesperGame.ENEMY_THEMES[this.mapId].miniBoss;
     const boss = {
       id: ++this._entityId, x, y, type: superBoss ? 'superboss' : 'boss',
       kind: superBoss ? 'superboss' : 'boss', boss: true, superBoss,
+      mapId: this.mapId, appearance: superBoss ? null : mini.id,
       finalBoss: stage.finalBoss, stageId: stage.id, characterId: stage.finalBoss ? this.mapDefinition.unlockCharacter : null,
-      name: superBoss ? this.mapDefinition.bossName : miniNames[this.mapId],
+      name: superBoss ? this.mapDefinition.bossName : mini.name,
       spawnAt: stage.at, spawnMinute: stage.at / 60, spawnWave, shadeHp, hp: health, maxHp: health,
       radius: superBoss ? 42 : 34,
-      speed: (superBoss ? 112 : 98) * Math.min(1.45, 1 + (spawnWave - 1) * 0.025),
-      damage: (superBoss ? 25 : 19) + Math.floor((spawnWave - 1) * 0.6),
+      speed: (superBoss ? 112 : 98) * Math.min(1.45, 1 + (spawnWave - 1) * 0.025) * difficulty.enemySpeed,
+      damage: Math.max(1, Math.round(((superBoss ? 25 : 19) + Math.floor((spawnWave - 1) * 0.6)) * difficulty.enemyDamage)),
       xp: gemCount * this._templates.shade.xp, gemCount,
       phase: Math.random() * Math.PI * 2, hit: 0, knockX: 0, knockY: 0, dead: false,
       dashState: 'chase', dashCooldown: 3, dashTimer: 0, dashX: 0, dashY: 0,
@@ -325,9 +332,7 @@ class VesperGame {
     if (this.callbacks.onBossSpawn) this.callbacks.onBossSpawn({ id: boss.id, name: boss.name, superBoss, finalBoss: boss.finalBoss, characterId: boss.characterId });
     return boss;
   }
-
   _moveBoss(enemy, dx, dy, distance, dt) {
-    // The direction locks before the full visible wind-up: a lateral dodge works.
     if (enemy.dashState === 'telegraph') {
       enemy.dashTimer -= dt;
       if (enemy.dashTimer <= 0) {
@@ -361,7 +366,6 @@ class VesperGame {
     enemy.x += (dx / distance * enemy.speed + enemy.knockX) * dt;
     enemy.y += (dy / distance * enemy.speed + enemy.knockY) * dt;
   }
-
   _updateEnemies(dt) {
     const p = this.player;
     const tooFar = Math.hypot(this.width, this.height) * 1.3;
@@ -370,7 +374,6 @@ class VesperGame {
       let dx = p.x - enemy.x;
       let dy = p.y - enemy.y;
       let distance = Math.hypot(dx, dy) || 1;
-      // Recycle distant pursuers back to the edge as the camera travels.
       if (!enemy.boss && distance > tooFar) {
         const edge = this._edgePosition(70, enemy.radius);
         enemy.x = edge.x;
@@ -411,10 +414,9 @@ class VesperGame {
       }
     }
   }
-
   _shoot() {
     const p = this.player;
-    // Only the small volley needs sorted targets; enemies retain stable ordering.
+
     const targets = this.enemies.filter(enemy => !enemy.dead)
       .map(enemy => ({ enemy, distance: (enemy.x - p.x) ** 2 + (enemy.y - p.y) ** 2 }))
       .sort((a, b) => a.distance - b.distance);
@@ -422,7 +424,6 @@ class VesperGame {
     const amount = Math.min(p.projectiles, this._limits.projectiles - this.projectiles.length);
     for (let i = 0; i < amount; i++) {
       const target = targets[i % targets.length].enemy;
-      // Each additional blade selects the next closest available enemy.
       const dx = target.x - p.x;
       const dy = target.y - p.y;
       const distance = Math.hypot(dx, dy) || 1;
@@ -439,7 +440,6 @@ class VesperGame {
     this._sound('shot');
     return true;
   }
-
   _segmentHits(x1, y1, x2, y2, circle, radius) {
     const dx = x2 - x1;
     const dy = y2 - y1;
@@ -447,7 +447,6 @@ class VesperGame {
     const t = lengthSquared ? Math.max(0, Math.min(1, ((circle.x - x1) * dx + (circle.y - y1) * dy) / lengthSquared)) : 0;
     return (circle.x - x1 - dx * t) ** 2 + (circle.y - y1 - dy * t) ** 2 <= radius * radius ? t : -1;
   }
-
   _updateProjectiles(dt) {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const shot = this.projectiles[i];
@@ -480,9 +479,7 @@ class VesperGame {
     }
     this.enemies = this.enemies.filter(enemy => !enemy.dead);
   }
-
   _killEnemy(enemy) {
-    // Mark immediately: a later projectile in the same frame cannot award twice.
     if (enemy.dead) return;
     enemy.dead = true;
     this.kills++;
@@ -511,10 +508,8 @@ class VesperGame {
       if (this.callbacks.onVictory) this.callbacks.onVictory({ ...this.victoryData });
     }
   }
-
   _reserveGemSlots(amount) {
-    // A boss always visibly drops its seven/fourteen separate green gems. Merge
-    // older gems first if needed, retaining every point of their accumulated XP.
+
     while (this.gems.length > this._limits.gems - amount && this.gems.length > 1) {
       const source = this.gems.pop();
       let nearest = this.gems[0], best = Infinity;
@@ -529,12 +524,10 @@ class VesperGame {
       nearest.attracted = nearest.attracted || source.attracted;
     }
   }
-
   _dropGem(x, y, value) {
     const position = this._clampEntity({ x, y }, 10);
     x = position.x; y = position.y;
     if (this.gems.length >= this._limits.gems) {
-      // Conservation invariant: merging never deletes earned XP, even at the cap.
       let closest = this.gems[0], best = Infinity;
       for (const gem of this.gems) {
         const distance = (gem.x - x) ** 2 + (gem.y - y) ** 2;
@@ -548,7 +541,6 @@ class VesperGame {
     }
     this.gems.push({ x, y, value, phase: Math.random() * Math.PI * 2, attracted: false });
   }
-
   _updateGems(dt) {
     if (this._state !== 'playing') return;
     const p = this.player;
@@ -576,7 +568,6 @@ class VesperGame {
       this._checkLevelUp();
     }
   }
-
   _checkLevelUp() {
     if (!['playing', 'upgrade'].includes(this._state) || this.xp < this.nextXp) return false;
     this.xp -= this.nextXp;
@@ -590,18 +581,16 @@ class VesperGame {
     if (this.callbacks.onLevelUp) this.callbacks.onLevelUp(this._options.map(option => ({ ...option })));
     return true;
   }
-
   _rollUpgrades() {
     const p = this.player;
     const pool = [
-      { id: 'damage', title: 'Pacto de sangue', description: 'Seus projéteis causam 25% mais dano.', icon: 'sword', detail: Math.round(p.damage) + ' → ' + Math.round(p.damage * 1.25) + ' de dano' },
-      { id: 'speed', title: 'Passo espectral', description: 'Mova-se 12% mais rápido entre as sombras.', icon: 'boot', detail: Math.round(p.speed) + ' → ' + Math.round(p.speed * 1.12) + ' de velocidade' },
-      { id: 'cadence', title: 'Ritual da pressa', description: 'Ataque 15% mais rápido.', icon: 'bolt', detail: p.attackInterval.toFixed(2) + 's → ' + (p.attackInterval / 1.15).toFixed(2) + 's por ataque' },
-      { id: 'pickup', title: 'Chamado das almas', description: 'Atraia gemas de experiência 30% mais longe.', icon: 'gem', detail: Math.round(p.pickup) + ' → ' + Math.round(p.pickup * 1.3) + ' de alcance' },
-      { id: 'vitality', title: 'Coração imortal', description: '+25 de vida máxima e recupera 40 de vida.', icon: 'heart', detail: p.maxHp + ' → ' + (p.maxHp + 25) + ' de vida máxima' }
+      { id: 'damage', title: 'Mais dano', description: 'Seus ataques causam 25% mais dano.', icon: 'sword', detail: Math.round(p.damage) + ' → ' + Math.round(p.damage * 1.25) + ' de dano' },
+      { id: 'speed', title: 'Mais velocidade', description: 'Ande 12% mais rápido.', icon: 'boot', detail: Math.round(p.speed) + ' → ' + Math.round(p.speed * 1.12) + ' de velocidade' },
+      { id: 'cadence', title: 'Ataque mais rápido', description: 'Você ataca 15% mais rápido.', icon: 'bolt', detail: p.attackInterval.toFixed(2) + 's → ' + (p.attackInterval / 1.15).toFixed(2) + 's entre ataques' },
+      { id: 'pickup', title: 'Mais alcance', description: 'Pegue gemas a uma distância 30% maior.', icon: 'gem', detail: Math.round(p.pickup) + ' → ' + Math.round(p.pickup * 1.3) + ' de alcance' },
+      { id: 'vitality', title: 'Mais vida', description: 'Ganhe 25 de vida máxima e recupere 40 de vida.', icon: 'heart', detail: p.maxHp + ' → ' + (p.maxHp + 25) + ' de vida máxima' }
     ];
-    if (p.projectiles < 6) pool.push({ id: 'projectile', title: 'Lâmina gêmea', description: 'Dispare uma lâmina adicional a cada ataque.', icon: 'blades', detail: p.projectiles + ' → ' + (p.projectiles + 1) + ' projéteis' });
-    // Avoid offering ineffective upgrades once their sensible safety caps are met.
+    if (p.projectiles < 6) pool.push({ id: 'projectile', title: 'Disparo extra', description: 'Lance mais um disparo a cada ataque.', icon: 'blades', detail: p.projectiles + ' → ' + (p.projectiles + 1) + ' disparos' });
     const useful = pool.filter(option => !(option.id === 'speed' && p.speed >= 420) && !(option.id === 'cadence' && p.attackInterval <= 0.13) && !(option.id === 'pickup' && p.pickup >= 420));
     for (let i = useful.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -609,7 +598,6 @@ class VesperGame {
     }
     return useful.slice(0, 2);
   }
-
   chooseUpgrade(id) {
     if (this._state !== 'upgrade' || !this._options.some(option => option.id === id)) return false;
     const p = this.player;
@@ -624,12 +612,10 @@ class VesperGame {
     this._options = [];
     p.invulnerability = Math.max(p.invulnerability, 0.65);
     this._burst(p.x, p.y, '#dfbd7b', 25, 125);
-    // A large merged gem can buy multiple levels: resolve each choice in order.
     if (!this._checkLevelUp()) this._setState('playing');
     this._emitHud();
     return true;
   }
-
   _burst(x, y, color, count, speed) {
     count = Math.min(count, this._limits.particles - this.particles.length);
     for (let i = 0; i < count; i++) {
@@ -639,12 +625,10 @@ class VesperGame {
       this.particles.push({ x, y, vx: Math.cos(angle) * velocity, vy: Math.sin(angle) * velocity, life, maxLife: life, color, size: 1 + Math.random() * 2.3 });
     }
   }
-
   _number(x, y, text, color, strong = false) {
     if (this.numbers.length >= this._limits.numbers) this.numbers.shift();
     this.numbers.push({ x: x + (Math.random() - 0.5) * 12, y, text, color, strong, life: 0.65 });
   }
-
   _updateEffects(dt) {
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const particle = this.particles[i];
@@ -661,12 +645,10 @@ class VesperGame {
       if (this.numbers[i].life <= 0) this.numbers.splice(i, 1);
     }
   }
-
   _hash(x, y, offset = 0) {
     const value = Math.sin(x * 127.1 + y * 311.7 + offset * 74.7) * 43758.5453;
     return value - Math.floor(value);
   }
-
   _makeFloor() {
     this._floor = document.createElement('canvas');
     this._floor.width = this._floor.height = 512;
@@ -702,7 +684,6 @@ class VesperGame {
     }
     ctx.globalAlpha = 1;
   }
-
   _draw() {
     const ctx = this.ctx;
     const menu = this._state === 'menu';
@@ -719,8 +700,6 @@ class VesperGame {
     ctx.fillStyle = '#07090e';
     ctx.fillRect(0, 0, this.width, this.height);
     if (menu) {
-      // The original endless sanctuary is retained only as the menu backdrop
-      // and as the reserved legacy renderer for a future online mode.
       for (let x = Math.floor(left / 512) * 512; x < left + this.width; x += 512) {
         for (let y = Math.floor(top / 512) * 512; y < top + this.height; y += 512) ctx.drawImage(this._floor, x - left, y - top);
       }
@@ -764,7 +743,6 @@ class VesperGame {
     ctx.globalAlpha = 1;
     if (menu || this.mapId === 'swamp' || this.mapId === 'halloween') this._drawFireflies(ctx);
     ctx.restore();
-    // A single screen-space vignette keeps the center readable on every viewport.
     const vignette = ctx.createRadialGradient(this.width * 0.5, this.height * 0.48, Math.min(this.width, this.height) * 0.12, this.width * 0.5, this.height * 0.5, Math.max(this.width, this.height) * 0.71);
     vignette.addColorStop(0, 'rgba(4,9,8,0)');
     vignette.addColorStop(0.6, 'rgba(3,8,7,.13)');
@@ -776,12 +754,12 @@ class VesperGame {
       ctx.fillRect(0, 0, this.width, this.height);
     }
   }
-
   _visible(entity, padding) {
     const view = this._view;
+
+    if (!view) return true;
     return entity.x > view.left - padding && entity.x < view.right + padding && entity.y > view.top - padding && entity.y < view.bottom + padding;
   }
-
   _getMapTile(id) {
     if (this._mapTileCache.has(id)) return this._mapTileCache.get(id);
     const tile = document.createElement('canvas'); tile.width = tile.height = 512;
@@ -842,7 +820,6 @@ class VesperGame {
     this._mapTileCache.set(id, tile);
     return tile;
   }
-
   _getMapFeatures(id) {
     if (this._mapFeatureCache.has(id)) return this._mapFeatureCache.get(id);
     const kinds = {
@@ -876,7 +853,6 @@ class VesperGame {
     this._mapFeatureCache.set(id, features);
     return features;
   }
-
   _drawOfflineEnvironment(ctx, id, view) {
     const map = VesperGame.MAPS.find(item => item.id === id);
     const bounds = { left: -map.width / 2, top: -map.height / 2, right: map.width / 2, bottom: map.height / 2, width: map.width, height: map.height };
@@ -898,7 +874,6 @@ class VesperGame {
     this._drawWorldBoundary(ctx, id, bounds, view);
     ctx.restore();
   }
-
   _drawMapTerrain(ctx, id, bounds, view) {
     if (id === 'castle') {
       ctx.fillStyle = '#24252c'; ctx.fillRect(-145, bounds.top + 30, 290, bounds.height - 60); ctx.fillRect(bounds.left + 30, -150, bounds.width - 60, 300);
@@ -967,7 +942,6 @@ class VesperGame {
       ctx.beginPath(); ctx.moveTo(-2200, 800); ctx.bezierCurveTo(-900, 680, -500, -290, 1800, -540); ctx.stroke();
     }
   }
-
   _drawMapFeature(ctx, id, kind, seed) {
     const poly = (color, points, stroke) => {
       ctx.fillStyle = color; ctx.beginPath(); points.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill();
@@ -1125,7 +1099,6 @@ class VesperGame {
       }
     }
   }
-
   _drawWorldBoundary(ctx, id, bounds, view) {
     const palette = { castle: ['#1a1d27', '#77707a'], egypt: ['#67563e', '#cbb078'], swamp: ['#152c27', '#56644a'], halloween: ['#211c2e', '#796079'] }[id];
     ctx.strokeStyle = palette[0]; ctx.lineWidth = 48; ctx.strokeRect(bounds.left, bounds.top, bounds.width, bounds.height);
@@ -1138,7 +1111,6 @@ class VesperGame {
     for (let x = bounds.left + 24; x <= bounds.right - 24; x += 160) { post(x, bounds.top + 12); post(x, bounds.bottom - 12); }
     for (let y = bounds.top + 24; y <= bounds.bottom - 24; y += 160) { post(bounds.left + 12, y); post(bounds.right - 12, y); }
   }
-
   _getMapOverview(id) {
     if (this._mapOverviewCache.has(id)) return this._mapOverviewCache.get(id);
     const map = VesperGame.MAPS.find(item => item.id === id);
@@ -1148,7 +1120,6 @@ class VesperGame {
     this._drawOfflineEnvironment(ctx, id, { left: -map.width / 2, top: -map.height / 2, right: map.width / 2, bottom: map.height / 2 });
     this._mapOverviewCache.set(id, canvas); return canvas;
   }
-
   drawMinimap(canvas) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height, b = this.worldBounds;
@@ -1169,7 +1140,6 @@ class VesperGame {
     ctx.fillStyle = '#ff4555'; ctx.strokeStyle = '#fff2e7'; ctx.lineWidth = 1.1 * unit;
     ctx.beginPath(); ctx.arc(x, y, 3.4 * unit, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
   }
-
   drawMapPreview(canvas, id) {
     const map = VesperGame.MAPS.find(item => item.id === id); if (!map) return;
     const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
@@ -1201,7 +1171,6 @@ class VesperGame {
     const shade = ctx.createLinearGradient(0, 0, 0, 190); shade.addColorStop(0, '#080d1420'); shade.addColorStop(.6, '#080d1400'); shade.addColorStop(1, '#080d147a'); ctx.fillStyle = shade; ctx.fillRect(0, 0, 480, 190);
     ctx.restore();
   }
-
   _drawRitual(ctx) {
     if (!this._visible({ x: 0, y: 0 }, 250)) return;
     ctx.save();
@@ -1250,7 +1219,6 @@ class VesperGame {
     this._drawTorch(ctx, -182, 133, 5);
     this._drawTorch(ctx, 191, -129, 7);
   }
-
   _drawDecorations(ctx) {
     const size = 280;
     const view = this._view;
@@ -1265,7 +1233,6 @@ class VesperGame {
         ctx.translate(x, y);
         ctx.scale(flip, 1);
         if (type < 0.31) {
-          // Worn grave stones, their carved cross and creeping moss.
           ctx.fillStyle = 'rgba(0,0,0,.24)';
           ctx.beginPath(); ctx.ellipse(4, 12, 26, 10, 0, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = '#1d2722';
@@ -1305,7 +1272,6 @@ class VesperGame {
       }
     }
   }
-
   _drawTorch(ctx, x, y, phase) {
     const flicker = 1 + Math.sin(this._clock * 9 + phase) * 0.12 + Math.sin(this._clock * 17 + phase) * 0.05;
     ctx.save();
@@ -1325,7 +1291,6 @@ class VesperGame {
     ctx.beginPath(); ctx.moveTo(-3, -28); ctx.quadraticCurveTo(-5, -32, 1, -39); ctx.quadraticCurveTo(0, -33, 4, -29); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
-
   _drawGem(ctx, gem) {
     const bob = Math.sin(this._clock * 3 + gem.phase) * 2;
     const size = Math.min(11, 5.5 + Math.log2(gem.value / 3 + 1));
@@ -1340,7 +1305,6 @@ class VesperGame {
     ctx.beginPath(); ctx.moveTo(-size * 0.75, 0); ctx.lineTo(0, -size); ctx.lineTo(size * 0.75, 0); ctx.stroke();
     ctx.restore();
   }
-
   _drawProjectile(ctx, shot) {
     if (!this._visible(shot, 60)) return;
     if (shot.trail.length) {
@@ -1355,7 +1319,6 @@ class VesperGame {
     ctx.strokeStyle = '#fff0bc'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(11, 0); ctx.stroke();
     ctx.restore();
   }
-
   _drawPlayer(ctx) {
     const p = this.player;
     const bob = Math.sin(p.steps || this._clock * 2) * 1.1;
@@ -1372,9 +1335,7 @@ class VesperGame {
     this._drawCharacter(ctx, this._character, p.steps);
     ctx.restore();
   }
-
   drawCharacterPreview(canvas, id, locked = false) {
-    // Menu portraits reuse the in-game art; locked heroes render as silhouettes.
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const { width, height } = canvas;
@@ -1400,7 +1361,6 @@ class VesperGame {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
   }
-
   _drawCharacter(ctx, id, steps) {
     ctx.save();
     ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
@@ -1413,7 +1373,6 @@ class VesperGame {
     else this._drawHuman(ctx, steps);
     ctx.restore();
   }
-
   _roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -1423,10 +1382,9 @@ class VesperGame {
     ctx.arcTo(x, y, x + width, y, radius);
     ctx.closePath();
   }
-
   _drawHuman(ctx, steps) {
     const stride = Math.sin(steps) * 1.6;
-    // A watchman in a teal coat and red scarf, short sword raised.
+
     ctx.fillStyle = '#1d2226'; ctx.fillRect(-8 + stride, 6, 5, 11); ctx.fillRect(3 - stride, 6, 5, 11);
     ctx.fillStyle = '#4a3325'; ctx.fillRect(-9 + stride, 15, 7, 4); ctx.fillRect(2 - stride, 15, 7, 4);
     ctx.fillStyle = '#2b4450';
@@ -1458,14 +1416,12 @@ class VesperGame {
     ctx.strokeStyle = '#5a3b27'; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(14, -1); ctx.lineTo(12.5, 4); ctx.stroke();
     ctx.fillStyle = '#d2a07e'; ctx.beginPath(); ctx.arc(13.5, 0.5, 2.8, 0, Math.PI * 2); ctx.fill();
   }
-
   _drawGhost(ctx) {
     const t = this._clock;
     ctx.translate(0, -3 + Math.sin(t * 2.6) * 2.2);
     const glow = ctx.createRadialGradient(0, -8, 2, 0, -8, 34);
     glow.addColorStop(0, 'rgba(188,232,222,.24)'); glow.addColorStop(1, 'rgba(188,232,222,0)');
     ctx.fillStyle = glow; ctx.fillRect(-36, -44, 72, 72);
-    // A classic sheet ghost with a rippling hem and small raised arms.
     ctx.fillStyle = 'rgba(223,239,233,.93)';
     ctx.beginPath(); ctx.ellipse(15, -6, 3.8, 6.5, -0.7, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(-15, -3, 3.5, 6, 0.6, 0, Math.PI * 2); ctx.fill();
@@ -1488,11 +1444,9 @@ class VesperGame {
     ctx.fillStyle = 'rgba(214,142,152,.35)';
     ctx.beginPath(); ctx.arc(-6, -10, 2.2, 0, Math.PI * 2); ctx.arc(11, -10, 2.2, 0, Math.PI * 2); ctx.fill();
   }
-
   _drawAlien(ctx, steps) {
     const t = this._clock;
     const stride = Math.sin(steps) * 1.5;
-    // Big-eyed visitor in a silver flight suit with a small ray gun.
     ctx.fillStyle = '#3c484e'; ctx.fillRect(-8 + stride, 6, 5, 11); ctx.fillRect(3 - stride, 6, 5, 11);
     ctx.fillStyle = '#1e272b'; ctx.fillRect(-9 + stride, 15, 7, 4); ctx.fillRect(2 - stride, 15, 7, 4);
     ctx.fillStyle = '#6c7f87';
@@ -1527,16 +1481,11 @@ class VesperGame {
     ctx.strokeStyle = '#3f7a42'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(1, -12); ctx.lineTo(4, -12); ctx.stroke();
     ctx.fillStyle = '#93a6ad';
     ctx.beginPath(); ctx.moveTo(6, -7); ctx.lineTo(13, -1); ctx.lineTo(10, 2); ctx.lineTo(4, -2); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#c7d0d4'; this._roundRect(ctx, 11, -4.5, 11, 4.5, 1.5); ctx.fill();
-    ctx.fillStyle = '#56666d'; ctx.fillRect(12.5, -1, 3, 5); ctx.fillRect(14, -6, 5, 1.5);
-    ctx.fillStyle = 'rgba(125,240,200,.35)'; ctx.beginPath(); ctx.arc(23, -2.3, 3.4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#8ff5d0'; ctx.beginPath(); ctx.arc(23, -2.3, 1.7, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#7fc464'; ctx.beginPath(); ctx.arc(12.5, 1, 2.4, 0, Math.PI * 2); ctx.fill();
   }
-
   _drawKing(ctx, steps) {
     const stride = Math.sin(steps) * 1.4;
-    // Crimson cape and ermine collar, jewelled crown and orb-topped sceptre.
+
     ctx.fillStyle = '#5c1d29';
     ctx.beginPath(); ctx.moveTo(-9, -9); ctx.lineTo(-20, 17); ctx.quadraticCurveTo(-4, 21, 13, 17); ctx.lineTo(9, -9); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#7e2b37';
@@ -1576,10 +1525,9 @@ class VesperGame {
     ctx.strokeStyle = '#e3b852'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(20.5, -29); ctx.lineTo(20.5, -34); ctx.moveTo(18.3, -32); ctx.lineTo(22.7, -32); ctx.stroke();
     ctx.fillStyle = '#e0b08b'; ctx.beginPath(); ctx.arc(13.5, 0, 2.8, 0, Math.PI * 2); ctx.fill();
   }
-
   _drawSpider(ctx, steps) {
     const t = this._clock;
-    // Eight articulated legs step in alternating pairs; red eyes lead the way.
+
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     for (const near of [false, true]) {
       ctx.strokeStyle = near ? '#4c3c5b' : '#2c2337';
@@ -1621,11 +1569,9 @@ class VesperGame {
     ctx.beginPath(); ctx.arc(8, -4.5, 1, 0, Math.PI * 2); ctx.arc(11.5, -4.8, 1, 0, Math.PI * 2); ctx.arc(14.3, -3.4, 0.9, 0, Math.PI * 2); ctx.arc(7.5, 1.5, 0.9, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ffe1d6'; ctx.fillRect(9.6, -2.3, 0.8, 0.8); ctx.fillRect(13.1, -1.3, 0.8, 0.8);
   }
-
   _drawRobot(ctx, steps) {
     const t = this._clock;
     const stride = Math.sin(steps) * 1.5;
-    // Riveted steel frame, glowing visor, blinking antenna and arm cannon.
     ctx.fillStyle = '#505b61'; ctx.fillRect(-8 + stride, 6, 5, 10); ctx.fillRect(3 - stride, 6, 5, 10);
     ctx.fillStyle = '#7d898f'; ctx.fillRect(-8 + stride, 9, 5, 2); ctx.fillRect(3 - stride, 9, 5, 2);
     ctx.fillStyle = '#2c3438'; this._roundRect(ctx, -10 + stride, 15, 8, 4, 1.2); ctx.fill(); this._roundRect(ctx, 2 - stride, 15, 8, 4, 1.2); ctx.fill();
@@ -1635,7 +1581,6 @@ class VesperGame {
     ctx.fillStyle = '#6d797f'; ctx.fillRect(-11, 3, 22, 5);
     ctx.fillStyle = '#b3bec2'; ctx.fillRect(-9, -8, 18, 2);
     ctx.fillStyle = '#243034'; this._roundRect(ctx, -6, -5, 12, 7, 1.5); ctx.fill();
-    // Keep the invulnerability flicker alpha while the chest lights blink.
     const alpha = ctx.globalAlpha;
     ['#7ff0e6', '#f2c14e', '#e2574c'].forEach((color, i) => {
       ctx.globalAlpha = alpha * (Math.sin(t * 4 + i * 2.1) > -0.3 ? 1 : 0.35);
@@ -1662,10 +1607,9 @@ class VesperGame {
     ctx.fillStyle = 'rgba(127,240,230,.35)'; ctx.beginPath(); ctx.arc(23.5, 1.7, 3.2, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#86f3ea'; ctx.beginPath(); ctx.arc(23.5, 1.7, 1.5, 0, Math.PI * 2); ctx.fill();
   }
-
   _drawHooded(ctx) {
     ctx.fillStyle = '#101714'; ctx.fillRect(-9, 7, 6, 12); ctx.fillRect(4, 6, 6, 12);
-    // Angular cloak silhouette remains recognizable at small sizes.
+
     ctx.fillStyle = '#402c36';
     ctx.beginPath(); ctx.moveTo(-10, -9); ctx.lineTo(-20, 14); ctx.lineTo(-9, 11); ctx.lineTo(-2, 18); ctx.lineTo(8, 12); ctx.lineTo(18, 14); ctx.lineTo(11, -8); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#78414d';
@@ -1684,7 +1628,6 @@ class VesperGame {
     ctx.fillStyle = '#dec083'; ctx.beginPath(); ctx.moveTo(22, -32); ctx.lineTo(27, -25); ctx.lineTo(21, -19); ctx.lineTo(17, -25); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#fff1c9'; ctx.beginPath(); ctx.moveTo(22, -29); ctx.lineTo(24, -25); ctx.lineTo(21, -22); ctx.closePath(); ctx.fill();
   }
-
   _drawEnemy(ctx, enemy) {
     const bob = Math.sin(this._clock * (enemy.type === 'bat' ? 9 : 5) + enemy.phase) * 1.5;
     ctx.save(); ctx.translate(enemy.x, enemy.y);
@@ -1692,6 +1635,8 @@ class VesperGame {
     ctx.translate(0, bob);
     if (enemy.boss) {
       this._drawBossBody(ctx, enemy);
+    } else if (enemy.appearance) {
+      this._drawThemedEnemyBody(ctx, enemy);
     } else if (enemy.type === 'bat') {
       const flap = Math.sin(this._clock * 11 + enemy.phase) * 7;
       ctx.fillStyle = enemy.hit > 0 ? '#cecaab' : '#66516a';
@@ -1773,13 +1718,12 @@ class VesperGame {
     }
     if (!enemy.boss && enemy.hp < enemy.maxHp) {
       const width = enemy.radius * 1.75;
-      const y = -enemy.radius - (enemy.type === 'brute' ? 18 : 18);
+      const y = enemy.appearance ? -enemy.radius * 2.25 - 4 : -enemy.radius - 18;
       ctx.fillStyle = '#131c17'; ctx.fillRect(-width / 2, y, width, 3);
       ctx.fillStyle = enemy.type === 'brute' ? '#ce9966' : '#a79373'; ctx.fillRect(-width / 2, y, width * Math.max(0, enemy.hp / enemy.maxHp), 3);
     }
     ctx.restore();
   }
-
   _drawBossTelegraphs(ctx) {
     for (const boss of this.bosses) {
       if (!this._visible(boss, 430)) continue;
@@ -1811,8 +1755,11 @@ class VesperGame {
       ctx.restore();
     }
   }
-
   _drawBossBody(ctx, enemy) {
+    if (enemy.appearance && !enemy.finalBoss) {
+      this._drawThemedEnemyBody(ctx, enemy);
+      return;
+    }
     if (enemy.finalBoss && enemy.characterId) {
       ctx.save();
       const accent = this.mapDefinition.accent;
@@ -1842,7 +1789,6 @@ class VesperGame {
     aura.addColorStop(0, superBoss ? 'rgba(196,72,56,.16)' : 'rgba(218,176,78,.14)');
     aura.addColorStop(1, 'rgba(218,176,78,0)');
     ctx.fillStyle = aura; ctx.fillRect(-75, -84, 150, 150);
-    // A dark mantle frames bright brass armor; the super boss gains a red crown.
     ctx.fillStyle = superBoss ? '#632f35' : '#454532';
     ctx.beginPath(); ctx.moveTo(-20, -20); ctx.lineTo(-37, 30); ctx.lineTo(-23, 25); ctx.lineTo(-14, 35); ctx.lineTo(0, 29); ctx.lineTo(15, 35); ctx.lineTo(25, 25); ctx.lineTo(37, 30); ctx.lineTo(20, -20); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#282b24'; ctx.fillRect(-18, 16, 11, 18); ctx.fillRect(7, 16, 11, 18);
@@ -1877,7 +1823,6 @@ class VesperGame {
         ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x + 3, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 3, y); ctx.closePath(); ctx.fill();
       }
     }
-    // A long polearm extends the silhouette without changing the contact radius.
     ctx.strokeStyle = '#806b49'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(35, 30); ctx.lineTo(40, -37); ctx.stroke();
     ctx.strokeStyle = '#ddbc78'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(36, 28); ctx.lineTo(41, -37); ctx.stroke();
@@ -1886,7 +1831,6 @@ class VesperGame {
     ctx.strokeStyle = '#f1d69b'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(40, -49); ctx.lineTo(42, -34); ctx.lineTo(53, -29); ctx.stroke();
     ctx.restore();
   }
-
   _drawMenuCreatures(ctx) {
     const creatures = [
       { x: 248, y: -151, type: 'shade', radius: 16, phase: 2 },
@@ -1898,15 +1842,14 @@ class VesperGame {
     for (const creature of creatures) this._drawEnemy(ctx, { ...creature, hp: 1, maxHp: 1, hit: 0 });
     ctx.globalAlpha = 1;
   }
-
   _drawFireflies(ctx) {
     const view = this._view;
-    const cell = 170;
-    ctx.fillStyle = '#b7ba80';
+    const cell = 210;
+    ctx.fillStyle = '#a7ab77';
     for (let x = Math.floor(view.left / cell); x <= Math.ceil(view.right / cell); x++) {
       for (let y = Math.floor(view.top / cell); y <= Math.ceil(view.bottom / cell); y++) {
         const phase = this._hash(x, y, 9) * Math.PI * 2;
-        ctx.globalAlpha = 0.1 + Math.max(0, Math.sin(this._clock * 0.9 + phase)) * 0.4;
+        ctx.globalAlpha = 0.06 + Math.max(0, Math.sin(this._clock * 0.9 + phase)) * 0.22;
         const fx = x * cell + this._hash(x, y, 10) * cell + Math.sin(this._clock * 0.3 + phase) * 12;
         const fy = y * cell + this._hash(x, y, 11) * cell + Math.cos(this._clock * 0.4 + phase) * 9;
         ctx.fillRect(fx, fy, 1.7, 1.7);
@@ -1914,7 +1857,6 @@ class VesperGame {
     }
     ctx.globalAlpha = 1;
   }
-
   _initAudio() {
     try {
       if (!this._audio) {
@@ -1925,11 +1867,9 @@ class VesperGame {
         this._master.gain.value = this._muted ? 0 : 0.12;
         this._master.connect(this._audio.destination);
       }
-      // Safari reports 'interrupted' after calls or app switches; both states need resume().
       if (this._audio.state === 'suspended' || this._audio.state === 'interrupted') this._audio.resume().catch(() => {});
     } catch (_) { this._audio = null; }
   }
-
   _sound(kind) {
     if (!this._audio || this._muted || this._audio.state !== 'running') return;
     try {
@@ -1954,16 +1894,18 @@ class VesperGame {
       osc.connect(gain); gain.connect(this._master);
       osc.start(now); osc.stop(now + settings[2] + 0.01);
       osc.onended = () => { osc.disconnect(); gain.disconnect(); };
-    } catch (_) { /* Audio is optional; gameplay continues if a device is unavailable. */ }
+    } catch (_) {  }
   }
 }
-
+VesperGame.DIFFICULTIES = Object.freeze([
+  { id: 'easy', name: 'Fácil', hint: 'Monstros mais frágeis, lentos e com menos dano.', enemyHealth: 0.78, enemySpeed: 0.92, enemyDamage: 0.75, spawnInterval: 1.14 },
+  { id: 'medium', name: 'Médio', hint: 'A experiência equilibrada do jogo.', enemyHealth: 1, enemySpeed: 1, enemyDamage: 1, spawnInterval: 1 },
+  { id: 'hard', name: 'Difícil', hint: 'Monstros mais fortes e ondas mais rápidas.', enemyHealth: 1.28, enemySpeed: 1.09, enemyDamage: 1.22, spawnInterval: 0.84 }
+].map(mode => Object.freeze(mode)));
 VesperGame.MAPS = Object.freeze([
-  { id: 'castle', name: 'Castelo', subtitle: 'Mansão do Vampiro', unlockCharacter: 'vampire', bossName: 'O VAMPIRO DA MANSÃO', width: 4800, height: 3600, accent: '#c78491' },
-  { id: 'egypt', name: 'Egito Antigo', subtitle: 'Deserto dos Eternos', unlockCharacter: 'mummy', bossName: 'FARAÓ DOS ETERNOS', width: 4800, height: 3600, accent: '#e0b75d' },
-  { id: 'swamp', name: 'Pântano', subtitle: 'Águas dos Esquecidos', unlockCharacter: 'zombie', bossName: 'SENHOR DO PÂNTANO', width: 4800, height: 3600, accent: '#79b99b' },
-  { id: 'halloween', name: 'Modo Halloween', subtitle: 'A Noite da Colheita', unlockCharacter: 'jack', bossName: 'JACK, O REI DAS ABÓBORAS', width: 4800, height: 3600, accent: '#eaa05f' }
+  { id: 'castle', name: 'Castelo', subtitle: 'Mansão do Vampiro', unlockCharacter: 'vampire', bossName: 'VAMPIRO', width: 4800, height: 3600, accent: '#c78491' },
+  { id: 'egypt', name: 'Egito Antigo', subtitle: 'Deserto e pirâmides', unlockCharacter: 'mummy', bossName: 'MÚMIA', width: 4800, height: 3600, accent: '#e0b75d' },
+  { id: 'swamp', name: 'Pântano', subtitle: 'Lagoas e cabanas', unlockCharacter: 'zombie', bossName: 'ZUMBI', width: 4800, height: 3600, accent: '#79b99b' },
+  { id: 'halloween', name: 'Modo Halloween', subtitle: 'Abóboras e cemitério', unlockCharacter: 'jack', bossName: 'JACK O’ LANTERN', width: 4800, height: 3600, accent: '#eaa05f' }
 ].map(map => Object.freeze(map)));
-
-// The character module installs the single authoritative roster before the UI starts.
 window.VesperGame = VesperGame;

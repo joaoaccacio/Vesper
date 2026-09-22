@@ -1,12 +1,8 @@
-/* Deterministic balance smoke test: node sim-balance.cjs [seconds] [seeds...]
-   Uses normal initial HP/stats, actual automatic attacks and actual level choices.
-   Only input is selected; no invulnerability, forced rewards or damage overrides. */
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { harness } = require('./test-vesper.cjs');
-
 const duration = Number(process.argv[2]) || 360;
 const seeds = process.argv.slice(3).length ? process.argv.slice(3).map(Number) : [7, 42];
 const maps = ['castle', 'egypt', 'swamp', 'halloween'];
@@ -29,7 +25,6 @@ for (const mapId of maps) for (const seed of seeds) {
   let peakEnemies = 0;
   let step = 0;
   const dt = 0.05;
-
   function chooseUpgrade() {
     const p = g.player;
     const rank = {
@@ -44,7 +39,6 @@ for (const mapId of maps) for (const seed of seeds) {
     choices.push({ level: g.level, id: option.id, at: Number(g.elapsed.toFixed(2)) });
     g.chooseUpgrade(option.id);
   }
-
   function chooseDirection() {
     const p = g.player;
     const nearby = g.enemies.filter(e => !e.dead && Math.hypot(e.x - p.x, e.y - p.y) < 480);
@@ -94,7 +88,6 @@ for (const mapId of maps) for (const seed of seeds) {
     }
     heading = chosen;
   }
-
   while (g.elapsed < duration - dt / 2 && !['gameover','victory'].includes(g.state)) {
     while (g.state === 'upgrade') chooseUpgrade();
     if (step % 3 === 0) chooseDirection();

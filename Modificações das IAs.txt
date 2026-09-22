@@ -1,0 +1,60 @@
+2026-09-17 — Codex
+- Limpeza segura do projeto: removidos `qa.html` e `balance-report.json` (artefatos gerados sob demanda) e os scripts de migração concluídos `redesign.cjs` e `update-campaign-layout.cjs`.
+- Adicionado `.gitignore` para impedir o versionamento de relatórios, páginas de QA e pacotes ZIP gerados.
+- Atualizados `DESENVOLVIMENTO.md` e `archive/README.md` para documentar a estrutura atual e os arquivos temporários.
+- Mantidos o código-fonte, construtores, testes, simulador, prévia local, Git, `VESPER/index.html` e o cenário legado reservado ao futuro modo Online.
+
+2026-09-21 — #Codex:
+- Sincronizada a versão restaurada de index.html com os arquivos-fonte, evitando que a construção apagasse o jogo escolhido pelo usuário.
+- Adicionada a escolha Fácil, Médio ou Difícil depois da seleção do mapa, com ajustes reais em vida, dano, velocidade e frequência das ondas, inclusive para chefes.
+- Adicionada poeira curta e discreta ao caminhar e botão Voltar fixo e visível no topo da tela de personagens.
+- Corrigidas falhas de controle por toque e compatibilidade sem ResizeObserver; entrega validada com 43 testes automatizados e inspeção responsiva em desktop e celular.
+- Atualizados index.html e VESPER/index.html; nenhum arquivo ZIP foi criado.
+
+2026-09-21 — #Claude:
+- Adicionei o modo Online completo: tela de nome, tela de carregamento, entrada em servidores de cinquenta vagas com abertura automática de novos servidores e partidas de cinco minutos contra jogadores reais do mesmo navegador, com as vagas restantes completadas por bots sorteados de uma lista de duzentos nomes comuns nos Estados Unidos.
+- Criei a arena Catedral em Ruínas, com praça do ritual, colunatas, pátios de criptas, braseiros e caixas de XP, reaproveitando a paleta e os desenhos já existentes do jogo.
+- Implementei tiro manual no espaço com mira no mouse, dez armas por nível (do revólver à Metralhadora Vesper), vida e dano crescentes, XP por abates e por caixas, renascimento em quatro segundos e ranking final que paga moedas por posição, nível e abates.
+- Troquei a Bruxa pelo Orc e acrescentei Frankenstein, Homem Invisível, Médico da Peste e Cyborg. As oito skins agora são compradas com moedas do Online, valem somente nas partidas online, o Alien já vem desbloqueado e cada uma tem sua habilidade.
+- Corrigi os atalhos do jogo dispararem enquanto o jogador digita o nome e o anel de nascimento que empurrava os cinquenta lutadores contra as paredes da arena.
+- Arquivos afetados: vesper-online.js e vesper-online.css (novos), vesper-characters.js, vesper-ui.js, index.html, VESPER/index.html, build.cjs, preview.cjs, test-vesper.cjs e DESENVOLVIMENTO.md. Entrega validada com 51 testes automatizados, uma simulação de partida completa de cinco minutos e inspeção no navegador em desktop.
+
+2026-09-21 — #Claude:
+- Troquei a mira do mouse por mira automática no jogador vivo mais próximo; o disparo continua manual na barra de espaço e os ouvintes de mouse da arena foram removidos.
+- Reduzi a capacidade de cada servidor para vinte e cinco jogadores e encolhi a arena para 2.800 × 2.100 unidades, mantendo a mesma densidade de encontros.
+- Enxuguei os textos das telas, do HUD e dos avisos: a tela do Online, o carregamento, o painel da arma, o ranking e o fim de partida deixaram de repetir informação.
+- Limpei a estética sem simplificar o cenário: a arena ganhou piso, muralha e vinheta próprios de contraste baixo, as caixas de XP e os vaga-lumes brilham menos, os nomes só aparecem de quem está perto e o fundo do menu ficou mais fechado.
+- Reequilibrei a letalidade dos bots para vinte e cinco jogadores, conferindo com simulações de partida completa em dois estilos de jogo.
+- Corrigi um bug real: entrar em uma partida antes do primeiro quadro de animação estourava no desenho da praça do ritual e matava o laço do jogo, deixando o relógio parado. Ficou um teste de regressão para isso.
+- Arquivos afetados: vesper-online.js, vesper-online.css, vesper-engine.js, vesper-ui.js, index.html, VESPER/index.html, test-vesper.cjs e DESENVOLVIMENTO.md. Entrega validada com 52 testes automatizados, simulações de partida completa e inspeção no navegador.
+
+2026-09-21 — #Claude:
+- Redesenhei as skins do Esqueleto, do Orc e do Médico da Peste com mais contraste e detalhe, e passei a arma de mão de cada um para as costas ou o cinto, liberando as mãos para a arma de fogo.
+- Cada uma das dez armas ganhou desenho próprio no traço do jogo (revólver, pistola, pistola automática, escopeta, submetralhadora, carabina, rifle, fuzil de assalto, AK-47 e metralhadora), equipada na mão do lutador, virada para a mira, com fogacho na boca do cano e o mesmo desenho como ícone no HUD.
+- Aumentei a arena para 4.000 × 3.000 unidades e espalhei o cenário pelo mapa maior.
+- O mapa passou a ser dividido em quinze zonas e cada lutador nasce em uma zona só sua, acabando com a aglomeração do início; ao renascer, vale a zona mais longe de quem está vivo.
+- O limite de cada servidor caiu para quinze jogadores.
+- Toda arma dispara um tiro por vez; apenas a habilidade do Cyborg acrescenta um segundo projétil. A vida subiu bastante e cresce a cada nível, de 180 no revólver a 540 na última arma.
+- Separei os elencos no motor: skin paga só funciona no Online, herói da campanha só funciona no Offline, inclusive para os bots, e o personagem da campanha é devolvido ao sair da partida.
+- Arquivos afetados: vesper-online.js, vesper-online.css, vesper-characters.js, vesper-engine.js, vesper-ui.js, index.html, VESPER/index.html, test-vesper.cjs e DESENVOLVIMENTO.md. Entrega validada com 54 testes automatizados, simulações de partida completa nos dois estilos de jogo e inspeção das artes no navegador.
+
+2026-09-22 — #Claude:
+- REGRA PERMANENTE, POR ORDEM DO USUARIO: nao escrever comentarios no codigo deste projeto. Todos os comentarios existentes foram removidos de todos os arquivos de codigo (js, cjs, css e marcacao). Quem mexer aqui depois deve manter o codigo sem comentarios e explicar as coisas pelo nome das funcoes e variaveis, ou no DESENVOLVIMENTO.md.
+- O modo Online deixou de ser local. Agora existe um servidor de verdade: vesper-server.cjs, em Node puro, sem dependencias, com HTTP e WebSocket escritos no projeto. Ele serve o jogo e a partida na mesma porta, entao qualquer pessoa que alcance o endereco joga junto, de outra casa inclusive.
+- Foram apagados o transporte antigo entre abas (BroadcastChannel, evento de armazenamento, Lobby e as chaves de sala no armazenamento local). O cliente agora so abre WebSocket.
+- Criado vesper-arena.js, o nucleo da partida compartilhado entre servidor e cliente: armas, habilidades, bots, zonas de nascimento, XP, caixas, ranking e relogio.
+- O servidor passou a mandar em tudo: vida, dano, abates, XP, nivel, tiros, caixas e relogio, a 20 pacotes por segundo. O cliente envia apenas direcao e disparo, preve o proprio movimento e aceita a correcao do servidor. Velocidade e cadencia de tiro acima do permitido sao recusadas.
+- Matchmaking com sala cheia abrindo outra sala sozinha, janela de entrada, descarte da sala depois do fim e reconexao de trinta segundos com o mesmo lugar, nivel e abates.
+- Os bots passaram a rodar no servidor, com preenchimento depois de oito segundos, saida do pior bot quando chega gente, marcacao [BOT] no ranking, contagem separada de humanos e bots e moedas ponderadas: abate em humano vale o dobro, em bot vale a metade.
+- A tela do Online ganhou campo de endereco do servidor, com aviso claro quando a conexao falha, cai ou a sala acaba.
+- Corrigido o alinhamento de numeros que o revisor apontou: a capacidade e quinze em todo lugar.
+- Mantida de proposito a decisao de o disparo encerrar a protecao de renascimento: sem isso, da para nascer e atirar invulneravel por dois segundos.
+- Arquivos afetados: vesper-arena.js, vesper-server.cjs, package.json, test-server.cjs (novos), vesper-online.js, vesper-ui.js, vesper-online.css, vesper-engine.js, vesper-characters.js, vesper-enemies.js, index.html, VESPER/index.html, build.cjs, preview.cjs, test-vesper.cjs e DESENVOLVIMENTO.md. Entrega validada com 57 testes do jogo, 10 testes de integracao do servidor com WebSocket real e duas abas jogando na mesma partida pelo navegador.
+
+2026-09-22 — #Claude:
+- Aplicadas as correcoes reais da revisao do DeepSeek sobre o cliente online. Os itens 18 e 19 da lista dele estavam errados: o servidor existe em vesper-server.cjs e ja acrescenta as moedas ao ranking em Room.finish.
+- Corrigidos: entrar em sala que nao lista o proprio jogador agora recusa a partida em vez de quebrar o desenho; as variaveis de ambiente aceitam zero; o bot para de atirar ao perder o alvo; as mensagens closed e error deixaram de apagar a tela de resultados e de encerrar partida em andamento; perder o proprio lutador no pacote sai da partida em vez de desenhar dado morto; o token de reconexao passou a ser guardado por endereco de servidor; o limiar de correcao de posicao subiu para 420 unidades, para latencia comum nao teleportar o personagem.
+- O jogo nao pausa mais ao perder o foco no modo Online: avisa a parada ao servidor na hora. A entrada tambem passou a ser enviada no instante em que a direcao muda, nao so no pulso de 20 Hz.
+- O servidor zera a direcao de quem para de mandar entrada por mais de 0,6 segundo, entao aba fechada ou travada nao deixa mais o lutador andando sozinho ate a parede.
+- Preco e habilidade das skins agora vivem so em vesper-arena.js; vesper-characters.js ficou com nome, cor e desenho. Fonte unica, sem risco de os catalogos divergirem.
+- Arquivos afetados: vesper-arena.js, vesper-online.js, vesper-ui.js, vesper-characters.js, index.html, VESPER/index.html, test-vesper.cjs e test-server.cjs. Entrega validada com 64 testes do jogo, 13 do servidor e partida real conferida com WebSocket ligado, alem do zip de hospedagem extraido e testado do zero.

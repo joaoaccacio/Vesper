@@ -1,4 +1,3 @@
-// Developer-only visual scenarios. This harness is never included in index.html.
 'use strict';
 const fs = require('node:fs');
 let html = fs.readFileSync('index.html', 'utf8');
@@ -41,6 +40,39 @@ const harness = `
       button.style.cssText = 'padding:7px 10px;background:#263224;color:#eee;border:1px solid #bdad7b;cursor:pointer';
       button.addEventListener('click', fn); toolbar.append(button);
     }
+    function artDialog(title, width, height) {
+      const panel = document.createElement('section');
+      panel.setAttribute('role','dialog'); panel.setAttribute('aria-label',title);
+      panel.style.cssText='position:fixed;inset:15px;z-index:40;background:#101b18f7;border:1px solid #b89b63;padding:15px;overflow:auto;text-align:center;color:#e0d2b3';
+      const close = document.createElement('button'); close.textContent='Fechar galeria'; close.style.cssText='display:block;margin:0 0 12px auto;padding:10px';
+      close.onclick=()=>panel.remove(); panel.append(close);
+      const canvas=document.createElement('canvas'); canvas.width=width; canvas.height=height;
+      canvas.style.cssText='max-width:100%;height:auto'; panel.append(canvas); document.body.append(panel);
+      return canvas;
+    }
+    add('Galeria de inimigos', () => {
+      const canvas=artDialog('Inimigos de cada cenário',1120,620), ctx=canvas.getContext('2d');
+      ProductionGame.MAPS.forEach((map,column) => {
+        const theme=ProductionGame.ENEMY_THEMES[map.id], left=column*280;
+        ctx.fillStyle=map.accent+'0d'; ctx.fillRect(left+4,0,272,620);
+        ctx.fillStyle=map.accent; ctx.font='22px Georgia'; ctx.textAlign='center'; ctx.fillText(map.name,left+140,32);
+        Object.entries(theme.enemies).forEach(([type,look],index)=>{
+          const x=left+75+(index%2)*130,y=110+Math.floor(index/2)*125;
+          const enemy={...game._templates[type],appearance:look.id,mapId:map.id,phase:0,hit:0};
+          ctx.save();ctx.translate(x,y);game._drawThemedEnemyBody(ctx,enemy);ctx.restore();
+          ctx.font='11px Arial';ctx.fillStyle='#bbc4af';ctx.fillText(look.name,x,y+43);
+        });
+        ctx.save();ctx.translate(left+140,535);
+        game._drawThemedEnemyBody(ctx,{radius:34,appearance:theme.miniBoss.id,mapId:map.id,phase:0,hit:0,boss:true});ctx.restore();
+        ctx.font='12px Arial';ctx.fillStyle=map.accent;ctx.fillText(theme.miniBoss.name,left+140,596);
+      });
+    });
+    add('Sobrevivente', () => {
+      game.setCharacter('survivor'); startFrozen(); game._emitHud();
+      const canvas=artDialog('Sobrevivente com machado de pedra',320,340);
+      game.drawCharacterPreview(canvas,'survivor');
+      status.textContent='Sobrevivente · machado de pedra · aparência no retrato e na partida';
+    });
     add('Minichefe 02:30', () => scenario(false));
     add('Final 04:00', () => scenario(true));
     add('Acertar', () => {

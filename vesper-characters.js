@@ -1,4 +1,3 @@
-/* VESPER — cosmetic character collection. No network, payments, or stat changes. */
 (() => {
   'use strict';
 
@@ -36,7 +35,6 @@
     vampire(ctx, steps) {
       const stride = Math.sin(steps) * 1.4;
       const sway = Math.sin(this._clock * 2.8) * 1.6;
-      // A wine-red lining makes the long black cloak readable on dark maps.
       polygon(ctx, '#231c2b', [[-11,-12],[-24+sway,15],[-13,19],[-4,15],[6,20],[22+sway,16],[11,-12]]);
       polygon(ctx, '#8f293e', [[-10,-12],[-20+sway,14],[-11,15],[-4,8],[4,17],[17+sway,14],[9,-12]]);
       line(ctx, '#c7505a', 0.9, [[-11,-7],[-19+sway,13],[-12,15]]);
@@ -75,7 +73,6 @@
     mummy(ctx, steps) {
       const stride = Math.sin(steps) * 1.3;
       const flutter = Math.sin(this._clock * 4) * 2;
-      // Loose linen ribbons and a lapis/gold headdress carry the pharaoh silhouette.
       polygon(ctx, '#a78e65', [[-8,-3],[-15,4],[-16,10],[-22+flutter,14],[-19+flutter,9],[-19,2],[-10,-6]]);
       polygon(ctx, '#c3ad83', [[10,3],[16,7],[20,4],[24,7+flutter],[19,8+flutter],[16,10],[8,7]]);
       boots(ctx, stride, '#bda987', '#8f7959');
@@ -128,7 +125,6 @@
 
     zombie(ctx, steps) {
       const stride = Math.sin(steps) * 1.7;
-      // The mismatched sleeves, crooked jaw and patched coat read even at game scale.
       boots(ctx, stride, '#423e36', '#352c29');
       ctx.fillStyle = '#9a9c71'; ctx.fillRect(3-stride,11,5,4);
       line(ctx, '#686d4c', 0.8, [[4-stride,12],[7-stride,13]]);
@@ -209,7 +205,6 @@
 
     survivor(ctx, steps) {
       const stride = Math.sin(steps) * 1.6;
-      // The original watchman's face, coat cut and sword survive under field repairs.
       polygon(ctx, '#4b4937', [[-10,-10],[-15,-7],[-15,8],[-9,11],[-6,6],[-6,-8]]);
       oval(ctx, '#67614b', -11.5, -9, 5, 3.3);
       line(ctx, '#a69267', 1, [[-15,-7],[-8,-6],[-8,8],[-14,6]]);
@@ -245,106 +240,266 @@
       polygon(ctx, '#b05047', [[-6,-7],[-12,-1],[-10,2],[-7,-2],[-3,-5]]);
       line(ctx, '#d77962', 0.8, [[-5,-8],[0,-7],[6,-8]]);
       polygon(ctx, '#315462', [[6,-8],[14,-1],[11,3],[4,-3]]);
-      line(ctx, '#b8bcae', 2.8, [[15,-3],[22,-27]]);
-      line(ctx, '#ebebd6', 0.9, [[15.7,-5],[22.2,-26]]);
-      polygon(ctx, '#c9d1c6', [[20.5,-26],[23.5,-32],[23.5,-25.5]]);
-      line(ctx, '#6e807b', 1, [[19,-19],[22,-18]]);
-      line(ctx, '#b89a5f', 2.2, [[10,-3],[19,0]]);
-      line(ctx, '#513b29', 2.6, [[14,-1],[12.5,4]]);
+      line(ctx, '#483323', 4.4, [[12,8],[15,-4],[18,-16],[21,-29]]);
+      line(ctx, '#90714c', 2.7, [[12,8],[15,-4],[18,-16],[21,-29]]);
+      line(ctx, '#ba9663', .8, [[12.5,6],[15.5,-4],[18.5,-16],[21.5,-28]]);
+      polygon(ctx, '#465452', [[17,-27],[24,-28],[31,-35],[35,-30],[36,-24],[33,-15],[25,-19],[18,-20]]);
+      polygon(ctx, '#81938b', [[17,-27],[24,-28],[31,-35],[30,-25],[24,-23],[18,-22]]);
+      polygon(ctx, '#61766f', [[18,-22],[24,-23],[30,-25],[33,-15],[25,-19],[18,-20]]);
+      polygon(ctx, '#b7c1ad', [[31,-35],[35,-30],[36,-24],[33,-15],[31,-20],[33,-26],[32,-30]]);
+      polygon(ctx, '#96a799', [[24,-28],[31,-35],[29,-27],[25,-24]]);
+      line(ctx, '#34453f', .8, [[24,-27],[26,-24],[23,-22],[26,-20]]);
+      line(ctx, '#d2d4bd', .7, [[34,-29],[35,-24],[33,-18]]);
+      for (let i = 0; i < 4; i++) line(ctx, i % 2 ? '#bfa77a' : '#8d7756', 1.6, [[16.5,-26+i*2.5],[24,-23+i*2.2]]);
+      line(ctx, '#cbb586', 1, [[17,-27],[23,-16],[25,-14]]);
       oval(ctx, '#d2a07e', 13.5, 0.5, 2.8, 2.8);
       line(ctx, '#ccc3a5', 1.3, [[12,1],[15,2]]);
     },
 
     skeleton(ctx, steps) {
       const stride = Math.sin(steps) * 1.5;
-      // Ivory bones sit above a short indigo mantle, separate from ordinary skeletons.
-      polygon(ctx, '#313746', [[-9,-9],[-16,8],[-10,6],[-11,13],[-4,8],[4,12],[12,9],[9,-8]]);
-      line(ctx, '#69708b', 0.8, [[-10,-5],[-14,6],[-9,5]]);
+      line(ctx, '#4b3d2d', 2.8, [[-12, 13], [13, -20]]);
+      line(ctx, '#7d6748', 1, [[-11, 12], [12, -19]]);
+      polygon(ctx, '#8e9a90', [[13, -20], [19, -26], [26, -21], [19, -18], [14, -17]]);
+      polygon(ctx, '#ccd6cb', [[13, -20], [19, -26], [22, -22], [15, -19]]);
+      polygon(ctx, '#252a38', [[-9,-9],[-17,9],[-10,7],[-12,15],[-3,9],[5,13],[14,9],[9,-8]]);
+      polygon(ctx, '#394156', [[-8,-8],[-14,8],[-9,6],[-10,13],[-3,8],[0,-7]]);
+      line(ctx, '#7b84a4', 0.9, [[-11,-4],[-15,8],[-10,7]]);
       for (const side of [-1,1]) {
         const dx = side < 0 ? stride : -stride;
-        line(ctx, '#938d76', 3.5, [[side*4,6],[side*6+dx,12],[side*5+dx,17]]);
-        line(ctx, '#e4dcc0', 1.8, [[side*4+.5,7],[side*6+dx+.5,12],[side*5+dx+.5,16]]);
-        oval(ctx, '#d2c9ac', side*6+dx, 12, 2, 2);
-        oval(ctx, '#d2c9ac', side*6+dx, 18, 4, 1.8);
-        line(ctx, '#928c76', 0.8, [[side*6+dx,17],[side*6+dx,19]]);
+        line(ctx, '#8f8871', 3.6, [[side*4,6],[side*6+dx,12],[side*5+dx,17]]);
+        line(ctx, '#ece3c8', 1.9, [[side*4+.5,7],[side*6+dx+.5,12],[side*5+dx+.5,16]]);
+        oval(ctx, '#ded4b6', side*6+dx, 12, 2.1, 2.1);
+        oval(ctx, '#ded4b6', side*6+dx, 18, 4.2, 1.9);
       }
-      line(ctx, '#d4cdb3', 3, [[0,-8],[0,7]]);
+      line(ctx, '#ece3c8', 3.2, [[0,-8],[0,7]]);
       for (let i = 0; i < 3; i++) {
-        ctx.strokeStyle = i === 0 ? '#e2dbc1' : '#c7bfa4'; ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.moveTo(-7,-5+i*3.3); ctx.quadraticCurveTo(-8,-1+i*3.3,-1,-2+i*3.3); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(7,-5+i*3.3); ctx.quadraticCurveTo(8,-1+i*3.3,1,-2+i*3.3); ctx.stroke();
+        const y = -5 + i * 3.4;
+        ctx.strokeStyle = '#ece3c8'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-7.5, y); ctx.quadraticCurveTo(-8.5, y + 4, -1, y + 3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(7.5, y); ctx.quadraticCurveTo(8.5, y + 4, 1, y + 3); ctx.stroke();
+        ctx.strokeStyle = '#a89e82'; ctx.lineWidth = 0.7;
+        ctx.beginPath(); ctx.moveTo(-7, y + 1.2); ctx.quadraticCurveTo(-8, y + 4.6, -1.4, y + 3.8); ctx.stroke();
       }
-      polygon(ctx, '#c8bda0', [[-7,5],[-5,9],[-1,9],[0,7],[2,9],[6,9],[8,5],[3,4],[0,5],[-3,4]]);
-      oval(ctx, '#272f33', -3.8, 6.2, 1.5, 0.8); oval(ctx, '#272f33', 4, 6.2, 1.5, 0.8);
-      line(ctx, '#c8bfa2', 2.5, [[-6,-6],[-12,-3],[-13,4],[-17,5]]);
-      line(ctx, '#eee1bf', 1, [[-11,-3],[-12,3]]);
-      oval(ctx, '#c8bfa2', -13, 4, 2, 2);
-      line(ctx, '#c8bfa2', 2.5, [[6,-6],[12,-3],[15,3]]);
-      oval(ctx, '#dacfad', 15, 3, 2.7, 2.3);
-      oval(ctx, '#e2d8ba', 0.5, -21, 10, 11.3);
-      polygon(ctx, '#b4aa8e', [[-9,-24],[-8,-15],[-4,-10],[-1,-10],[-4,-15],[-6,-24]]);
-      polygon(ctx, '#e2d8ba', [[-6,-15],[7,-15],[6,-9],[-5,-9]]);
-      oval(ctx, '#333b38', -3.8, -21, 3.2, 3.5, 0.2);
-      oval(ctx, '#333b38', 5, -21, 3.3, 3.5, -0.2);
-      oval(ctx, '#b9e4c5', -3.1, -21, 1.2, 1.3);
-      oval(ctx, '#b9e4c5', 5.7, -21, 1.2, 1.3);
-      polygon(ctx, '#5b6051', [[.4,-18],[-1.2,-15],[2.4,-15]]);
-      line(ctx, '#887f68', 0.9, [[-4,-12],[5,-12]]);
-      for (let i = -3; i <= 4; i += 2.3) line(ctx, '#918871', 0.8, [[i,-13.5],[i,-10]]);
-      line(ctx, '#a79d80', 0.8, [[1,-31],[-1,-27],[2,-26],[1,-24]]);
-      polygon(ctx, '#615670', [[-8,-10],[0,-8],[8,-11],[7,-7],[1,-5],[-6,-6]]);
-      oval(ctx, '#c4a668', 1, -7, 1.4, 1.4);
-      line(ctx, '#6a5742', 2.4, [[17,15],[20,-21]]);
-      polygon(ctx, '#adb8af', [[20,-26],[24,-23],[30,-16],[30,-9],[27,-13],[24,-16],[19,-18]]);
-      line(ctx, '#dee7d7', 0.9, [[23,-23],[28,-16],[29,-11]]);
-      line(ctx, '#c7aa6c', 1.8, [[17,-18],[22,-18]]);
+      polygon(ctx, '#d6cbac', [[-7,5],[-5,10],[-1,10],[0,7],[2,10],[6,10],[8,5],[3,4],[0,5],[-3,4]]);
+      oval(ctx, '#23292c', -3.8, 6.4, 1.6, 0.9); oval(ctx, '#23292c', 4, 6.4, 1.6, 0.9);
+      line(ctx, '#d2c8a9', 2.6, [[-6,-6],[-12,-3],[-13,4],[-16,6]]);
+      oval(ctx, '#ded4b6', -16, 6, 2.2, 2.2);
+      line(ctx, '#d2c8a9', 2.6, [[6,-6],[12,-3],[14,2]]);
+      oval(ctx, '#ded4b6', 14.5, 2.5, 2.6, 2.4);
+      oval(ctx, '#efe6cb', 0.5, -21, 10.2, 11.4);
+      oval(ctx, '#dcd0af', -4.4, -19, 4.6, 7.4);
+      polygon(ctx, '#c3b795', [[-9,-24],[-8,-15],[-4,-10],[-1,-10],[-4,-15],[-6,-24]]);
+      polygon(ctx, '#efe6cb', [[-6,-15],[7,-15],[6,-8.6],[-5,-8.6]]);
+      line(ctx, '#b6aa8a', 0.9, [[-5,-12],[6,-12]]);
+      for (let i = -3.4; i <= 4.4; i += 2) line(ctx, '#b6aa8a', 0.8, [[i,-14.6],[i,-9.4]]);
+      line(ctx, '#bdb08e', 0.8, [[1.5,-31.4],[-0.6,-27],[2.4,-25.6],[1.2,-23]]);
+      glow(ctx, 'rgba(150,224,176,.3)', 0.6, -21, 12);
+      oval(ctx, '#1f2a26', -3.9, -21.2, 3.4, 3.7, 0.2);
+      oval(ctx, '#1f2a26', 5.1, -21.2, 3.5, 3.7, -0.2);
+      oval(ctx, '#9fe6bd', -3.2, -21, 1.5, 1.6);
+      oval(ctx, '#9fe6bd', 5.8, -21, 1.5, 1.6);
+      oval(ctx, '#eafff2', -3.6, -21.7, 0.6, 0.6);
+      oval(ctx, '#eafff2', 5.4, -21.7, 0.6, 0.6);
+      polygon(ctx, '#4f554a', [[.4,-18.4],[-1.4,-15.2],[2.6,-15.2]]);
+      polygon(ctx, '#2f3546', [[-9,-10],[0,-8],[9,-11],[8,-6.4],[1,-4.6],[-7,-6]]);
+      oval(ctx, '#d8b672', 1, -7, 1.8, 1.8);
+      oval(ctx, '#fff0c2', 1, -7.4, 0.7, 0.7);
     },
 
-    witch(ctx, steps) {
+    orc(ctx, steps) {
+      const stride = Math.sin(steps) * 1.5;
+      line(ctx, '#5b4027', 3.2, [[-11, 14], [14, -18]]);
+      line(ctx, '#8d6740', 1.1, [[-10, 13], [13, -17]]);
+      polygon(ctx, '#7f8a78', [[14, -18], [23, -25], [30, -17], [24, -10], [17, -13]]);
+      polygon(ctx, '#c2cbb6', [[14, -18], [23, -25], [27, -19], [18, -14]]);
+      line(ctx, '#5d6659', 0.9, [[20, -21], [22, -15]]);
+      boots(ctx, stride, '#41372a', '#241d15');
+      polygon(ctx, '#6d8c4c', [[-11,-9],[10,-9],[14,12],[-14,12]]);
+      polygon(ctx, '#587340', [[3,-9],[10,-9],[14,12],[5,11]]);
+      polygon(ctx, '#7d5433', [[-12,-8],[-3,-11],[0,5],[-10,7]]);
+      line(ctx, '#a97846', 0.9, [[-11,-6],[-2,-8.6]]);
+      line(ctx, '#a97846', 0.9, [[-10,0],[-1,-2]]);
+      polygon(ctx, '#3f5230', [[-8,-9],[8,-9],[9,-2],[-9,-2]]);
+      for (const x of [-6, -1, 4]) { oval(ctx, '#c9a862', x, -5.4, 1.2, 1.2); oval(ctx, '#f2d999', x, -5.8, 0.5, 0.5); }
+      ctx.fillStyle = '#6b4a2c'; ctx.fillRect(-14, 3, 28, 4.4);
+      ctx.fillStyle = '#c9a862'; ctx.fillRect(-2.6, 2.2, 6, 6);
+      ctx.fillStyle = '#8a6a38'; ctx.fillRect(-1.4, 3.6, 3.6, 3.2);
+      polygon(ctx, '#8e9470', [[-16,-10],[-5,-15],[0,-6],[-12,-1]]);
+      polygon(ctx, '#b9c096', [[-16,-10],[-5,-15],[-2,-10],[-14,-6]]);
+      line(ctx, '#6a7053', 0.9, [[-13,-8],[-4,-12]]);
+      polygon(ctx, '#6d8c4c', [[-10,-6],[-18,3],[-13,8],[-6,-1]]);
+      oval(ctx, '#7fa155', -16.5, 7.5, 3.6, 3.6);
+      polygon(ctx, '#6d8c4c', [[8,-7],[16,-1],[13,4],[6,-1]]);
+      oval(ctx, '#7fa155', 14.5, 3.5, 3.6, 3.4);
+      oval(ctx, '#7fa155', 1, -18, 9.8, 9.2);
+      oval(ctx, '#6b8c48', -4.6, -16.6, 4.6, 6.2);
+      polygon(ctx, '#3f5230', [[-9,-21],[-4,-27],[4,-28],[10,-24],[9,-19],[3,-22],[-3,-21]]);
+      line(ctx, '#63764a', 1.1, [[-6,-24],[0,-26],[6,-24]]);
+      line(ctx, '#2c3a22', 1.6, [[-5,-20],[-1,-19]]);
+      line(ctx, '#2c3a22', 1.6, [[5,-19],[9,-20]]);
+      line(ctx, '#4e2f2f', 1.6, [[-7,-15],[-6,-9]]);
+      line(ctx, '#4e2f2f', 1.6, [[-4,-15.4],[-3.4,-10]]);
+      glow(ctx, 'rgba(246,214,110,.22)', 1.6, -17.6, 9);
+      oval(ctx, '#f6d66e', -2.2, -17.6, 1.9, 1.5);
+      oval(ctx, '#f6d66e', 5.8, -17.4, 1.9, 1.5);
+      oval(ctx, '#2a1f17', -2.4, -17.8, 0.9, 0.9);
+      oval(ctx, '#2a1f17', 5.6, -17.6, 0.9, 0.9);
+      line(ctx, '#5d7340', 1, [[1,-14],[4.4,-14]]);
+      line(ctx, '#41542f', 1.4, [[-4.4,-11.6],[7.4,-11.6]]);
+      polygon(ctx, '#f7f1d8', [[-3.6,-12],[-1,-12],[-2.2,-17.4]]);
+      polygon(ctx, '#f7f1d8', [[5,-12],[7.4,-12],[6.2,-16.6]]);
+      polygon(ctx, '#d9d2b6', [[-3.6,-12],[-2.6,-12],[-2.2,-17.4]]);
+      oval(ctx, '#c9a862', -9, -13, 1.3, 2);
+      oval(ctx, '#f2d999', -9, -13.6, 0.5, 0.7);
+    },
+
+    frankenstein(ctx, steps) {
       const stride = Math.sin(steps) * 1.2;
-      boots(ctx, stride, '#302537', '#241f2c');
-      polygon(ctx, '#443049', [[-8,-10],[7,-10],[16,16],[9,14],[5,18],[-3,16],[-10,18],[-16,15]]);
-      polygon(ctx, '#745079', [[-7,-8],[-3,-10],[-5,14],[-11,15],[-13,13]]);
-      polygon(ctx, '#58375f', [[2,-9],[7,-9],[13,14],[8,13],[4,16]]);
-      line(ctx, '#a57bad', 0.8, [[-8,-5],[-12,13],[-8,14]]);
-      line(ctx, '#927399', 0.8, [[8,1],[12,13],[9,12]]);
-      polygon(ctx, '#aa8870', [[-8,-2],[9,-2],[10,1],[-9,1]]);
-      ctx.fillStyle = '#dcb977'; ctx.fillRect(-1,-2.7,4,4.2);
-      ctx.fillStyle = '#5f3b61'; ctx.fillRect(0,-1.7,2,2.2);
-      polygon(ctx, '#483048', [[-8,-7],[-14,1],[-11,5],[-5,-2]]);
-      oval(ctx, '#b4b58b', -12.4, 5, 2.8, 2.8);
-      polygon(ctx, '#483048', [[7,-7],[14,-1],[13,3],[5,-2]]);
-      // Warm silver hair peeks out below the brim and frames a sage-green face.
-      polygon(ctx, '#bac1b2', [[-8,-23],[-11,-12],[-13,-5],[-7,-7],[-8,-3],[-2,-8],[6,-6],[11,-4],[8,-14],[9,-25]]);
-      polygon(ctx, '#80978a', [[-7,-22],[-9,-11],[-6,-8],[-5,-16]]);
-      oval(ctx, '#b7bea0', 1, -18, 7.5, 8.2);
-      polygon(ctx, '#a6ac8d', [[-5,-16],[-2,-10],[4,-10],[6,-13],[2,-11]]);
-      polygon(ctx, '#d4d6b9', [[5,-18],[10,-15],[6,-14]]);
-      line(ctx, '#6e645f', 1.2, [[-3,-19],[0,-19]]);
-      line(ctx, '#6e645f', 1.2, [[4,-19],[7,-20]]);
-      oval(ctx, '#283a33', -1.5, -17.4, 1.1, 1.3);
-      oval(ctx, '#283a33', 5.5, -17.6, 1.1, 1.3);
-      line(ctx, '#846569', 0.8, [[0,-12],[4,-12]]);
-      oval(ctx, '#d8b55e', -6.2, -13, 1.1, 1.7);
-      polygon(ctx, '#3d294d', [[-12,-24],[-7,-34],[-4,-45],[4,-43],[8,-38],[13,-37],[9,-33],[6,-33],[12,-23]]);
-      polygon(ctx, '#72507e', [[-10,-25],[-6,-34],[-3,-43],[1,-41],[0,-34],[5,-23]]);
-      line(ctx, '#9570a0', 0.9, [[-8,-28],[-4,-40],[-3,-43],[1,-42]]);
-      polygon(ctx, '#79513e', [[-10,-27],[8,-28],[11,-23],[-12,-22]]);
-      polygon(ctx, '#d3ad67', [[-1,-27],[4,-27],[5,-23],[-1,-23]]);
-      ctx.fillStyle = '#3d294d'; ctx.fillRect(0,-26,3,2);
-      ctx.fillStyle = '#48334f';
-      ctx.beginPath(); ctx.moveTo(-21,-21); ctx.quadraticCurveTo(-10,-27,1,-25); ctx.quadraticCurveTo(14,-25,21,-20); ctx.quadraticCurveTo(12,-17,3,-20); ctx.quadraticCurveTo(-9,-17,-21,-21); ctx.fill();
-      ctx.strokeStyle = '#a27fa6'; ctx.lineWidth = 0.8;
-      ctx.beginPath(); ctx.moveTo(-19,-21); ctx.quadraticCurveTo(-10,-23,-3,-22); ctx.stroke();
-      line(ctx, '#796442', 2.5, [[16,15],[19,-17]]);
-      line(ctx, '#b69b66', 0.8, [[17,13],[20,-17]]);
-      polygon(ctx, '#b7a064', [[15,9],[19,9],[24,18],[19,16],[17,19],[13,17]]);
-      line(ctx, '#e0c584', 0.8, [[16,11],[15,16],[18,11],[20,16]]);
-      line(ctx, '#775342', 1.6, [[14,9],[20,9]]);
-      glow(ctx, 'rgba(171,212,128,.26)', 19, -19, 8);
-      oval(ctx, '#abd79a', 19, -19, 2.8, 3.4);
-      oval(ctx, '#e4f3b9', 19.4, -20, 1, 1.5);
-      oval(ctx, '#b4b58b', 15, 1.7, 3, 2.8);
+      ctx.fillStyle = '#2f3138'; ctx.fillRect(-9 + stride, 6, 6, 11); ctx.fillRect(3 - stride, 6, 6, 11);
+      ctx.fillStyle = '#20222a'; ctx.fillRect(-10 + stride, 14, 8, 6); ctx.fillRect(2 - stride, 14, 9, 6);
+      line(ctx, '#4a4d56', 1, [[-9+stride,17],[-2+stride,17]]);
+      line(ctx, '#4a4d56', 1, [[2-stride,17],[10-stride,17]]);
+      polygon(ctx, '#2c3a3a', [[-11,-10],[10,-10],[13,11],[-13,11]]);
+      polygon(ctx, '#222e2f', [[3,-10],[10,-10],[13,11],[5,10]]);
+      polygon(ctx, '#6d8558', [[-4,-10],[3,-10],[3,2],[-4,2]]);
+      line(ctx, '#3c5140', 0.8, [[-3,-7],[2,-7]]);
+      line(ctx, '#3c5140', 0.8, [[-3,-3],[2,-3]]);
+      ctx.fillStyle = '#4a3a2a'; ctx.fillRect(-13,3,26,3);
+      polygon(ctx, '#2c3a3a', [[-11,-8],[-19,0],[-15,5],[-7,-2]]);
+      oval(ctx, '#7d9a62', -17, 5, 3.6, 3.4);
+      polygon(ctx, '#2c3a3a', [[8,-8],[17,-2],[14,3],[6,-1]]);
+      oval(ctx, '#7d9a62', 16, 1, 3.6, 3.4);
+      line(ctx, '#55443a', 1, [[-17,3],[-14,7]]);
+      oval(ctx, '#6d8a56', 1, -17, 8.8, 9.2);
+      polygon(ctx, '#5c7548', [[-8,-19],[-8,-12],[-2,-9],[-4,-15]]);
+      polygon(ctx, '#2a2420', [[-9,-21],[-9,-28],[10,-28],[10,-21],[6,-23],[0,-24],[-5,-22]]);
+      line(ctx, '#3d3630', 1, [[-8,-26],[9,-26]]);
+      ctx.fillStyle = '#9aa38c'; ctx.fillRect(-12,-13,4,4); ctx.fillRect(9,-13,4,4);
+      oval(ctx, '#c6cdb6', -10, -11, 1.6, 1.6);
+      oval(ctx, '#c6cdb6', 11, -11, 1.6, 1.6);
+      line(ctx, '#2e3a2a', 1.4, [[-4,-20],[-1,-20]]);
+      line(ctx, '#2e3a2a', 1.4, [[5,-20],[8,-20]]);
+      oval(ctx, '#e6e2c4', -2, -18, 1.5, 1.2);
+      oval(ctx, '#e6e2c4', 5.6, -18, 1.5, 1.2);
+      oval(ctx, '#20262a', -2, -18, 0.8, 0.9);
+      oval(ctx, '#20262a', 5.6, -18, 0.8, 0.9);
+      line(ctx, '#4b5c3d', 1, [[1,-15],[4,-15]]);
+      line(ctx, '#41522f', 1.2, [[-4,-12],[7,-12]]);
+      for (const x of [-3, 0, 3, 6]) line(ctx, '#41522f', 0.8, [[x,-13.5],[x,-10.5]]);
+      line(ctx, '#41522f', 0.9, [[6,-23],[9,-18]]);
+      line(ctx, '#41522f', 0.9, [[7.4,-22.4],[6,-21]]);
+    },
+
+    invisible(ctx, steps) {
+      const bob = Math.sin(steps) * 0.9;
+      ctx.save();
+      ctx.translate(0, bob);
+      ctx.globalAlpha *= 0.13;
+      polygon(ctx, '#cfe0dc', [[-9,-10],[9,-10],[12,11],[-12,11]]);
+      polygon(ctx, '#cfe0dc', [[-9,-8],[-16,1],[-12,5],[-6,-2]]);
+      polygon(ctx, '#cfe0dc', [[8,-8],[15,-2],[12,3],[5,-1]]);
+      ctx.fillStyle = '#cfe0dc'; ctx.fillRect(-8,6,5,11); ctx.fillRect(3,6,5,11);
+      oval(ctx, '#cfe0dc', 1, -17, 7.6, 8);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(0, bob);
+      line(ctx, 'rgba(214,232,226,.28)', 1, [[-9,-10],[-12,11]]);
+      line(ctx, 'rgba(214,232,226,.28)', 1, [[9,-10],[12,11]]);
+      oval(ctx, 'rgba(226,240,235,.22)', 1, -17, 7.6, 8);
+      polygon(ctx, '#2b2b33', [[-13,-21],[-8,-29],[9,-29],[13,-21],[8,-19],[-8,-19]]);
+      polygon(ctx, '#3a3a45', [[-8,-29],[9,-29],[9,-22],[-8,-22]]);
+      line(ctx, '#8d6f4a', 1.6, [[-8,-23],[9,-23]]);
+      oval(ctx, '#1b1d22', -3, -17.6, 3.4, 3.2);
+      oval(ctx, '#1b1d22', 6, -17.6, 3.4, 3.2);
+      oval(ctx, '#4b5a66', -3.8, -18.4, 1.2, 1.1);
+      oval(ctx, '#4b5a66', 5.2, -18.4, 1.2, 1.1);
+      line(ctx, '#2b2b33', 1.2, [[0,-17.6],[3,-17.6]]);
+      line(ctx, '#2b2b33', 1.2, [[-6.4,-18],[-9,-19]]);
+      line(ctx, '#2b2b33', 1.2, [[9.4,-18],[12,-19]]);
+      ctx.restore();
+    },
+
+    plague(ctx, steps) {
+      const stride = Math.sin(steps) * 1.2;
+      const sway = Math.sin(this._clock * 2.4) * 1.4;
+      polygon(ctx, '#23262f', [[-10,-11],[-20+sway,16],[-9,13],[-2,18],[7,13],[19+sway,16],[10,-11]]);
+      polygon(ctx, '#333744', [[-8,-10],[-14+sway,14],[-7,12],[-2,7],[4,15],[14+sway,14],[8,-10]]);
+      line(ctx, '#6a6f82', 0.9, [[-9,-6],[-14+sway,13]]);
+      line(ctx, '#6a6f82', 0.9, [[9,-4],[14+sway,13]]);
+      boots(ctx, stride, '#1f2129', '#14151b');
+      polygon(ctx, '#454a58', [[-8,-10],[8,-10],[11,11],[-11,11]]);
+      polygon(ctx, '#e3ddc4', [[-4,-10],[4,-10],[3.4,-1],[-3.4,-1]]);
+      for (let i = 0; i < 4; i++) { oval(ctx, '#cdd2bc', 0, -8.4 + i * 2.6, 1, 1); }
+      ctx.fillStyle = '#4a4436'; ctx.fillRect(-11, 2, 22, 3.6);
+      ctx.fillStyle = '#c0a868'; ctx.fillRect(-2.4, 1.2, 5.4, 5);
+      polygon(ctx, '#7d8a6a', [[6,3],[10,3],[10,9],[6,9]]);
+      oval(ctx, '#a9d89a', 8, 3, 2, 1.2);
+      glow(ctx, 'rgba(169,216,154,.2)', 8, 6, 8);
+      polygon(ctx, '#333744', [[-8,-8],[-15,1],[-11,5],[-5,-2]]);
+      oval(ctx, '#2c2f39', -13.5, 5.5, 3.2, 3.2);
+      polygon(ctx, '#333744', [[7,-8],[14,-2],[11,3],[4,-1]]);
+      oval(ctx, '#2c2f39', 13.5, 2.5, 3.2, 3.2);
+      oval(ctx, '#2a2d37', 1, -18, 8.4, 8.8);
+      polygon(ctx, '#494e5c', [[-6,-25],[7,-25],[9,-14],[1,-9],[-6,-15]]);
+      polygon(ctx, '#e8e2c6', [[-3,-21],[3,-20],[12,-12],[1,-13],[-3,-16]]);
+      polygon(ctx, '#c4bda0', [[-3,-16],[1,-13],[12,-12],[3,-15]]);
+      line(ctx, '#8f886f', 0.8, [[-1,-18],[9,-13]]);
+      oval(ctx, '#1a1c22', -3.4, -21.4, 3.4, 3.2);
+      oval(ctx, '#1a1c22', 5.4, -21.4, 3.4, 3.2);
+      oval(ctx, '#b8724f', -3.4, -21.4, 2.4, 2.2);
+      oval(ctx, '#b8724f', 5.4, -21.4, 2.4, 2.2);
+      glow(ctx, 'rgba(226,120,88,.3)', 1, -21.4, 12);
+      oval(ctx, '#e8875f', -3.4, -21.4, 1.5, 1.4);
+      oval(ctx, '#e8875f', 5.4, -21.4, 1.5, 1.4);
+      oval(ctx, '#ffe6d2', -4, -22, 0.7, 0.7);
+      oval(ctx, '#ffe6d2', 4.8, -22, 0.7, 0.7);
+      line(ctx, '#c0a868', 1.1, [[-6.8,-21.4],[-6.8,-21.4]]);
+      line(ctx, '#c0a868', 1, [[-6.6,-23.4],[-0.4,-24]]);
+      line(ctx, '#c0a868', 1, [[2.6,-24],[8.6,-23.4]]);
+      polygon(ctx, '#181a22', [[-12,-24],[-10,-28],[10,-28],[13,-24],[9,-22],[-8,-22]]);
+      polygon(ctx, '#272a34', [[-10,-28],[10,-28],[9,-32],[-8,-32]]);
+      line(ctx, '#c0a868', 1.6, [[-9.6,-25.4],[10.4,-25.4]]);
+      line(ctx, '#3c404d', 1, [[-8,-31],[9,-31]]);
+    },
+
+    cyborg(ctx, steps) {
+      const t = this._clock;
+      const stride = Math.sin(steps) * 1.5;
+      ctx.fillStyle = '#2b333a'; ctx.fillRect(-8 + stride, 6, 5, 11);
+      ctx.fillStyle = '#7e8a90'; ctx.fillRect(3 - stride, 6, 5, 11);
+      ctx.fillStyle = '#1b2126'; ctx.fillRect(-9 + stride, 15, 7, 4);
+      ctx.fillStyle = '#4c575d'; ctx.fillRect(2 - stride, 15, 8, 4);
+      line(ctx, '#aab6bb', 0.8, [[3-stride,9],[7-stride,9]]);
+      polygon(ctx, '#3f5b64', [[-10,-9],[9,-9],[12,11],[-12,11]]);
+      polygon(ctx, '#8f9ca2', [[2,-9],[9,-9],[12,11],[4,10]]);
+      line(ctx, '#c2ccd0', 0.8, [[5,-6],[10,-6]]);
+      line(ctx, '#c2ccd0', 0.8, [[6,0],[11,0]]);
+      polygon(ctx, '#2f4650', [[-10,-8],[-4,-9],[-3,3],[-9,4]]);
+      ctx.fillStyle = '#42525a'; ctx.fillRect(-12,2,24,3);
+      ctx.fillStyle = '#c9a862'; ctx.fillRect(-2,1.2,5,4.4);
+      glow(ctx, 'rgba(126,232,214,.34)', -3, -3, 11);
+      oval(ctx, '#1d2a2e', -3, -3, 3.4, 3.4);
+      oval(ctx, '#7ee8d6', -3, -3, 1.9, 1.9);
+      polygon(ctx, '#3f5b64', [[-10,-7],[-16,1],[-12,5],[-6,-2]]);
+      oval(ctx, '#d2a07e', -14, 5, 3, 3);
+      polygon(ctx, '#aab6bb', [[8,-8],[16,-3],[13,3],[5,-1]]);
+      line(ctx, '#57646a', 0.9, [[10,-5],[13,-1]]);
+      oval(ctx, '#8f9ca2', 15, 1, 3.4, 3.2);
+      oval(ctx, '#d2a07e', 1, -17, 7.6, 8.2);
+      polygon(ctx, '#aab6bb', [[1,-25],[9,-22],[9,-12],[1,-9]]);
+      line(ctx, '#d6dee1', 0.9, [[3,-23],[8,-20]]);
+      line(ctx, '#57646a', 0.9, [[2,-14],[8,-14]]);
+      polygon(ctx, '#3c2a1e', [[-7,-16],[-8,-24],[-1,-28],[4,-26],[1,-23],[-3,-24],[-5,-15]]);
+      ctx.fillStyle = '#231a15'; ctx.fillRect(-3,-18,2,2.4);
+      const scan = Math.sin(t * 3.4) * 1.6;
+      glow(ctx, 'rgba(255,106,85,.36)', 5.6, -18, 8);
+      oval(ctx, '#ff6a55', 5.6, -18, 1.9, 1.9);
+      oval(ctx, '#ffd8cc', 5.2, -18.4, 0.7, 0.7);
+      line(ctx, 'rgba(255,106,85,.45)', 0.9, [[7.4,-18],[16+scan,-18]]);
+      line(ctx, '#9b6a55', 1, [[-2,-12],[1,-12]]);
+      line(ctx, '#57646a', 1, [[2,-11],[7,-11]]);
+      oval(ctx, '#7ee8d6', 10.6, -21, 1.1, 1.1);
     }
   };
 
@@ -360,7 +515,11 @@
     { id: 'alien', name: 'Alien', unlockType: 'coins', accent: '#a4d989' },
     { id: 'spider', name: 'Aranha', unlockType: 'coins', accent: '#bc91c7' },
     { id: 'skeleton', name: 'Esqueleto', unlockType: 'coins', accent: '#d9d1b5' },
-    { id: 'witch', name: 'Bruxa', unlockType: 'coins', accent: '#c299d0' }
+    { id: 'orc', name: 'Orc', unlockType: 'coins', accent: '#8fae62' },
+    { id: 'invisible', name: 'Homem Invisível', unlockType: 'coins', accent: '#cfe0dc' },
+    { id: 'cyborg', name: 'Cyborg', unlockType: 'coins', accent: '#8ad6d0' },
+    { id: 'plague', name: 'Médico da Peste', unlockType: 'coins', accent: '#a9b6a0' },
+    { id: 'frankenstein', name: 'Frankenstein', unlockType: 'coins', accent: '#7fa86a' }
   ].map(character => Object.freeze(character)));
 
   VesperGame.prototype._drawCharacter = function (ctx, id, steps = 0) {
