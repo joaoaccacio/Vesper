@@ -67,3 +67,8 @@
 - Animacao de andar nos dois modos: balanco curto do corpo e leve gingado ao andar, respiracao sutil parado. Vale para a campanha e para todos os lutadores do Online.
 - Corrigida a emenda visivel entre blocos do piso no mapa de neve e fixado um teste de servidor que falhava quando o lutador nascia colado na parede.
 - Arquivos afetados: vesper-engine.js, vesper-enemies.js, vesper-characters.js, vesper-arena.js, vesper-online.js, vesper-ui.js, vesper-campaign.css, index.html, VESPER/index.html, test-vesper.cjs, test-server.cjs e DESENVOLVIMENTO.md. Validado com 64 testes do jogo e 13 do servidor, tres rodadas seguidas, e inspecao visual das artes e dos dois mapas novos no navegador.
+
+2026-09-23 — #Claude:
+- Esqueleto redesenhado como rei-esqueleto: coroa dourada torta com joias, capa roxa rasgada com forro vinho e borda dourada, gola de arminho, costelas curvas com uma chama de alma verde brilhando no peito, ossos com juntas e espada com o cabo aparecendo sobre o ombro.
+- Yeti redesenhado com pelagem em tufos (novo auxiliar shag em vesper-characters.js), chifres de gelo, cristais no ombro, rosto azulado com olhos claros e presas, maos e pes escuros com garras. Vale para o personagem e para o chefe final das Montanhas Geladas.
+- Arquivos afetados: vesper-characters.js, index.html e VESPER/index.html. Validado com 64 testes do jogo, 13 do servidor e conferencia visual das duas artes no menu do jogo.
