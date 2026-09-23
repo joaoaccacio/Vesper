@@ -356,6 +356,128 @@ test('o mesmo cliente nao entra duas vezes na partida', async () => {
   } finally { client.close(); server.closeAll(); }
 });
 
+test('subir de nivel fica mais caro a cada nivel, sem pesar no comeco', () => {
+  const { nextXpFor } = VesperArena;
+  assert.equal(nextXpFor(1), 22, 'O primeiro nivel continua igual');
+  assert.ok(nextXpFor(2) <= 36, 'O segundo nivel quase nao muda');
+  let previousStep = 0;
+  for (let level = 2; level < CONFIG.levelCap; level++) {
+    const step = nextXpFor(level) - nextXpFor(level - 1);
+    assert.ok(step > previousStep, 'O salto de XP cresce no nivel ' + level);
+    previousStep = step;
+  }
+  assert.ok(nextXpFor(11) < nextXpFor(1) * 12, 'Nem o ultimo nivel fica absurdo');
+});
+
+test('doze armas: dano e cadencia sobem juntos ate a 10, e as duas ultimas batem muito mais forte', () => {
+  const { WEAPONS } = VesperArena;
+  assert.equal(CONFIG.levelCap, 12);
+  assert.equal(CONFIG.botLevelCap, 10);
+  assert.deepEqual(WEAPONS.map(weapon => weapon.name), ['Revólver', 'Pistola', 'Pistola Automática', 'Escopeta', 'Carabina', 'Rifle',
+    'Submetralhadora', 'Rifle de Assalto', 'AK-47', 'Metralhadora', 'Canhão de Plasma Vesper', 'Lançador de Granada Vesper']);
+  for (let i = 1; i < 10; i++) {
+    assert.ok(WEAPONS[i].damage > WEAPONS[i - 1].damage, 'Dano sobe na arma ' + (i + 1));
+    assert.ok(WEAPONS[i].interval < WEAPONS[i - 1].interval, 'Cadencia sobe na arma ' + (i + 1));
+    assert.ok(WEAPONS[i].speed > WEAPONS[i - 1].speed, 'O tiro fica mais rapido na arma ' + (i + 1));
+  }
+  const [plasma, grenade] = WEAPONS.slice(10);
+  assert.ok(plasma.heavy && grenade.heavy);
+  assert.ok(plasma.damage >= WEAPONS[9].damage * 5 && grenade.damage > plasma.damage);
+  assert.ok(Math.max(plasma.speed, grenade.speed) < WEAPONS[0].speed, 'Os projeteis especiais sao os mais lentos');
+});
+
+test('bots param no nivel 10 e so gente chega aos niveis 11 e 12', () => {
+  const arena = new Arena();
+  const bot = arena.join({ bot: true, skin: 'alien' });
+  const human = arena.join({ name: 'Guino', skin: 'alien' });
+  arena.grantXp(bot, 100000);
+  arena.grantXp(human, 100000);
+  assert.equal(bot.level, CONFIG.botLevelCap);
+  assert.equal(human.level, CONFIG.levelCap);
+  assert.equal(human.maxHp, VesperArena.WEAPONS[11].hp);
+});
+
+test('arma especial so atira de novo quando o projetil chega, com meio segundo a mais se acertar', () => {
+  const arena = new Arena();
+  const human = arena.join({ name: 'Guino', skin: 'alien' });
+  const target = arena.join({ bot: true, skin: 'orc' });
+  for (const crate of arena.crates) crate.respawn = 999;
+  arena.grantXp(human, 100000);
+  human.x = 0; human.y = 0; human.spawnGuard = 0;
+  target.x = 300; target.y = 0; target.spawnGuard = 0; target.think = 999; target.target = null; target.hp = target.maxHp = 5000;
+  arena.input(human.id, 0, 0, true);
+  const shots = [];
+  const hits = [];
+  for (let i = 0; i < 60; i++) {
+    arena.input(human.id, 0, 0, true);
+    for (const event of arena.step(0.05)) {
+      if (event.e === 'shot' && event.id === human.id) shots.push(arena.elapsed);
+      if (event.e === 'hit' && event.by === human.id) hits.push(arena.elapsed);
+    }
+    target.x = 300; target.y = 0;
+  }
+  assert.ok(shots.length >= 2 && hits.length >= 1);
+  assert.ok(hits[0] > shots[0] + 0.6, 'O projetil especial e lento');
+  assert.ok(shots[1] >= hits[0] + CONFIG.heavyReload - 0.051, 'Depois de acertar espera meio segundo');
+  const miss = new Arena();
+  const shooter = miss.join({ name: 'Guino', skin: 'alien' });
+  const runner = miss.join({ bot: true, skin: 'orc' });
+  for (const crate of miss.crates) crate.respawn = 999;
+  miss.grantXp(shooter, 100000);
+  shooter.x = 0; shooter.y = 0; shooter.spawnGuard = 0;
+  runner.x = 300; runner.y = 0; runner.spawnGuard = 0; runner.think = 999; runner.target = null;
+  miss.input(shooter.id, 0, 0, true);
+  miss.step(0.05);
+  assert.equal(shooter.heavyShots, 1);
+  runner.y = 400;
+  let ended = 0;
+  for (let i = 0; i < 40 && !ended; i++) {
+    miss.input(shooter.id, 0, 0, false);
+    miss.step(0.05);
+    if (shooter.heavyShots === 0) ended = miss.elapsed;
+  }
+  assert.ok(ended > 0, 'O tiro perdido termina ao chegar no ponto do alvo');
+  assert.ok(shooter.fireTimer <= 0, 'Errando, o meio segundo extra e ignorado');
+});
+
+test('veneno mostra o dano em pulsos, nao a cada quadro', () => {
+  const arena = new Arena();
+  const plague = arena.join({ name: 'P', skin: 'plague' });
+  const victim = arena.join({ bot: true, skin: 'alien' });
+  victim.spawnGuard = 0; victim.think = 999; victim.target = null; victim.hp = victim.maxHp = 5000;
+  arena.hurt(victim, 10, plague.id, 8, 1);
+  let pulses = 0;
+  for (let i = 0; i < 70; i++) for (const event of arena.step(0.05)) if (event.e === 'hit' && event.p) pulses++;
+  assert.ok(pulses >= 5 && pulses <= 8, 'Veneno avisa poucas vezes: ' + pulses);
+  assert.ok(victim.hp < 5000 - 10 - 20, 'Mas continua tirando vida');
+});
+
+test('acessorios chegam limpos ao servidor e os bots tambem usam', () => {
+  const arena = new Arena();
+  const human = arena.join({ name: 'Guino', skin: 'banana', acc: ['mini', 'coroa', 'hat', 'hat'] });
+  assert.deepEqual(human.acc, ['hat', 'mini']);
+  assert.equal(human.skin, 'banana', 'Skin dos dois modos vale no Online');
+  assert.deepEqual(arena.roster().find(entry => entry.id === human.id).acc, ['hat', 'mini']);
+  for (let i = 0; i < 40; i++) arena.join({ bot: true });
+  const ids = VesperArena.ACCESSORIES.map(item => item.id);
+  assert.ok(arena.fighters.every(fighter => fighter.acc.every(id => ids.includes(id))));
+  assert.ok(arena.fighters.some(fighter => fighter.bot && fighter.acc.length), 'Bots tambem aparecem com acessorio');
+});
+
+test('a mira das armas especiais adianta o alvo que esta andando', () => {
+  const arena = new Arena();
+  const human = arena.join({ name: 'Guino', skin: 'alien' });
+  const target = arena.join({ bot: true, skin: 'orc' });
+  human.x = 0; human.y = 0;
+  target.x = 300; target.y = 0; target.mx = 0; target.my = 1;
+  arena.aimAt(human, target);
+  assert.equal(human.aim, 0, 'Com arma normal mira onde o alvo esta');
+  arena.grantXp(human, 100000);
+  arena.aimAt(human, target);
+  assert.ok(human.aim > 0.3, 'Com arma especial mira onde o alvo vai estar');
+  assert.ok(human.aimDistance > 300, 'E o projetil voa ate o ponto previsto');
+});
+
 (async () => {
   for (const item of tests) {
     try { await item.run(); passed++; process.stdout.write('PASS ' + item.name + '\n'); }

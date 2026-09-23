@@ -2,7 +2,7 @@
   'use strict';
 
   const Arena = typeof window === 'object' ? window.VesperArena : null;
-  const { ARENA, WEAPONS, SKINS, CONFIG, clamp, weaponFor, coinsFor, bonusOf, bounds } = Arena;
+  const { ARENA, WEAPONS, SKINS, ACCESSORIES, CONFIG, clamp, weaponFor, coinsFor, bonusOf, accessoriesOf, segmentHit, bounds } = Arena;
   const TAU = Math.PI * 2;
   const STORE = Object.freeze({ profile: 'vesper.online.v1' });
 
@@ -34,28 +34,56 @@
     return 'ws://' + text;
   }
 
+  const DAILY_REWARDS = Object.freeze([
+    { day: 1, type: 'coins', amount: 15 },
+    { day: 2, type: 'coins', amount: 20 },
+    { day: 3, type: 'accessory', id: 'hat' },
+    { day: 4, type: 'coins', amount: 25 },
+    { day: 5, type: 'coins', amount: 20 },
+    { day: 6, type: 'coins', amount: 25 },
+    { day: 7, type: 'accessory', id: 'mini' },
+    { day: 8, type: 'coins', amount: 30 },
+    { day: 9, type: 'coins', amount: 35 },
+    { day: 10, type: 'skin', id: 'banana' },
+    { day: 11, type: 'coins', amount: 35 },
+    { day: 12, type: 'coins', amount: 40 },
+    { day: 13, type: 'gift' },
+    { day: 14, type: 'coins', amount: 40 },
+    { day: 15, type: 'skin', id: 'penguin' }
+  ].map(reward => Object.freeze(reward)));
+
+  function localDay(date = new Date()) {
+    const pad = value => String(value).padStart(2, '0');
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+  }
+
   const Profile = {
     load() {
       const saved = readJson(STORE.profile, {});
       const available = SKINS.map(skin => skin.id);
       const owned = available.filter(id => id === 'alien' || (Array.isArray(saved.owned) && saved.owned.includes(id)));
       const coins = Number.isFinite(saved.coins) && saved.coins > 0 ? Math.floor(saved.coins) : 0;
+      const accessories = accessoriesOf(saved.accessories);
       return {
         coins, owned,
         skin: owned.includes(saved.skin) ? saved.skin : 'alien',
-        name: typeof saved.name === 'string' ? saved.name.slice(0, 14) : ''
+        name: typeof saved.name === 'string' ? saved.name.slice(0, 14) : '',
+        accessories,
+        worn: accessoriesOf(saved.worn).filter(id => accessories.includes(id)),
+        daily: Number.isInteger(saved.daily) ? clamp(saved.daily, 0, DAILY_REWARDS.length) : 0,
+        lastClaim: typeof saved.lastClaim === 'string' ? saved.lastClaim.slice(0, 10) : ''
       };
     },
     save(profile) {
       writeJson(STORE.profile, {
-        version: 2, coins: profile.coins, owned: profile.owned,
-        skin: profile.skin, name: profile.name
+        version: 3, coins: profile.coins, owned: profile.owned, skin: profile.skin, name: profile.name,
+        accessories: profile.accessories, worn: profile.worn, daily: profile.daily, lastClaim: profile.lastClaim
       });
       return profile;
     },
     priceOf(id) {
       const skin = SKINS.find(item => item.id === id);
-      return skin ? skin.price || 0 : Infinity;
+      return skin && Number.isFinite(skin.price) ? skin.price : Infinity;
     },
     buy(id) {
       const profile = Profile.load();
@@ -83,12 +111,37 @@
       const profile = Profile.load();
       profile.coins += Math.max(0, Math.round(amount));
       return Profile.save(profile);
+    },
+    dailyState(today = localDay()) {
+      const profile = Profile.load();
+      const done = profile.daily >= DAILY_REWARDS.length;
+      return { claimed: profile.daily, ready: !done && profile.lastClaim !== today, done, next: done ? null : DAILY_REWARDS[profile.daily] };
+    },
+    claimDaily(today = localDay()) {
+      const profile = Profile.load();
+      if (profile.daily >= DAILY_REWARDS.length || profile.lastClaim === today) return { ok: false, profile };
+      const reward = DAILY_REWARDS[profile.daily];
+      if (reward.type === 'coins') profile.coins += reward.amount;
+      if (reward.type === 'accessory' && !profile.accessories.includes(reward.id)) {
+        profile.accessories.push(reward.id);
+        profile.worn.push(reward.id);
+      }
+      if (reward.type === 'skin' && !profile.owned.includes(reward.id)) profile.owned.push(reward.id);
+      profile.daily++;
+      profile.lastClaim = today;
+      return { ok: true, reward, profile: Profile.save(profile) };
+    },
+    toggleAccessory(id) {
+      const profile = Profile.load();
+      if (!profile.accessories.includes(id)) return { ok: false, profile };
+      profile.worn = profile.worn.includes(id) ? profile.worn.filter(item => item !== id) : [...profile.worn, id];
+      return { ok: true, profile: Profile.save(profile) };
     }
   };
 
   const skinCatalog = () => SKINS.map(skin => {
     const character = VesperGame.CHARACTERS.find(item => item.id === skin.id) || { name: skin.id, accent: ARENA.accent };
-    return { id: skin.id, name: character.name, accent: character.accent, price: skin.price, skill: skin.skill };
+    return { id: skin.id, name: character.name, accent: character.accent, price: skin.price, skill: skin.skill, shop: Number.isFinite(skin.price) };
   });
 
   const box = (ctx, color, x, y, width, height) => { ctx.fillStyle = color; ctx.fillRect(x, y, width, height); };
@@ -145,15 +198,6 @@
       stroke(ctx, GRAIN, 0.7, [[14.4, 1.2], [20.4, 1.2]]);
       box(ctx, DARK, 26.4, -3.2, 1.2, 3.4);
     } },
-    { muzzle: 19, draw(ctx) {
-      shape(ctx, DARK, [[-4, -2.4], [2, -2.4], [2, 0.6], [-4, 0.6]]);
-      stroke(ctx, LIGHT, 0.8, [[-3.6, -1], [1.4, -1]]);
-      grip(ctx); shape(ctx, DARK, [[4, 0.6], [7.4, 0.6], [8.6, 8.4], [5, 8.4]]);
-      box(ctx, STEEL, 2, -3.6, 11, 4);
-      box(ctx, LIGHT, 2, -3.6, 11, 1);
-      box(ctx, STEEL, 13, -2.8, 6, 2.2);
-      box(ctx, DARK, 17.4, -3.4, 1.8, 3.4);
-    } },
     { muzzle: 25, draw(ctx) {
       stock(ctx); grip(ctx, WOOD);
       box(ctx, STEEL, 3, -3.4, 8.6, 3.8);
@@ -173,6 +217,15 @@
       stroke(ctx, DARK, 1.2, [[8, -3.8], [8, -6.4]]);
       stroke(ctx, DARK, 1.2, [[13.4, -3.8], [13.4, -6.4]]);
       box(ctx, DARK, 29.2, -3, 1.2, 2.8);
+    } },
+    { muzzle: 19, draw(ctx) {
+      shape(ctx, DARK, [[-4, -2.4], [2, -2.4], [2, 0.6], [-4, 0.6]]);
+      stroke(ctx, LIGHT, 0.8, [[-3.6, -1], [1.4, -1]]);
+      grip(ctx); shape(ctx, DARK, [[4, 0.6], [7.4, 0.6], [8.6, 8.4], [5, 8.4]]);
+      box(ctx, STEEL, 2, -3.6, 11, 4);
+      box(ctx, LIGHT, 2, -3.6, 11, 1);
+      box(ctx, STEEL, 13, -2.8, 6, 2.2);
+      box(ctx, DARK, 17.4, -3.4, 1.8, 3.4);
     } },
     { muzzle: 26, draw(ctx) {
       stock(ctx, DARK);
@@ -206,12 +259,36 @@
       stroke(ctx, DARK, 1.2, [[24, -0.4], [22.4, 5]]);
       stroke(ctx, DARK, 1.2, [[24, -0.4], [26.4, 4.6]]);
       box(ctx, DARK, 31, -4, 1.4, 4.2);
+    } },
+    { muzzle: 31, draw(ctx) {
+      shape(ctx, DARK, [[-5, -2.8], [3, -3.4], [3, 2.6], [-3.6, 3.8], [-5, 2.4]]);
+      grip(ctx, DARK);
+      box(ctx, '#2d3140', 2.4, -5.4, 17.4, 7.6);
+      box(ctx, '#4a5066', 2.4, -5.4, 17.4, 1.4);
+      round(ctx, 'rgba(255,92,184,.3)', 11.6, -1.6, 8, 5.4);
+      for (let i = 0; i < 3; i++) box(ctx, '#ff5cb8', 5.6 + i * 4.4, -4.2, 1.8, 5.4);
+      box(ctx, DARK, 7.6, 2.2, 7.4, 3);
+      box(ctx, '#3a3f52', 19.8, -4.4, 8, 5.8);
+      box(ctx, '#ff9ad6', 27.2, -3.6, 3, 4.2);
+      round(ctx, '#ffe3f3', 30.2, -1.5, 1.7, 1.7);
+    } },
+    { muzzle: 30, draw(ctx) {
+      stock(ctx, '#3d4a35'); grip(ctx, WOOD);
+      box(ctx, STEEL, 2.6, -4.2, 8, 4.8);
+      box(ctx, LIGHT, 2.6, -4.2, 8, 1);
+      round(ctx, '#2f3b2c', 10.4, 1, 5.6, 5.2);
+      round(ctx, '#46573f', 10.4, 1, 3.4, 3.2);
+      for (const [x, y] of [[9, -0.6], [11.8, -0.6], [10.4, 2.8]]) round(ctx, '#1f271d', x, y, 1, 1);
+      box(ctx, '#3f5a36', 12.6, -5.8, 15.6, 6.4);
+      box(ctx, '#5f7d4f', 12.6, -5.8, 15.6, 1.4);
+      box(ctx, DARK, 16.4, -8.2, 3, 2.4);
+      box(ctx, '#2a3a26', 27.4, -6.4, 2.2, 7.8);
     } }
   ]);
 
   VesperGame.ONLINE = Object.freeze({
-    ARENA, WEAPONS, SKINS, CONFIG, weaponFor, coinsFor, bonusOf, skinCatalog,
-    defaultServer, normalizeServer
+    ARENA, WEAPONS, SKINS, ACCESSORIES, DAILY_REWARDS, CONFIG, weaponFor, coinsFor, bonusOf, skinCatalog,
+    localDay, defaultServer, normalizeServer
   });
   VesperGame.OnlineProfile = Profile;
 
@@ -228,7 +305,7 @@
 
   function makeMirror(entry) {
     return {
-      id: entry.id, name: entry.name, skin: entry.skin, characterId: entry.skin, bot: Boolean(entry.bot),
+      id: entry.id, name: entry.name, skin: entry.skin, characterId: entry.skin, bot: Boolean(entry.bot), acc: accessoriesOf(entry.acc),
       x: 0, y: 0, tx: 0, ty: 0, aim: 0, facing: 1, steps: 0,
       level: 1, xp: 0, hp: 1, maxHp: 1, kills: 0, alive: true, respawn: 0,
       spawnGuard: CONFIG.spawnGuard, hurt: 0, flash: 0, placed: false, walk: 0
@@ -258,6 +335,8 @@
     this._arenaZones = null;
     this._onlineName = name;
     this._onlineSkin = skin;
+    this._onlineAcc = accessoriesOf(options.acc);
+    this._explosions = [];
     this._serverUrl = server;
     this._tokenKey = 'vesper.online.token.' + server;
     this._firing = false;
@@ -279,7 +358,7 @@
     socket.onopen = () => {
       let token = '';
       try { token = sessionStorage.getItem(this._tokenKey) || ''; } catch (_) { token = ''; }
-      socket.send(JSON.stringify({ t: 'join', name, skin, token }));
+      socket.send(JSON.stringify({ t: 'join', name, skin, token, acc: this._onlineAcc }));
     };
     socket.onmessage = event => {
       let message;
@@ -397,6 +476,7 @@
           fighter.name = event.name;
           fighter.skin = fighter.characterId = event.skin;
           fighter.bot = Boolean(event.bot);
+          fighter.acc = accessoriesOf(event.acc);
         }
         continue;
       }
@@ -406,7 +486,7 @@
         if (this.shots.length < CONFIG.shotLimit) {
           this.shots.push({
             x: event.x, y: event.y, vx: Math.cos(event.a) * event.s, vy: Math.sin(event.a) * event.s,
-            tier: event.t, poison: event.p, life: CONFIG.shotLife
+            owner: event.id, tier: event.t, poison: event.p, life: Number.isFinite(event.l) ? event.l : CONFIG.shotLife
           });
         }
         if (this.me && Math.hypot(event.x - this.camera.x, event.y - this.camera.y) < 760) this._sound('shot');
@@ -417,9 +497,12 @@
         if (!target) continue;
         target.hurt = 0.12;
         const mine = this.me && target.id === this.me.id;
-        this._number(target.x, target.y - CONFIG.radius, String(event.damage), mine ? '#ffa393' : '#f4d49a', Boolean(mine));
-        this._burst(target.x, target.y, '#e5ad61', 4, 70);
-        if (mine) { this._shake = 4; this._sound('hurt'); }
+        const color = event.p ? '#a9e08a' : mine ? '#ffa393' : '#f4d49a';
+        this._number(target.x, target.y - CONFIG.radius, String(event.damage), color, Boolean(mine) && !event.p);
+        if (event.t === 12) this._blast(target.x, target.y, 'grenade');
+        else if (event.t === 11) this._blast(target.x, target.y, 'plasma');
+        else if (!event.p) this._burst(target.x, target.y, '#e5ad61', 4, 70);
+        if (mine && !event.p) { this._shake = Math.max(this._shake, event.t >= 11 ? 8 : 4); this._sound('hurt'); }
         continue;
       }
       if (event.e === 'kill') {
@@ -552,6 +635,7 @@
       fighter.flash = Math.max(0, fighter.flash - dt);
       fighter.spawnGuard = Math.max(0, fighter.spawnGuard - dt);
       fighter.invulnerability = fighter.spawnGuard;
+      if (fighter.acc.includes('mini')) this._followPet(fighter, dt);
       if (fighter === me) continue;
       const step = Math.min(1, dt * 14);
       const moved = Math.hypot(fighter.tx - fighter.x, fighter.ty - fighter.y);
@@ -565,10 +649,15 @@
     }
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const shot = this.shots[i];
+      const fromX = shot.x, fromY = shot.y;
       shot.x += shot.vx * dt;
       shot.y += shot.vy * dt;
       shot.life -= dt;
-      if (shot.life <= 0) this.shots.splice(i, 1);
+      if (shot.life <= 0 || this._shotBlocked(shot, fromX, fromY)) this.shots.splice(i, 1);
+    }
+    for (let i = this._explosions.length - 1; i >= 0; i--) {
+      this._explosions[i].life -= dt;
+      if (this._explosions[i].life <= 0) this._explosions.splice(i, 1);
     }
     if (me.alive) {
       this.camera.x += (me.x - this.camera.x) * Math.min(1, dt * 9);
@@ -581,6 +670,53 @@
     if (this._inputTimer <= 0) { this._inputTimer = 1 / CONFIG.tickRate; this._sendInput(); }
     this._hudTimer -= dt;
     if (this._hudTimer <= 0) { this._hudTimer = 0.08; this._emitOnlineHud(); }
+  };
+
+  VesperGame.prototype._shotBlocked = function (shot, fromX, fromY) {
+    for (const fighter of this.fighters) {
+      if (!fighter.alive || fighter.id === shot.owner || fighter.spawnGuard > 0) continue;
+      if (segmentHit(fromX, fromY, shot.x, shot.y, fighter, CONFIG.radius + CONFIG.shotRadius) >= 0) return true;
+    }
+    for (const crate of this.crates) {
+      if (!crate.broken && segmentHit(fromX, fromY, shot.x, shot.y, crate, CONFIG.crateRadius + CONFIG.shotRadius) >= 0) return true;
+    }
+    return false;
+  };
+
+  VesperGame.prototype._blast = function (x, y, kind) {
+    const grenade = kind === 'grenade';
+    this._explosions.push({ x, y, kind, life: grenade ? 0.85 : 0.45, max: grenade ? 0.85 : 0.45 });
+    if (this._explosions.length > 12) this._explosions.shift();
+    if (grenade) {
+      this._burst(x, y, '#ffb347', 34, 300);
+      this._burst(x, y, '#3f6b3a', 12, 150);
+    } else this._burst(x, y, '#ff6fc4', 20, 200);
+    if (this.me && Math.hypot(x - this.camera.x, y - this.camera.y) < 520) {
+      this._shake = Math.max(this._shake, grenade ? 9 : 5);
+      this._sound(grenade ? 'boss' : 'kill');
+    }
+  };
+
+  VesperGame.prototype._drawBlast = function (ctx, blast) {
+    const progress = 1 - blast.life / blast.max;
+    const grenade = blast.kind === 'grenade';
+    const radius = (grenade ? 22 : 10) + progress * (grenade ? 96 : 34);
+    const fade = 1 - progress;
+    const glow = ctx.createRadialGradient(blast.x, blast.y, 0, blast.x, blast.y, radius);
+    if (grenade) {
+      glow.addColorStop(0, `rgba(255,248,214,${fade})`);
+      glow.addColorStop(0.35, `rgba(255,176,72,${fade * 0.92})`);
+      glow.addColorStop(0.72, `rgba(190,64,28,${fade * 0.55})`);
+    } else {
+      glow.addColorStop(0, `rgba(255,236,247,${fade})`);
+      glow.addColorStop(0.45, `rgba(255,92,184,${fade * 0.8})`);
+    }
+    glow.addColorStop(1, 'rgba(40,20,20,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(blast.x, blast.y, radius, 0, TAU); ctx.fill();
+    ctx.strokeStyle = grenade ? `rgba(255,226,160,${fade * 0.8})` : `rgba(255,150,214,${fade * 0.8})`;
+    ctx.lineWidth = 1 + fade * (grenade ? 4 : 2.4);
+    ctx.beginPath(); ctx.arc(blast.x, blast.y, radius * 1.18, 0, TAU); ctx.stroke();
   };
 
   VesperGame.prototype._closeOnline = function () {
@@ -636,7 +772,7 @@
   VesperGame.prototype.setCharacter = function (id) {
     const character = VesperGame.CHARACTERS.find(item => item.id === id);
     if (!character) return false;
-    if ((character.unlockType === 'coins') !== (this._mode === 'online')) return false;
+    if (character.unlockType !== 'daily' && (character.unlockType === 'coins') !== (this._mode === 'online')) return false;
     return baseSetCharacter.call(this, id);
   };
 
@@ -839,15 +975,17 @@
     ctx.restore();
   };
   VesperGame.prototype._drawFighterWeapon = function (ctx, fighter) {
-    const art = WEAPON_ART[weaponFor(fighter.level).tier - 1];
+    const tier = weaponFor(fighter.level).tier;
+    const art = WEAPON_ART[tier - 1];
     ctx.save();
     ctx.translate(1, -2);
     ctx.rotate(fighter.aim);
     if (Math.cos(fighter.aim) < 0) ctx.scale(1, -1);
     art.draw(ctx);
     if (fighter.flash > 0) {
+      const tint = tier === 11 ? '255,120,200' : tier === 12 ? '170,220,140' : '255,214,140';
       const flash = ctx.createRadialGradient(art.muzzle + 4, -1, 1, art.muzzle + 4, -1, 12);
-      flash.addColorStop(0, 'rgba(255,214,140,.75)'); flash.addColorStop(1, 'rgba(255,214,140,0)');
+      flash.addColorStop(0, `rgba(${tint},.75)`); flash.addColorStop(1, `rgba(${tint},0)`);
       ctx.fillStyle = flash; ctx.fillRect(art.muzzle - 8, -13, 24, 24);
       shape(ctx, '#ffe9b4', [[art.muzzle + 1, -1], [art.muzzle + 9, -4.4], [art.muzzle + 9, 2.4]]);
     }
@@ -887,6 +1025,7 @@
     ctx.save();
     ctx.scale(fighter.facing, 1);
     this._drawCharacter(ctx, fighter.characterId, fighter.steps);
+    if (fighter.acc.includes('hat')) this._drawHat(ctx, fighter.characterId);
     ctx.restore();
     this._drawFighterWeapon(ctx, fighter);
     if (fighter.hurt > 0) {
@@ -908,11 +1047,27 @@
     ctx.restore();
   };
   VesperGame.prototype._drawOnlineShot = function (ctx, shot) {
-    if (!this._visible(shot, 40)) return;
-    const size = 2.6 + shot.tier * 0.16;
+    if (!this._visible(shot, 50)) return;
+    const size = 2.6 + Math.min(shot.tier, CONFIG.botLevelCap) * 0.16;
     ctx.save();
     ctx.translate(shot.x, shot.y);
     ctx.rotate(Math.atan2(shot.vy, shot.vx));
+    ctx.lineCap = 'round';
+    if (shot.tier === 11) {
+      stroke(ctx, 'rgba(255,92,184,.3)', 17, [[-40, 0], [7, 0]]);
+      stroke(ctx, '#ff5cb8', 8.5, [[-33, 0], [4, 0]]);
+      stroke(ctx, '#ffe3f3', 3, [[-26, 0], [3, 0]]);
+      ctx.restore();
+      return;
+    }
+    if (shot.tier === 12) {
+      stroke(ctx, 'rgba(118,128,108,.35)', 3.4, [[-15, 0], [-3, 0]]);
+      round(ctx, '#1d3a1c', 0, 0, 5.4, 4.4);
+      round(ctx, '#2f5a2c', 0, 0, 4.4, 3.5);
+      round(ctx, '#6f9a5c', 1.2, -1.2, 1.4, 1);
+      ctx.restore();
+      return;
+    }
     ctx.strokeStyle = 'rgba(240,206,132,.32)'; ctx.lineWidth = size * 0.9;
     ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(0, 0); ctx.stroke();
     ctx.fillStyle = shot.poison > 0 ? '#a9e08a' : '#ffdc9a';
@@ -936,9 +1091,18 @@
     this._drawArena(ctx, this._view);
     for (const crate of this.crates) if (!crate.broken && this._visible(crate, 40)) this._drawXpCrate(ctx, crate);
     for (const shot of this.shots) this._drawOnlineShot(ctx, shot);
-    const visible = this.fighters.filter(fighter => fighter.alive && this._visible(fighter, 70));
-    visible.sort((a, b) => a.y - b.y);
-    for (const fighter of visible) this._drawFighter(ctx, fighter);
+    const figures = [];
+    for (const fighter of this.fighters) {
+      if (!fighter.alive) continue;
+      if (this._visible(fighter, 70)) figures.push({ y: fighter.y, fighter });
+      if (fighter.pet && fighter.acc.includes('mini') && this._visible(fighter.pet, 40)) figures.push({ y: fighter.pet.y, owner: fighter });
+    }
+    figures.sort((a, b) => a.y - b.y);
+    for (const figure of figures) {
+      if (figure.owner) this._drawPet(ctx, figure.owner, figure.owner.characterId);
+      else this._drawFighter(ctx, figure.fighter);
+    }
+    for (const blast of this._explosions) this._drawBlast(ctx, blast);
     for (const particle of this.particles) {
       ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
       ctx.fillStyle = particle.color;

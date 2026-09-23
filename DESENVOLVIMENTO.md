@@ -11,11 +11,11 @@ No modo Online o tiro é manual e a mira é automática: WASD move, a mira trava
 ## Campanha
 
 - Seis mapas de 4.800 × 3.600 unidades, com câmera e personagens limitados às bordas. Depois de escolher o mapa, selecione Fácil, Médio ou Difícil; o modo altera vida, velocidade, dano e ritmo das ondas. No Difícil os monstros têm 55% mais vida, 16% mais velocidade, 50% mais dano e as ondas chegam 30% mais rápido.
-- Minichefe aos 150 segundos e chefe final aos 240 segundos de tempo efetivo da partida. Pausas e escolhas de melhoria congelam esse relógio.
+- Minichefe aos 120 segundos e chefe final aos 240 segundos de tempo efetivo da partida. Pausas e escolhas de melhoria congelam esse relógio.
 - Vencer o chefe final encerra a fase e registra a conquista. A fase e a skin conquistada recebem moldura dourada.
 - Castelo/Mansão: Vampiro. Egito Antigo/Deserto: Múmia. Pântano: Zumbi. Halloween: Jack o’ Lantern. Fundo do Mar: Kraken. Montanhas Geladas: Yeti. Concluir todos os mapas libera o Sobrevivente.
 - Os personagens andam com um balanço curto do corpo e um leve gingado, na campanha e no Online; parados, só respiram.
-- Humano, Fantasma e Encapuzado estão disponíveis desde o início. Todos os personagens compartilham os mesmos atributos. As oito skins do Online aparecem na mesma tela, em uma seção própria, e são compradas com as moedas do ranking.
+- Humano, Fantasma e Encapuzado estão disponíveis desde o início. Todos os personagens compartilham os mesmos atributos. A tela de Personagens tem três seções: os heróis da campanha, as skins dos dois modos (Banana e Pinguim, ganhas no login diário e usadas no offline e no Online ao mesmo tempo) e as oito skins do Online, compradas com as moedas do ranking. No topo fica o botão Acessórios.
 - O minimapa mostra o mundo inteiro, a área visível e o jogador em vermelho. Ele muda de canto quando cobriria o jogador.
 
 O progresso é salvo no navegador em `vesper.progress.v2`; recordes antigos não liberam conquistas da campanha.
@@ -48,12 +48,20 @@ Abrir `VESPER/index.html` direto do disco continua valendo para a campanha offli
 - Abater gente de verdade paga o dobro em moedas; abater bot paga a metade.
 - O mapa e dividido em quinze zonas e cada lutador nasce em uma zona so sua. Ao renascer, vale a zona mais distante de quem esta vivo.
 - Cada partida dura cinco minutos na arena Catedral em Ruinas (4.000 x 3.000 unidades), com praca do ritual no centro, duas colunatas, quatro patios de criptas, braseiros e caixas de XP. A arena tem piso, muralha e vinheta proprios, de contraste baixo.
-- Todos nascem no nivel 1 com um revolver e sobem ate o nivel 10, que troca a arma, o dano e a vida maxima: Revolver, Pistola, Pistola Automatica, Escopeta, Submetralhadora, Carabina, Rifle, Fuzil de Assalto, AK-47 e Metralhadora Vesper. A vida vai de 180 a 540 e o dano por segundo de 34 a 170.
+- Todos nascem no nivel 1 com um revolver e sobem ate o nivel 12, que troca a arma, o dano e a vida maxima: Revolver, Pistola, Pistola Automatica, Escopeta, Carabina, Rifle, Submetralhadora, Rifle de Assalto, AK-47, Metralhadora, Canhao de Plasma Vesper e Lancador de Granada Vesper. Da 1 a 10, dano, cadencia e velocidade do tiro sobem a cada arma; a vida vai de 180 a 620.
+- O XP para subir cresce a cada nivel: 22 no primeiro, quase igual no comeco e cada vez mais caro depois (256 para ir do 11 ao 12). Em simulacao, um jogador forte chega ao 11 ou 12 perto do fim dos cinco minutos e um jogador medio fica entre 7 e 9.
+- Bots param no nivel 10. As armas 11 e 12 sao so de gente: dano muito maior (240 e 320), projetil lento que voa ate o ponto do alvo, mira que adianta o movimento do alvo e so atiram de novo quando o projetil chega; se acertar, esperam mais meio segundo, se errar, nao. O plasma e uma faixa rosa grande; a granada e um tiro verde escuro que explode ao acertar alguem.
 - Cada arma tem desenho proprio, no mesmo traco dos personagens, equipado na mao do lutador e virado para a mira; o mesmo desenho aparece como icone no HUD. Toda arma dispara um tiro por vez: so a habilidade do Cyborg acrescenta um segundo projetil.
 - A mira e automatica, travada no alvo mais proximo (jogador ou caixa de XP), ignorando quem acabou de nascer e ainda esta intocavel; o disparo e manual, na barra de espaco.
 - No fim da partida o ranking ordena todos por nivel e depois por abates, e a posicao define as moedas.
 
-As moedas compram as oito skins do Online, que valem somente nessas partidas. Os dois elencos sao separados no motor: uma skin paga nao vira personagem da campanha e um heroi da campanha nao entra na arena, nem para os bots. O Alien ja vem desbloqueado e cada skin tem uma habilidade propria: Alien nenhuma, Aranha velocidade de ataque +10%, Esqueleto velocidade de ataque +15%, Orc dano +20%, Homem Invisivel velocidade +25%, Cyborg +1 projetil, Medico da Peste tiros que envenenam por tres segundos e Frankenstein dano +30%. A carteira fica salva no navegador em `vesper.online.v1`.
+As moedas compram as oito skins do Online, que valem somente nessas partidas. Os dois elencos sao separados no motor: uma skin paga nao vira personagem da campanha e um heroi da campanha nao entra na arena, nem para os bots. O Alien ja vem desbloqueado e cada skin tem uma habilidade propria: Alien nenhuma, Aranha velocidade de ataque +10%, Esqueleto vida +15%, Orc dano +20%, Homem Invisivel velocidade +25%, Frankenstein dano +30%, Medico da Peste tiros que envenenam por tres segundos e Cyborg +1 projetil. Precos: Aranha 50, Esqueleto 220, Orc 320, Homem Invisivel 400, Frankenstein 480, Medico da Peste 600 e Cyborg 700. O veneno aparece em pulsos verdes de meio segundo, nao a cada quadro. A carteira fica salva no navegador em `vesper.online.v1` (versao 3), junto com os acessorios e o progresso do login diario.
+
+## Login diario e acessorios
+
+O login diario tem 15 dias e libera um premio por dia de calendario, sem zerar quem pula dias: moedas nos dias 1, 2, 4, 5, 6, 8, 9, 11, 12 e 14 (15 a 40), Chapeu de Cowboy no dia 3, Mini Voce no dia 7, skin Banana no dia 10, presente misterioso no dia 13 (uma carta do ADM que pode ser relida) e skin Pinguim no dia 15. A tela abre sozinha quando ha premio e o botao LOGIN DIARIO do menu mostra PREMIO.
+
+Os acessorios valem nos dois modos e podem ser usados juntos. O chapeu se ajusta a cabeca de cada personagem. O Mini Voce e uma copia pequena do personagem que segue o dono. No Online os outros jogadores veem os acessorios, e os bots tambem aparecem com eles de vez em quando, para ninguem descobrir quem e bot.
 
 ## Inimigos e personagens
 

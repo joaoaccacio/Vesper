@@ -8,7 +8,8 @@
     'characters-new','unlock-note','maps-view','map-grid','coin-grid','difficulty-view',
     'difficulty-choices','difficulty-map-name','difficulty-map-subtitle','victory-overlay',
     'minimap-canvas','minimap-name','stage-objective','online-loading-view','online-hud',
-    'online-respawn','online-results-overlay'].map(id => [id, $(id)]));
+    'online-respawn','online-results-overlay','daily-view','daily-grid','accessories-view','accessory-grid',
+    'both-grid','letter-overlay'].map(id => [id, $(id)]));
   const clock = seconds => {
     const total = Math.max(0, Math.floor(seconds));
     return `${Math.floor(total / 60).toString().padStart(2, '0')}:${(total % 60).toString().padStart(2, '0')}`;
@@ -16,8 +17,14 @@
   const characters = VesperGame.CHARACTERS;
   const maps = VesperGame.MAPS;
   const difficulties = VesperGame.DIFFICULTIES;
-  const campaignCharacters = characters.filter(character => character.unlockType !== 'coins');
+  const offlineCharacters = characters.filter(character => ['free', 'map', 'all'].includes(character.unlockType));
+  const bothCharacters = characters.filter(character => character.unlockType === 'daily');
+  const campaignCharacters = [...offlineCharacters, ...bothCharacters];
   const onlineSkins = VesperGame.ONLINE.skinCatalog();
+  const shopSkins = onlineSkins.filter(skin => skin.shop);
+  const accessories = VesperGame.ONLINE.ACCESSORIES;
+  const dailyRewards = VesperGame.ONLINE.DAILY_REWARDS;
+  const unlockDayOf = id => dailyRewards.find(reward => reward.id === id).day;
   let profile = VesperGame.OnlineProfile.load();
   const completedMaps = new Set();
   const seenCharacters = new Set(characters.filter(character => character.unlockType === 'free').map(character => character.id));
@@ -46,9 +53,9 @@
   const isUnlocked = character => character.unlockType === 'free'
     || (character.unlockType === 'map' && completedMaps.has(character.unlockMap))
     || (character.unlockType === 'all' && maps.every(map => completedMaps.has(map.id)))
-    || (character.unlockType === 'coins' && profile.owned.includes(character.id));
+    || (['coins', 'daily'].includes(character.unlockType) && profile.owned.includes(character.id));
   const isEarned = character => ['map', 'all'].includes(character.unlockType) && isUnlocked(character);
-  const unlockedCount = () => campaignCharacters.filter(isUnlocked).length;
+  const unlockedCount = () => offlineCharacters.filter(isUnlocked).length;
   if (!campaignCharacters.some(character => character.id === characterId && isUnlocked(character))) characterId = characters[0].id;
   $('best-time').textContent = best ? clock(best) : '—';
   let game;
@@ -124,7 +131,7 @@
     ui.level.textContent = `NV. ${data.level}`;
     updateBossBars(data.bosses || []);
     ui['minimap-name'].textContent = data.mapName || maps.find(map => map.id === lastMapId).name;
-    ui['stage-objective'].textContent = data.stageBossStatus || 'Minichefe em 02:30';
+    ui['stage-objective'].textContent = data.stageBossStatus || 'Minichefe em 02:00';
     ui['online-hud'].hidden = !data.online;
     ui.timer.setAttribute('aria-label', data.online ? 'Tempo restante da partida' : 'Tempo de sobrevivência');
     if (data.online) renderOnlineHud(data);
@@ -256,11 +263,15 @@
   const cards = new Map();
   const mapCards = new Map();
   const skinCards = new Map();
+  const bothCards = new Map();
+  const accessoryCards = new Map();
+  const dailyCells = [];
   const boardRows = [];
   let weaponTier = 0;
   let nextMenuView = null;
   function updateNewBadge() {
-    ui['characters-new'].hidden = !characters.some(character => isEarned(character) && !seenCharacters.has(character.id));
+    ui['characters-new'].hidden = !characters.some(character => (isEarned(character) || (character.unlockType === 'daily' && isUnlocked(character))) && !seenCharacters.has(character.id));
+    $('daily-new').hidden = !VesperGame.OnlineProfile.dailyState().ready;
   }
   function showMenuView(view, focus = true) {
     const previous = menuView;
@@ -272,7 +283,11 @@
     ui['characters-view'].hidden = view !== 'characters';
     ui['maps-view'].hidden = view !== 'maps';
     ui['difficulty-view'].hidden = view !== 'difficulty';
+    ui['daily-view'].hidden = view !== 'daily';
+    ui['accessories-view'].hidden = view !== 'accessories';
     if (view === 'online') { renderOnline(); startPortraits(); }
+    else if (view === 'daily') { renderDaily(); stopPortraits(); }
+    else if (view === 'accessories') { renderAccessories(); startPortraits(); }
     else if (view === 'characters') {
       renderCharacters();
       for (const character of characters.filter(isUnlocked)) seenCharacters.add(character.id);
@@ -288,7 +303,9 @@
       : view === 'characters' ? (cards.get(characterId) || skinCards.get(profile.skin)).button
       : view === 'maps' ? mapCards.get(lastMapId).button
       : view === 'difficulty' ? ui['difficulty-choices'].children[1]
-      : $(previous === 'online' ? 'online-btn' : previous === 'characters' ? 'characters-btn' : 'start-btn');
+      : view === 'daily' ? ($('daily-claim-btn').disabled ? $('daily-back-btn') : $('daily-claim-btn'))
+      : view === 'accessories' ? accessoryCards.get(accessories[0].id).button
+      : $(previous === 'online' ? 'online-btn' : previous === 'characters' ? 'characters-btn' : previous === 'daily' ? 'daily-btn' : 'start-btn');
     target?.focus({ preventScroll: true });
   }
   function renderDifficulties() {
@@ -320,7 +337,7 @@
   function renderCharacters() {
     $('characters-progress').textContent = `${unlockedCount()} / ${campaignCharacters.length}`;
     $('earned-count').textContent = `${unlockedCount()} / ${campaignCharacters.length}`;
-    for (const character of campaignCharacters) {
+    for (const character of offlineCharacters) {
       let card = cards.get(character.id);
       if (!card) {
         const button = document.createElement('button');
@@ -358,7 +375,176 @@
         ? character.unlockType === 'all' ? 'Todos os mapas concluídos' : `${maps.find(map => map.id === character.unlockMap).name} concluído`
         : unlockRule(character);
     }
+    renderBoth();
     renderSkins();
+  }
+  function renderBoth() {
+    $('both-count').textContent = `${bothCharacters.filter(isUnlocked).length} / ${bothCharacters.length}`;
+    for (const character of bothCharacters) {
+      let card = bothCards.get(character.id);
+      if (!card) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.characterId = character.id;
+        const portrait = document.createElement('canvas');
+        portrait.className = 'character-portrait';
+        portrait.setAttribute('aria-hidden', 'true');
+        const name = document.createElement('strong');
+        name.className = 'character-name';
+        name.textContent = character.name;
+        const status = document.createElement('span');
+        status.className = 'character-status';
+        const rule = document.createElement('p');
+        rule.className = 'character-rule';
+        button.append(portrait, name, status, rule);
+        button.addEventListener('click', () => selectBoth(character.id));
+        ui['both-grid'].append(button);
+        card = { button, portrait, status, rule };
+        bothCards.set(character.id, card);
+      }
+      const unlocked = isUnlocked(character);
+      const offline = unlocked && characterId === character.id;
+      const online = unlocked && profile.skin === character.id;
+      card.button.className = `character-card coin-card${unlocked ? '' : ' is-locked'}${offline || online ? ' is-using' : ''}`;
+      card.button.setAttribute('aria-pressed', String(offline && online));
+      const icon = document.createElement('span');
+      icon.innerHTML = offline || online ? '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>'
+        : unlocked ? '' : '<svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>';
+      const label = document.createElement('span');
+      label.textContent = !unlocked ? 'BLOQUEADO' : offline && online ? 'EM USO NOS DOIS' : offline ? 'EM USO NO OFFLINE' : online ? 'EM USO NO ONLINE' : 'USAR NOS DOIS';
+      card.status.replaceChildren(icon, label);
+      card.rule.textContent = unlocked ? 'Offline e Online' : `Login diário · dia ${character.unlockDay}`;
+      card.button.setAttribute('aria-label', unlocked ? `${character.name}, ${label.textContent.toLowerCase()}` : `${character.name}, bloqueado. Login diário, dia ${character.unlockDay}`);
+    }
+  }
+  function selectBoth(id) {
+    const character = bothCharacters.find(item => item.id === id);
+    if (!character) return;
+    if (!isUnlocked(character)) { toast(`Liberado no dia ${character.unlockDay} do login diário.`, 2600); return; }
+    characterId = id;
+    game.setCharacter(id);
+    try { localStorage.setItem('vesper.character.v1', id); } catch (_) {  }
+    profile = VesperGame.OnlineProfile.select(id).profile;
+    toast(`${character.name} em uso no offline e no Online.`, 2400);
+    renderCharacters();
+  }
+  function rewardLabel(reward) {
+    if (reward.type === 'coins') return `${reward.amount} moedas`;
+    if (reward.type === 'accessory') return accessories.find(item => item.id === reward.id).name;
+    if (reward.type === 'skin') return `Skin ${characters.find(item => item.id === reward.id).name}`;
+    return 'Presente misterioso';
+  }
+  function renderDaily() {
+    profile = VesperGame.OnlineProfile.load();
+    const state = VesperGame.OnlineProfile.dailyState();
+    $('daily-progress').textContent = `${state.claimed} / ${dailyRewards.length}`;
+    dailyRewards.forEach((reward, index) => {
+      let cell = dailyCells[index];
+      if (!cell) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        const day = document.createElement('small');
+        day.textContent = `DIA ${reward.day}`;
+        const art = document.createElement('canvas');
+        art.className = 'daily-art';
+        art.width = 148; art.height = 116;
+        art.setAttribute('aria-hidden', 'true');
+        const label = document.createElement('strong');
+        label.textContent = rewardLabel(reward);
+        const mark = document.createElement('span');
+        mark.className = 'daily-mark';
+        button.append(day, art, label, mark);
+        button.addEventListener('click', () => pickDaily(index));
+        ui['daily-grid'].append(button);
+        cell = { button, art, mark };
+        dailyCells.push(cell);
+      }
+      const claimed = index < state.claimed;
+      const ready = state.ready && index === state.claimed;
+      cell.button.className = `daily-cell${reward.type === 'coins' ? '' : ' is-special'}${claimed ? ' is-claimed' : ready ? ' is-ready' : ' is-locked'}`;
+      cell.button.setAttribute('aria-label', `Dia ${reward.day}: ${rewardLabel(reward)}. ${claimed ? 'Resgatado.' : ready ? 'Disponível hoje.' : 'Ainda não liberado.'}`);
+      cell.mark.innerHTML = claimed ? '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>' : '';
+      game.drawRewardArt(cell.art, reward, characterId);
+    });
+    const claim = $('daily-claim-btn');
+    claim.disabled = !state.ready;
+    claim.textContent = state.done ? 'TUDO RESGATADO' : state.ready ? `RESGATAR DIA ${state.claimed + 1}` : 'VOLTE AMANHÃ';
+    $('daily-note').textContent = state.done ? 'Você completou os 15 dias. Obrigado por jogar!'
+      : state.ready ? 'O prêmio de hoje já está liberado.' : `Amanhã: ${rewardLabel(state.next)}.`;
+    updateNewBadge();
+  }
+  function pickDaily(index) {
+    const state = VesperGame.OnlineProfile.dailyState();
+    if (state.ready && index === state.claimed) claimDaily();
+    else if (dailyRewards[index].type === 'gift' && index < state.claimed) openLetter();
+  }
+  function claimDaily() {
+    const result = VesperGame.OnlineProfile.claimDaily();
+    if (!result.ok) return;
+    profile = result.profile;
+    const reward = result.reward;
+    game.setAccessories(profile.worn);
+    renderDaily();
+    if (reward.type === 'gift') { openLetter(); return; }
+    toast(reward.type === 'coins' ? `+${reward.amount} moedas · saldo ${profile.coins.toLocaleString('pt-BR')}`
+      : reward.type === 'accessory' ? `${rewardLabel(reward)} equipado. Troque na tela de Acessórios.`
+      : `${characters.find(item => item.id === reward.id).name} liberada no offline e no Online.`, 3200);
+  }
+  function openLetter() {
+    ui['letter-overlay'].hidden = false;
+    $('letter-close-btn').focus({ preventScroll: true });
+  }
+  function closeLetter() {
+    ui['letter-overlay'].hidden = true;
+    if (menuView === 'daily') $('daily-back-btn').focus({ preventScroll: true });
+  }
+  function renderAccessories() {
+    profile = VesperGame.OnlineProfile.load();
+    $('accessories-progress').textContent = `${profile.accessories.length} / ${accessories.length}`;
+    for (const accessory of accessories) {
+      let card = accessoryCards.get(accessory.id);
+      if (!card) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        const portrait = document.createElement('canvas');
+        portrait.className = 'character-portrait';
+        portrait.setAttribute('aria-hidden', 'true');
+        const name = document.createElement('strong');
+        name.className = 'character-name';
+        name.textContent = accessory.name;
+        const status = document.createElement('span');
+        status.className = 'character-status';
+        const rule = document.createElement('p');
+        rule.className = 'character-rule';
+        button.append(portrait, name, status, rule);
+        button.addEventListener('click', () => toggleAccessory(accessory.id));
+        ui['accessory-grid'].append(button);
+        card = { button, portrait, status, rule };
+        accessoryCards.set(accessory.id, card);
+      }
+      const owned = profile.accessories.includes(accessory.id);
+      const worn = profile.worn.includes(accessory.id);
+      card.button.className = `character-card accessory-card${owned ? '' : ' is-locked'}${worn ? ' is-using' : ''}`;
+      card.button.setAttribute('aria-pressed', String(worn));
+      const icon = document.createElement('span');
+      icon.innerHTML = worn ? '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>'
+        : owned ? '' : '<svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>';
+      const label = document.createElement('span');
+      label.textContent = worn ? 'EM USO' : owned ? 'COLOCAR' : 'BLOQUEADO';
+      card.status.replaceChildren(icon, label);
+      card.rule.textContent = owned ? (worn ? 'Clique para tirar' : 'Clique para colocar') : `Login diário · dia ${unlockDayOf(accessory.id)}`;
+      card.button.setAttribute('aria-label', `${accessory.name}. ${owned ? (worn ? 'Em uso, clique para tirar' : 'Clique para colocar') : `Bloqueado, login diário dia ${unlockDayOf(accessory.id)}`}`);
+    }
+    drawPortraits();
+  }
+  function toggleAccessory(id) {
+    const accessory = accessories.find(item => item.id === id);
+    const result = VesperGame.OnlineProfile.toggleAccessory(id);
+    if (!result.ok) { toast(`Liberado no dia ${unlockDayOf(id)} do login diário.`, 2600); return; }
+    profile = result.profile;
+    game.setAccessories(profile.worn);
+    toast(`${accessory.name} ${profile.worn.includes(id) ? 'colocado' : 'retirado'}.`, 2000);
+    renderAccessories();
   }
   function unlockRule(character) {
     if (character.unlockType === 'map') return `Conclua ${maps.find(map => map.id === character.unlockMap).name}`;
@@ -368,8 +554,8 @@
   }
   function renderSkins() {
     $('skins-coins').textContent = profile.coins.toLocaleString('pt-BR');
-    $('skins-count').textContent = `${profile.owned.length} / ${onlineSkins.length}`;
-    for (const skin of onlineSkins) {
+    $('skins-count').textContent = `${shopSkins.filter(skin => profile.owned.includes(skin.id)).length} / ${shopSkins.length}`;
+    for (const skin of shopSkins) {
       let card = skinCards.get(skin.id);
       if (!card) {
         const button = document.createElement('button');
@@ -491,7 +677,17 @@
       const rect = canvas.getBoundingClientRect();
       const width = Math.round((rect.width || 48) * ratio), height = Math.round((rect.height || 54) * ratio);
       if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
-      game.drawCharacterPreview(canvas, profile.skin, false);
+      game.drawCharacterPreview(canvas, profile.skin, false, profile.worn);
+      return;
+    }
+    if (menuView === 'accessories') {
+      for (const accessory of accessories) {
+        const card = accessoryCards.get(accessory.id);
+        if (!card) continue;
+        const size = Math.round((card.portrait.getBoundingClientRect().width || 150) * ratio);
+        if (card.portrait.width !== size) { card.portrait.width = size; card.portrait.height = size; }
+        game.drawCharacterPreview(card.portrait, characterId, !profile.accessories.includes(accessory.id), [accessory.id]);
+      }
       return;
     }
     if (menuView === 'maps') {
@@ -502,14 +698,23 @@
       game.drawCharacterPreview(canvas, characterId, false);
       return;
     }
-    for (const character of campaignCharacters) {
+    for (const character of offlineCharacters) {
       const card = cards.get(character.id);
       if (card) paint(card.portrait, character.id, !isUnlocked(character));
     }
-    for (const skin of onlineSkins) {
+    for (const character of bothCharacters) {
+      const card = bothCards.get(character.id);
+      if (card) paint(card.portrait, character.id, !isUnlocked(character));
+    }
+    for (const skin of shopSkins) {
       const card = skinCards.get(skin.id);
       if (card) paint(card.portrait, skin.id, !profile.owned.includes(skin.id));
     }
+    const badge = $('accessories-preview');
+    const box = badge.getBoundingClientRect();
+    const width = Math.round((box.width || 40) * ratio), height = Math.round((box.height || 46) * ratio);
+    if (badge.width !== width || badge.height !== height) { badge.width = width; badge.height = height; }
+    game.drawCharacterPreview(badge, characterId, false, profile.worn);
   }
   function animatePortraits(timestamp) {
     if (timestamp - lastPortraitTime >= 50) { drawPortraits(); lastPortraitTime = timestamp; }
@@ -566,7 +771,7 @@
   function connect() {
     $('online-loading-fill').style.width = '35%';
     $('online-loading-step').textContent = 'Preparando a arena';
-    game.startOnline({ name: profile.name, skin: profile.skin });
+    game.startOnline({ name: profile.name, skin: profile.skin, acc: profile.worn });
   }
   function onOnlineJoined() {
     $('online-loading-fill').style.width = '100%';
@@ -639,7 +844,8 @@
     onBossSpawn: boss => toast(boss.finalBoss ? 'CHEFE FINAL' : 'MINICHEFE', 2400)
   });
   game.setCharacter(characterId);
-  showMenuView('main', false);
+  game.setAccessories(profile.worn);
+  showMenuView(VesperGame.OnlineProfile.dailyState().ready ? 'daily' : 'main', false);
   updateNewBadge();
   function clearTransient() {
     releaseInput();
@@ -704,6 +910,12 @@
   $('online-skins-btn').addEventListener('click', () => { nextMenuView = 'characters'; charactersReturnView = 'online'; game.leaveOnline(); });
   $('online-menu-btn').addEventListener('click', () => game.leaveOnline());
   $('characters-btn').addEventListener('click', () => { charactersReturnView = 'main'; showMenuView('characters'); });
+  $('daily-btn').addEventListener('click', () => showMenuView('daily'));
+  $('daily-back-btn').addEventListener('click', () => showMenuView('main'));
+  $('daily-claim-btn').addEventListener('click', claimDaily);
+  $('letter-close-btn').addEventListener('click', closeLetter);
+  $('accessories-btn').addEventListener('click', () => showMenuView('accessories'));
+  $('accessories-back-btn').addEventListener('click', () => showMenuView('characters'));
   $('map-character-btn').addEventListener('click', () => { charactersReturnView = 'maps'; showMenuView('characters'); });
   $('maps-back-btn').addEventListener('click', () => showMenuView('main'));
   $('difficulty-back-btn').addEventListener('click', () => showMenuView('maps'));
@@ -741,9 +953,11 @@
       return;
     }
     if (event.repeat) return;
-    if (event.code === 'Escape' && game.state === 'menu' && menuView !== 'main') {
+    if (event.code === 'Escape' && !ui['letter-overlay'].hidden) { event.preventDefault(); closeLetter(); }
+    else if (event.code === 'Escape' && game.state === 'menu' && menuView !== 'main') {
       event.preventDefault();
       showMenuView(menuView === 'characters' ? charactersReturnView
+        : menuView === 'accessories' ? 'characters'
         : menuView === 'difficulty' ? 'maps'
         : menuView === 'online-loading' ? 'online' : 'main');
     }

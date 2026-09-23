@@ -5,6 +5,7 @@ class VesperGame {
     this.callbacks = callbacks;
     this._state = 'menu';
     this._movement = { x: 0, y: 0 };
+    this._accessories = [];
     this._muted = false;
     this._audio = null;
     this._clock = 0;
@@ -64,7 +65,7 @@ class VesperGame {
     this.elapsed = 0;
     this.kills = 0;
     this.bossKills = 0;
-    this._bossStages = [{ id: 'mini', at: 150, finalBoss: false }, { id: 'final', at: 240, finalBoss: true }];
+    this._bossStages = [{ id: 'mini', at: 120, finalBoss: false }, { id: 'final', at: 240, finalBoss: true }];
     this._bossStageCursor = 0;
     this._stageDefeated = { mini: false, final: false };
     this.victoryData = null;
@@ -137,6 +138,10 @@ class VesperGame {
     this._character = id;
     return true;
   }
+  setAccessories(list) {
+    this._accessories = Array.isArray(list) ? list.filter(id => typeof id === 'string') : [];
+    return this._accessories.slice();
+  }
   setMovement(x, y) {
     x = Number.isFinite(x) ? x : 0;
     y = Number.isFinite(y) ? y : 0;
@@ -177,7 +182,7 @@ class VesperGame {
       bosses: this._state === 'victory' ? [] : this.getBosses(), bossKills: this.bossKills,
       mapId: this.mapId, mapName: this.mapDefinition.name,
       difficultyId: this.difficultyId, difficultyName: this.difficultyDefinition.name,
-      stageBossStatus: this._stageDefeated.final ? 'Mapa concluído' : this._bossStageCursor > 1 ? 'Derrote o chefe final' : this._bossStageCursor === 0 ? 'Minichefe em 02:30' : this._stageDefeated.mini ? 'Chefe final em 04:00' : 'Derrote o minichefe'
+      stageBossStatus: this._stageDefeated.final ? 'Mapa concluído' : this._bossStageCursor > 1 ? 'Derrote o chefe final' : this._bossStageCursor === 0 ? 'Minichefe em 02:00' : this._stageDefeated.mini ? 'Chefe final em 04:00' : 'Derrote o minichefe'
     });
   }
   _frame(timestamp) {
@@ -202,6 +207,7 @@ class VesperGame {
     const movementAmount = Math.hypot(this._movement.x, this._movement.y);
     p.steps += movementAmount * dt * 10;
     p.walk += ((movementAmount > 0.08 ? 1 : 0) - p.walk) * Math.min(1, dt * 10);
+    if (this._accessories.includes('mini')) this._followPet(p, dt);
     if (movementAmount > 0.08 && !this._reducedMotion) {
       this._dustTimer -= dt;
       if (this._dustTimer <= 0) {
@@ -720,9 +726,11 @@ class VesperGame {
     for (const shot of this.projectiles) this._drawProjectile(ctx, shot);
     const figures = this.enemies.filter(enemy => !enemy.dead && this._visible(enemy, 65));
     figures.push({ isPlayer: true, x: this.player.x, y: this.player.y });
+    if (this._accessories.includes('mini')) figures.push({ isPet: true, y: this.player.pet ? this.player.pet.y : this.player.y + 8 });
     figures.sort((a, b) => a.y - b.y);
     for (const figure of figures) {
       if (figure.isPlayer) this._drawPlayer(ctx);
+      else if (figure.isPet) this._drawPet(ctx, this.player, this._character);
       else this._drawEnemy(ctx, figure);
     }
     if (menu) this._drawMenuCreatures(ctx);
@@ -1480,6 +1488,39 @@ class VesperGame {
     this._walkPose(ctx, p.steps, p.walk || 0);
     ctx.scale(p.facing, 1);
     this._drawCharacter(ctx, this._character, p.steps);
+    if (this._accessories.includes('hat')) this._drawHat(ctx, this._character);
+    ctx.restore();
+  }
+  _followPet(owner, dt) {
+    if (!owner.pet) owner.pet = { x: owner.x - (owner.facing || 1) * 26, y: owner.y + 8, steps: 0, walk: 0, facing: owner.facing || 1, side: owner.facing || 1, ownerX: owner.x };
+    const pet = owner.pet;
+    const moved = owner.x - pet.ownerX;
+    pet.ownerX = owner.x;
+    if (Math.abs(moved) > 0.5) pet.side = Math.sign(moved);
+    const dx = owner.x - pet.side * 26 - pet.x;
+    const dy = owner.y + 8 - pet.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance > 360) { pet.x += dx; pet.y += dy; }
+    else {
+      const pull = Math.min(1, dt * 6);
+      pet.x += dx * pull;
+      pet.y += dy * pull;
+    }
+    const moving = distance > 3;
+    pet.steps += moving ? dt * 14 : 0;
+    pet.walk += ((moving ? 1 : 0) - pet.walk) * Math.min(1, dt * 10);
+    pet.facing = moving && Math.abs(dx) > 1 ? Math.sign(dx) : (owner.facing || 1);
+  }
+  _drawPet(ctx, owner, id) {
+    const side = owner.facing || 1;
+    const pet = owner.pet || { x: owner.x - side * 26, y: owner.y + 8, steps: 0, walk: 0, facing: side };
+    ctx.save();
+    ctx.translate(pet.x, pet.y);
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath(); ctx.ellipse(0, 7.5, 9, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+    this._walkPose(ctx, pet.steps, pet.walk);
+    ctx.scale(pet.facing * 0.42, 0.42);
+    this._drawCharacter(ctx, id, pet.steps);
     ctx.restore();
   }
   _walkPose(ctx, steps, walk) {

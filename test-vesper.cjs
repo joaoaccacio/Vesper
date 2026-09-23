@@ -137,7 +137,7 @@ function harness({ width = 1200, height = 800, dpr = 1, seed = 1707, source = 'm
     for (const callback of callbacks) callback(now);
   };
   const online = (options = {}) => {
-    game.startOnline({ name: options.name || 'Guino', skin: options.skin || 'alien', server: 'ws://teste:1' });
+    game.startOnline({ name: options.name || 'Guino', skin: options.skin || 'alien', acc: options.acc, server: 'ws://teste:1' });
     const socket = sockets[sockets.length - 1];
     socket.open();
     const roster = options.roster || [
@@ -608,16 +608,16 @@ test('player, camera, enemies and gems stay inside all map boundaries on desktop
     h.frame();
   }
 });
-test('each map spawns exactly its mini boss at 150 seconds and final character at 240 seconds', () => {
+test('each map spawns exactly its mini boss at 120 seconds and final character at 240 seconds', () => {
   for (const id of mapIds) {
     const { game: g } = isolated();
     g.start(id); g.enemies.length = 0; g._spawnTimer = g._attackTimer = Infinity;
-    for (const time of [0, 60, 120, 149.99]) { atTime(g, time); assert.equal(bosses(g).length, 0); }
-    atTime(g,150);
+    for (const time of [0, 60, 100, 119.99]) { atTime(g, time); assert.equal(bosses(g).length, 0); }
+    atTime(g,120);
     const mini = bosses(g)[0];
     assert.ok(mini && !mini.finalBoss);
-    assert.equal(mini.spawnAt,150);
-    for (const time of [150, 180, 239.99]) { atTime(g,time); assert.equal(bosses(g).length,1); }
+    assert.equal(mini.spawnAt,120);
+    for (const time of [120, 180, 239.99]) { atTime(g,time); assert.equal(bosses(g).length,1); }
     atTime(g,240);
     const final = bosses(g).find(e => e.finalBoss);
     assert.equal(bosses(g).length,2);
@@ -629,7 +629,7 @@ test('each map spawns exactly its mini boss at 150 seconds and final character a
   }
 });
 test('pause and upgrades freeze map encounter deadlines', () => {
-  for (const state of ['paused','upgrade']) for (const deadline of [150,240]) {
+  for (const state of ['paused','upgrade']) for (const deadline of [120,240]) {
     const h = isolated(), g = h.game;
     atTime(g,deadline-0.01); h.frame();
     const count=bosses(g).length;
@@ -684,8 +684,8 @@ test('only final-boss defeat awards one victory, cancels same-frame XP, and free
     assert.equal(h.events.hud.at(-1).bosses.length,0,'Victory HUD must hide live encounter bars');
     g.start(id);assert.equal(g.state,'playing');assert.equal(g.elapsed,0);assert.equal(g.kills,0);
     g.enemies.length=0;g._spawnTimer=g._attackTimer=Infinity;
-    atTime(g,149.99);assert.equal(bosses(g).length,0);
-    atTime(g,150);assert.equal(bosses(g).length,1);
+    atTime(g,119.99);assert.equal(bosses(g).length,0);
+    atTime(g,120);assert.equal(bosses(g).length,1);
     assert.equal(h.events.victories.length,1,'Restart alone never awards a completion');
   }
 });
@@ -824,6 +824,8 @@ function uiHarness(stored = {}, { blocked = false } = {}) {
     setMap(id) { this.mapId = id; return true; }
     get mapDefinition() { return FakeGame.MAPS.find(map => map.id === this.mapId); }
     drawCharacterPreview(canvas, id, locked) { this.previews.push({ id, locked, size: canvas.width }); }
+    drawRewardArt(canvas, reward) { this.rewardArts = (this.rewardArts || 0) + 1; }
+    setAccessories(list) { this.accessories = list.slice(); return this.accessories; }
     drawMapPreview() {}
     drawMinimap() {}
     start(id, difficultyId) { if(id)this.mapId=id; this.difficultyId=difficultyId || this.difficultyId || 'medium'; this.starts = (this.starts || 0) + 1; this.state = 'playing'; this.callbacks.onState(this.state); }
@@ -1094,11 +1096,12 @@ test('minimap changes corner only when it would cover the player', () => {
   ui.game.player.x = ui.game.player.y = 0; ui.game.callbacks.onHud(data);
   assert.equal(n.get('minimap').classList.contains('is-obscuring'), false);
 });
-test('campaign keeps eight heroes while the Online mode adds eight paid skins', () => {
+test('the roster splits campaign heroes, daily skins for both modes and paid Online skins', () => {
   const earned = ['human', 'ghost', 'hooded', 'vampire', 'mummy', 'zombie', 'jack', 'kraken', 'yeti', 'survivor'];
-  const skins = ['alien', 'spider', 'skeleton', 'orc', 'invisible', 'cyborg', 'plague', 'frankenstein'];
+  const both = ['banana', 'penguin'];
+  const skins = ['alien', 'spider', 'skeleton', 'orc', 'invisible', 'frankenstein', 'plague', 'cyborg'];
   const roster = harness().game.constructor.CHARACTERS;
-  assert.deepEqual(Array.from(roster, character => character.id), earned.concat(skins));
+  assert.deepEqual(Array.from(roster, character => character.id), earned.concat(both, skins));
   const paid = roster.filter(character => character.unlockType === 'coins');
   assert.equal(paid.length, 8, 'Oito skins pagas no catalogo da campanha');
   for (const selected of [...skins, 'vampire', 'unknown']) {
@@ -1108,6 +1111,8 @@ test('campaign keeps eight heroes while the Online mode adds eight paid skins', 
     const coinCards = ui.nodes.get('coin-grid').children;
     assert.deepEqual(cards.map(card => card.dataset.characterId), earned);
     assert.deepEqual(coinCards.map(card => card.dataset.characterId), skins);
+    assert.deepEqual(ui.nodes.get('both-grid').children.map(card => card.dataset.characterId), both);
+    assert.ok(ui.nodes.get('both-grid').children.every(card => card.classList.contains('is-locked')), 'Banana e Pinguim comecam bloqueados');
     assert.deepEqual(cards.filter(card => !card.classList.contains('is-locked')).map(card => card.dataset.characterId), ['human', 'ghost', 'hooded']);
     assert.equal(ui.game.character, 'human');
     assert.ok(coinCards[0].classList.contains('is-using'), 'O Alien começa em uso no Online');
@@ -1236,7 +1241,7 @@ test('the Online client mirrors the server snapshot instead of simulating the ma
   const arena = h.sandbox.VesperArena;
   const socket = h.online({ name: 'Guino', skin: 'orc' });
   assert.equal(socket.url, 'ws://teste:1');
-  assert.deepEqual({ ...socket.sent[0] }, { t: 'join', name: 'Guino', skin: 'orc', token: '' });
+  assert.deepEqual({ ...socket.sent[0], acc: Array.from(socket.sent[0].acc) }, { t: 'join', name: 'Guino', skin: 'orc', token: '', acc: [] });
   assert.equal(h.game.state, 'playing');
   assert.equal(h.game.onlineActive, true);
   assert.equal(h.game.fighters.length, 3);
@@ -1354,11 +1359,11 @@ test('the server address accepts short forms and falls back to the page origin',
   assert.equal(online.normalizeServer('   '), '');
   assert.equal(online.defaultServer(), 'ws://127.0.0.1:8080');
 });
-test('ten single shot weapons carry their own art in the fighter hand', () => {
+test('twelve single shot weapons carry their own art in the fighter hand', () => {
   const h = harness();
   const arena = h.sandbox.VesperArena;
   assert.ok(arena.WEAPONS.every(weapon => weapon.projectiles === 1), 'Nenhuma arma dispara mais de um tiro');
-  assert.equal(new Set(arena.WEAPONS.map(weapon => weapon.name)).size, 10);
+  assert.equal(new Set(arena.WEAPONS.map(weapon => weapon.name)).size, 12);
   const socket = h.online();
   const me = h.game.me;
   const drawings = new Set();
@@ -1373,7 +1378,7 @@ test('ten single shot weapons carry their own art in the fighter hand', () => {
       operations.push([method, ...args]);
     };
   }
-  for (let level = 1; level <= 10; level++) {
+  for (let level = 1; level <= 12; level++) {
     me.level = level;
     operations = [];
     h.game._drawFighterWeapon(context, me);
@@ -1381,7 +1386,7 @@ test('ten single shot weapons carry their own art in the fighter hand', () => {
     drawings.add(JSON.stringify(operations));
     assert.equal(depth, 0);
   }
-  assert.equal(drawings.size, 10, 'Os dez desenhos sao diferentes');
+  assert.equal(drawings.size, 12, 'Os doze desenhos sao diferentes');
   me.level = 9;
   me.aim = Math.PI;
   operations = [];
@@ -1394,11 +1399,12 @@ test('ten single shot weapons carry their own art in the fighter hand', () => {
 test('every Online skin keeps its own skill and price in the shared arena core', () => {
   const arena = harness().sandbox.VesperArena;
   assert.deepEqual(Array.from(arena.SKINS, skin => skin.id),
-    ['alien', 'spider', 'skeleton', 'orc', 'invisible', 'cyborg', 'plague', 'frankenstein']);
-  assert.deepEqual(Array.from(arena.SKINS, skin => skin.price), [0, 150, 220, 300, 380, 450, 520, 600]);
-  assert.deepEqual({ ...arena.bonusOf('alien') }, { damage: 1, cadence: 1, speed: 1, projectile: 0, poison: 0 });
+    ['alien', 'spider', 'skeleton', 'orc', 'invisible', 'frankenstein', 'plague', 'cyborg', 'banana', 'penguin']);
+  assert.deepEqual(Array.from(arena.SKINS, skin => skin.price), [0, 50, 220, 320, 400, 480, 600, 700, null, null]);
+  assert.deepEqual({ ...arena.bonusOf('alien') }, { damage: 1, cadence: 1, speed: 1, health: 1, projectile: 0, poison: 0 });
   close(arena.bonusOf('spider').cadence, 1.1, 1e-9, 'aranha');
-  close(arena.bonusOf('skeleton').cadence, 1.15, 1e-9, 'esqueleto');
+  close(arena.bonusOf('skeleton').health, 1.15, 1e-9, 'esqueleto');
+  assert.equal(arena.bonusOf('skeleton').cadence, 1, 'O esqueleto trocou velocidade de ataque por vida');
   close(arena.bonusOf('orc').damage, 1.2, 1e-9, 'orc');
   close(arena.bonusOf('invisible').speed, 1.25, 1e-9, 'homem invisivel');
   close(arena.bonusOf('frankenstein').damage, 1.3, 1e-9, 'frankenstein');
@@ -1413,6 +1419,9 @@ test('every Online skin keeps its own skill and price in the shared arena core',
   match.shots.length = 0;
   match.fire(plain);
   assert.equal(withSkill, match.shots.length + 1, 'O cyborg lanca um projetil a mais');
+  const skeleton = match.join({ name: 'E', skin: 'skeleton' });
+  assert.equal(skeleton.maxHp, Math.round(arena.WEAPONS[0].hp * 1.15), 'O esqueleto nasce com 15% a mais de vida');
+  assert.equal(skeleton.hp, skeleton.maxHp);
   const orc = match.join({ name: 'O', skin: 'orc' });
   match.shots.length = 0;
   match.fire(orc);
@@ -1425,7 +1434,7 @@ test('Online skins stay in the Online mode and campaign heroes stay in the campa
   const h = harness();
   const roster = Array.from(h.game.constructor.CHARACTERS);
   const skins = roster.filter(character => character.unlockType === 'coins').map(character => character.id);
-  const heroes = roster.filter(character => character.unlockType !== 'coins').map(character => character.id);
+  const heroes = roster.filter(character => ['free', 'map', 'all'].includes(character.unlockType)).map(character => character.id);
   h.game.setCharacter('ghost');
   const socket = h.online({ skin: 'frankenstein' });
   assert.equal(h.game.character, 'frankenstein');
@@ -1453,7 +1462,7 @@ test('Online coins buy skins in the shop and the chosen skin enters the match', 
   orc.fire('click');
   assert.ok(!orc.classList.contains('is-locked'), 'A skin comprada destrava');
   assert.ok(orc.classList.contains('is-using'));
-  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins, 100);
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins, 80);
   cyborg.fire('click');
   assert.ok(cyborg.classList.contains('is-locked'), 'Sem moedas a skin continua travada');
   ui.nodes.get('online-btn').fire('click');
@@ -1464,7 +1473,7 @@ test('Online coins buy skins in the shop and the chosen skin enters the match', 
   ui.nodes.get('online-name').value = 'Guino';
   ui.nodes.get('online-form').fire('submit');
   assert.equal(ui.nodes.get('online-loading-view').hidden, false);
-  assert.deepEqual({ ...ui.game.onlineOptions }, { name: 'Guino', skin: 'orc' }, 'O endereco salvo antigo nao prende o jogador em outro servidor');
+  assert.deepEqual({ ...ui.game.onlineOptions, acc: Array.from(ui.game.onlineOptions.acc) }, { name: 'Guino', skin: 'orc', acc: [] }, 'O endereco salvo antigo nao prende o jogador em outro servidor');
   assert.equal('server' in JSON.parse(ui.stored['vesper.online.v1']), false);
   assert.equal(/servidor/i.test(ui.nodes.get('online-loading-step').textContent), false);
   assert.equal(ui.game.state, 'playing');
@@ -1661,6 +1670,114 @@ test('the input goes out the moment the direction changes, including the stop', 
   assert.deepEqual({ x: stopped.at(-1).x, y: stopped.at(-1).y }, { x: 0, y: 0 }, 'A parada tambem e avisada');
 });
 
+test('daily login pays fifteen days, one per calendar day, and keeps the rewards', () => {
+  const h = harness();
+  const Profile = h.sandbox.VesperGame.OnlineProfile;
+  const days = h.sandbox.VesperGame.ONLINE.DAILY_REWARDS;
+  assert.equal(days.length, 15);
+  assert.equal(Profile.priceOf('banana'), Infinity, 'Skin do login diario nao se compra');
+  assert.equal(Profile.buy('penguin').ok, false);
+  assert.equal(Profile.dailyState('2026-01-01').ready, true);
+  assert.equal(Profile.claimDaily('2026-01-01').reward.amount, 15);
+  assert.equal(Profile.claimDaily('2026-01-01').ok, false, 'O mesmo dia nao paga duas vezes');
+  assert.equal(Profile.dailyState('2026-01-01').ready, false);
+  for (let day = 2; day <= 15; day++) assert.equal(Profile.claimDaily(`2026-01-${String(day).padStart(2, '0')}`).ok, true);
+  const profile = Profile.load();
+  assert.equal(profile.coins, 15 + 20 + 25 + 20 + 25 + 30 + 35 + 35 + 40 + 40);
+  assert.deepEqual(Array.from(profile.accessories), ['hat', 'mini']);
+  assert.deepEqual(Array.from(profile.worn), ['hat', 'mini'], 'Acessorio ganho ja entra em uso');
+  assert.ok(profile.owned.includes('banana') && profile.owned.includes('penguin'));
+  const done = Profile.dailyState('2026-02-01');
+  assert.equal(done.done, true);
+  assert.equal(done.ready, false);
+  assert.equal(Profile.claimDaily('2026-02-01').ok, false);
+  assert.equal(Profile.toggleAccessory('hat').profile.worn.includes('hat'), false);
+  assert.equal(Profile.toggleAccessory('hat').profile.worn.includes('hat'), true);
+  assert.equal(Profile.toggleAccessory('crown').ok, false);
+});
+test('the daily screen opens by itself, claims the prize and shows the letter on day 13', () => {
+  const ui = uiHarness();
+  assert.equal(ui.nodes.get('menu').dataset.view, 'daily', 'Com premio liberado o login diario abre sozinho');
+  assert.equal(ui.nodes.get('daily-grid').children.length, 15);
+  assert.ok(ui.nodes.get('daily-grid').children[0].className.includes('is-ready'));
+  ui.nodes.get('daily-claim-btn').fire('click');
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins, 15);
+  assert.equal(ui.nodes.get('daily-claim-btn').disabled, true);
+  assert.equal(ui.nodes.get('daily-claim-btn').textContent, 'VOLTE AMANHÃ');
+  assert.equal(ui.nodes.get('daily-new').hidden, true);
+  ui.nodes.get('daily-grid').children[1].fire('click');
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins, 15, 'O dia seguinte so libera amanha');
+  const letter = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 3, coins: 0, owned: ['alien'], skin: 'alien', name: '', daily: 12, lastClaim: '2000-01-01' }) });
+  letter.nodes.get('daily-claim-btn').fire('click');
+  assert.equal(letter.nodes.get('letter-overlay').hidden, false, 'O presente abre a carta');
+  letter.browser.fire('keydown', { code: 'Escape' });
+  assert.equal(letter.nodes.get('letter-overlay').hidden, true);
+  letter.nodes.get('daily-grid').children[12].fire('click');
+  assert.equal(letter.nodes.get('letter-overlay').hidden, false, 'A carta pode ser relida');
+  letter.nodes.get('letter-close-btn').fire('click');
+  assert.equal(letter.nodes.get('letter-overlay').hidden, true);
+  const quiet = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 3, coins: 0, owned: ['alien'], skin: 'alien', name: '', daily: 15, lastClaim: '2000-01-01' }) });
+  assert.equal(quiet.nodes.get('menu').dataset.view, 'main', 'Sem premio o jogo abre no menu');
+});
+test('accessories are equipped from their own screen and reach both modes', () => {
+  const wallet = { version: 3, coins: 0, owned: ['alien', 'banana'], skin: 'alien', name: 'Guino', accessories: ['hat'], worn: [], daily: 15, lastClaim: '2000-01-01' };
+  const ui = uiHarness({ 'vesper.online.v1': JSON.stringify(wallet) });
+  ui.nodes.get('characters-btn').fire('click');
+  ui.nodes.get('accessories-btn').fire('click');
+  assert.equal(ui.nodes.get('menu').dataset.view, 'accessories');
+  const [hat, mini] = ui.nodes.get('accessory-grid').children;
+  assert.ok(mini.className.includes('is-locked'));
+  hat.fire('click');
+  assert.deepEqual(Array.from(ui.game.accessories), ['hat']);
+  assert.deepEqual(JSON.parse(ui.stored['vesper.online.v1']).worn, ['hat']);
+  assert.ok(hat.className.includes('is-using'));
+  mini.fire('click');
+  assert.deepEqual(Array.from(ui.game.accessories), ['hat'], 'Acessorio bloqueado nao entra');
+  ui.nodes.get('accessories-back-btn').fire('click');
+  assert.equal(ui.nodes.get('menu').dataset.view, 'characters');
+  const banana = ui.nodes.get('both-grid').children.find(card => card.dataset.characterId === 'banana');
+  banana.fire('click');
+  assert.equal(ui.game.character, 'banana', 'Banana vira o personagem da campanha');
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).skin, 'banana', 'E a skin do Online');
+  assert.equal(ui.stored['vesper.character.v1'], 'banana');
+  ui.nodes.get('characters-back-btn').fire('click');
+  ui.nodes.get('online-btn').fire('click');
+  ui.nodes.get('online-name').value = 'Guino';
+  ui.nodes.get('online-form').fire('submit');
+  assert.equal(ui.game.onlineOptions.skin, 'banana');
+  assert.deepEqual(Array.from(ui.game.onlineOptions.acc), ['hat'], 'O Online recebe os acessorios em uso');
+});
+test('the Online client draws heavy shots, grenade blasts and quiet poison numbers', () => {
+  const h = harness();
+  const socket = h.online({ acc: ['hat', 'mini'], roster: [
+    { id: 1, name: 'Guino', skin: 'banana', bot: false, acc: ['hat', 'mini'] },
+    { id: 2, name: 'Ashley', skin: 'penguin', bot: true, acc: ['mini'] }
+  ] });
+  assert.deepEqual(Array.from(socket.sent[0].acc), ['hat', 'mini']);
+  assert.deepEqual(Array.from(h.game.fighters[1].acc), ['mini']);
+  h.snapshot(socket, [
+    [1, 0, 0, 0, 12, 620, 620, 0, 1, 0, 0],
+    [2, 300, 0, 0, 10, 540, 540, 0, 1, 0, 0]
+  ], { events: [{ e: 'shot', id: 1, x: 22, y: -2, a: 0, s: 330, t: 12, p: 0, l: 0.9 }] });
+  const shot = h.game.shots.at(-1);
+  close(shot.life, 0.9, 1e-9, 'A granada voa so ate o alvo');
+  h.game.fighters[1].spawnGuard = 0;
+  h.game._updateOnline(0.5);
+  h.game._updateOnline(0.5);
+  assert.equal(h.game.shots.length, 0, 'A bala visual some ao encostar no alvo');
+  socket.deliver({ t: 's', k: 3, r: 100, f: [[1, 0, 0, 0, 12, 620, 620, 0, 1, 0, 0], [2, 300, 0, 0, 10, 220, 540, 0, 1, 0, 0]], c: [], e: [{ e: 'hit', id: 2, by: 1, damage: 320, t: 12 }] });
+  assert.equal(h.game._explosions.length, 1, 'A granada explode ao acertar o personagem');
+  assert.equal(h.game._explosions[0].kind, 'grenade');
+  const before = h.game.particles.length;
+  socket.deliver({ t: 's', k: 4, r: 99, f: [[1, 0, 0, 0, 12, 620, 620, 0, 1, 0, 0], [2, 300, 0, 0, 10, 214, 540, 0, 1, 0, 0]], c: [], e: [{ e: 'hit', id: 2, by: 1, damage: 6, p: 1 }] });
+  assert.equal(h.game.particles.length, before, 'O veneno nao solta estilhacos');
+  assert.equal(h.game.numbers.at(-1).color, '#a9e08a', 'O dano de veneno aparece em verde');
+  for (let i = 0; i < 20; i++) h.game._updateOnline(0.05);
+  assert.equal(h.game._explosions.length, 0);
+  assert.ok(h.game.me.pet && h.game.fighters[1].pet, 'Quem usa Mini Voce ganha um seguidor');
+  h.game.resize();
+  h.game._drawOnline();
+});
 if (isMain) process.on('beforeExit', () => {
   process.stdout.write(`\n${passed} passed; ${failures.length} failed.\n`);
   if (failures.length) process.exitCode = 1;

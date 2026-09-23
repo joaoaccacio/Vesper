@@ -10,28 +10,37 @@
   });
 
   const WEAPONS = Object.freeze([
-    { tier: 1, name: 'Revólver', damage: 18, interval: 0.53, projectiles: 1, spread: 0.05, speed: 620, hp: 180 },
-    { tier: 2, name: 'Pistola', damage: 17, interval: 0.41, projectiles: 1, spread: 0.05, speed: 650, hp: 220 },
-    { tier: 3, name: 'Pistola Automática', damage: 14, interval: 0.28, projectiles: 1, spread: 0.07, speed: 670, hp: 260 },
-    { tier: 4, name: 'Escopeta', damage: 50, interval: 0.84, projectiles: 1, spread: 0.09, speed: 600, hp: 300 },
-    { tier: 5, name: 'Submetralhadora', damage: 16, interval: 0.225, projectiles: 1, spread: 0.08, speed: 700, hp: 340 },
-    { tier: 6, name: 'Carabina', damage: 36, interval: 0.42, projectiles: 1, spread: 0.04, speed: 760, hp: 380 },
-    { tier: 7, name: 'Rifle', damage: 52, interval: 0.51, projectiles: 1, spread: 0.03, speed: 820, hp: 420 },
-    { tier: 8, name: 'Fuzil de Assalto', damage: 27, interval: 0.22, projectiles: 1, spread: 0.06, speed: 800, hp: 460 },
-    { tier: 9, name: 'AK-47', damage: 30, interval: 0.21, projectiles: 1, spread: 0.07, speed: 840, hp: 500 },
-    { tier: 10, name: 'Metralhadora Vesper', damage: 28, interval: 0.165, projectiles: 1, spread: 0.08, speed: 880, hp: 540 }
+    { tier: 1, name: 'Revólver', damage: 16, interval: 0.56, projectiles: 1, spread: 0.05, speed: 600, hp: 180 },
+    { tier: 2, name: 'Pistola', damage: 18, interval: 0.5, projectiles: 1, spread: 0.05, speed: 630, hp: 220 },
+    { tier: 3, name: 'Pistola Automática', damage: 20, interval: 0.45, projectiles: 1, spread: 0.06, speed: 660, hp: 260 },
+    { tier: 4, name: 'Escopeta', damage: 22, interval: 0.41, projectiles: 1, spread: 0.07, speed: 690, hp: 300 },
+    { tier: 5, name: 'Carabina', damage: 24, interval: 0.37, projectiles: 1, spread: 0.05, speed: 720, hp: 340 },
+    { tier: 6, name: 'Rifle', damage: 26, interval: 0.33, projectiles: 1, spread: 0.04, speed: 750, hp: 380 },
+    { tier: 7, name: 'Submetralhadora', damage: 28, interval: 0.3, projectiles: 1, spread: 0.07, speed: 780, hp: 420 },
+    { tier: 8, name: 'Rifle de Assalto', damage: 30, interval: 0.27, projectiles: 1, spread: 0.06, speed: 810, hp: 460 },
+    { tier: 9, name: 'AK-47', damage: 32, interval: 0.245, projectiles: 1, spread: 0.07, speed: 840, hp: 500 },
+    { tier: 10, name: 'Metralhadora', damage: 34, interval: 0.22, projectiles: 1, spread: 0.08, speed: 870, hp: 540 },
+    { tier: 11, name: 'Canhão de Plasma Vesper', damage: 240, interval: 0.6, projectiles: 1, spread: 0.02, speed: 380, hp: 580, heavy: true, range: 760 },
+    { tier: 12, name: 'Lançador de Granada Vesper', damage: 320, interval: 0.6, projectiles: 1, spread: 0.02, speed: 330, hp: 620, heavy: true, range: 760 }
   ].map(weapon => Object.freeze(weapon)));
 
   const SKINS = Object.freeze([
     { id: 'alien', price: 0, skill: null },
-    { id: 'spider', price: 150, skill: { id: 'cadence', value: 1.1, label: 'Velocidade de ataque +10%' } },
-    { id: 'skeleton', price: 220, skill: { id: 'cadence', value: 1.15, label: 'Velocidade de ataque +15%' } },
-    { id: 'orc', price: 300, skill: { id: 'damage', value: 1.2, label: 'Dano +20%' } },
-    { id: 'invisible', price: 380, skill: { id: 'speed', value: 1.25, label: 'Velocidade +25%' } },
-    { id: 'cyborg', price: 450, skill: { id: 'projectile', value: 1, label: '+1 projétil' } },
-    { id: 'plague', price: 520, skill: { id: 'poison', value: 0.4, label: 'Tiros envenenam por 3s' } },
-    { id: 'frankenstein', price: 600, skill: { id: 'damage', value: 1.3, label: 'Dano +30%' } }
+    { id: 'spider', price: 50, skill: { id: 'cadence', value: 1.1, label: 'Velocidade de ataque +10%' } },
+    { id: 'skeleton', price: 220, skill: { id: 'health', value: 1.15, label: 'Vida +15%' } },
+    { id: 'orc', price: 320, skill: { id: 'damage', value: 1.2, label: 'Dano +20%' } },
+    { id: 'invisible', price: 400, skill: { id: 'speed', value: 1.25, label: 'Velocidade +25%' } },
+    { id: 'frankenstein', price: 480, skill: { id: 'damage', value: 1.3, label: 'Dano +30%' } },
+    { id: 'plague', price: 600, skill: { id: 'poison', value: 0.4, label: 'Tiros envenenam por 3s' } },
+    { id: 'cyborg', price: 700, skill: { id: 'projectile', value: 1, label: '+1 projétil' } },
+    { id: 'banana', price: null, skill: null },
+    { id: 'penguin', price: null, skill: null }
   ].map(skin => Object.freeze(skin)));
+
+  const ACCESSORIES = Object.freeze([
+    { id: 'hat', name: 'Chapéu de Cowboy' },
+    { id: 'mini', name: 'Mini Você' }
+  ].map(accessory => Object.freeze(accessory)));
 
   const BOT_NAMES = Object.freeze([
     'Aaron', 'Adam', 'Adrian', 'Alan', 'Albert', 'Alex', 'Alexis', 'Allison', 'Amanda', 'Amber',
@@ -63,28 +72,33 @@
   };
 
   const CONFIG = Object.freeze({
-    matchSeconds: number(env.VESPER_MATCH_SECONDS, 300), capacity: number(env.VESPER_CAPACITY, 15), levelCap: 10, respawnSeconds: 4, spawnGuard: 2,
+    matchSeconds: number(env.VESPER_MATCH_SECONDS, 300), capacity: number(env.VESPER_CAPACITY, 15), levelCap: 12, botLevelCap: 10, respawnSeconds: 4, spawnGuard: 2,
     crates: 22, crateHp: 34, crateXp: 20, crateRespawn: 12, crateRadius: 17,
-    botFill: number(env.VESPER_BOT_FILL, 8), botStrafe: 0.3, botSpeed: 0.88, botDamage: 0.6, botRange: 560, botHunt: 1400, botAim: 0.34,
+    botFill: number(env.VESPER_BOT_FILL, 8), botStrafe: 0.3, botSpeed: 0.88, botDamage: 0.6, botRange: 560, botHunt: 1400, botAim: 0.34, botAccessory: 0.25,
+    heavyReload: 0.5, poisonSeconds: 3, poisonCap: 40, poisonPulse: 0.5,
     shotLimit: 180, tagRange: 560, tickRate: 20, joinSeconds: 240, graceSeconds: 30,
     reconnectSeconds: 30, humanReward: 2, botReward: 0.5, inputTimeout: 0.6, snapDistance: 420,
     speed: 210, radius: 14, shotRadius: 4, shotLife: 0.9, zoneColumns: 5, zoneRows: 3
   });
 
-  const nextXpFor = level => 22 + (level - 1) * 13;
+  const nextXpFor = level => Math.round(22 + (level - 1) * 13 * (1 + (level - 1) * 0.08));
   const killXpFor = level => 10 + level * 6;
   const weaponFor = level => WEAPONS[clamp(Math.floor(level), 1, CONFIG.levelCap) - 1];
   const skinFor = id => SKINS.find(skin => skin.id === id) || SKINS[0];
+  const accessoriesOf = list => (Array.isArray(list) ? ACCESSORIES.filter(item => list.includes(item.id)).map(item => item.id) : []);
 
   const coinsFor = (rank, level, kills) =>
     (rank === 1 ? 60 : rank === 2 ? 42 : rank === 3 ? 32 : Math.max(6, 26 - rank)) + level * 3 + kills * 2;
 
   function bonusOf(skinId) {
     const skill = skinFor(skinId).skill;
-    const bonus = { damage: 1, cadence: 1, speed: 1, projectile: 0, poison: 0 };
+    const bonus = { damage: 1, cadence: 1, speed: 1, health: 1, projectile: 0, poison: 0 };
     if (skill && Object.prototype.hasOwnProperty.call(bonus, skill.id)) bonus[skill.id] = skill.value;
     return bonus;
   }
+
+  const maxHpFor = (fighter, level = fighter.level) => Math.round(weaponFor(level).hp * fighter.bonus.health);
+  const levelCapOf = fighter => (fighter.bot ? CONFIG.botLevelCap : CONFIG.levelCap);
 
   const bounds = Object.freeze({
     left: -ARENA.width / 2, right: ARENA.width / 2,
@@ -193,25 +207,27 @@
     join(options = {}) {
       const bot = Boolean(options.bot);
       const skin = SKINS.some(item => item.id === options.skin) ? options.skin : SKINS[Math.floor(this.random() * SKINS.length)].id;
-      const weapon = WEAPONS[0];
       const fighter = {
         id: this._nextId++,
         name: String(options.name || (bot ? this.nextBotName() : 'Jogador')).slice(0, 14),
         skin: bot ? skin : (SKINS.some(item => item.id === options.skin) ? options.skin : 'alien'),
         bot,
         level: 1, xp: 0, nextXp: nextXpFor(1), humanKills: 0, botKills: 0,
-        hp: weapon.hp, maxHp: weapon.hp,
+        hp: 1, maxHp: 1,
+        acc: bot ? ACCESSORIES.filter(() => this.random() < CONFIG.botAccessory).map(item => item.id) : accessoriesOf(options.acc),
         x: 0, y: 0, aim: 0, kills: 0, deaths: 0,
         alive: true, respawn: 0, spawnGuard: CONFIG.spawnGuard,
-        fireTimer: 0, poison: 0, poisonDps: 0, poisonBy: 0,
+        fireTimer: 0, heavyShots: 0, heavyHit: false, aimDistance: Infinity,
+        poison: 0, poisonDps: 0, poisonBy: 0, poisonPulse: 0, poisonTaken: 0,
         mx: 0, my: 0, firing: false, lastInput: 0,
         think: 0, strafe: 1, target: null,
         order: this.random()
       };
       fighter.bonus = bonusOf(fighter.skin);
+      fighter.maxHp = fighter.hp = maxHpFor(fighter);
       this.place(fighter, this.nextZone(fighter));
       this.fighters.push(fighter);
-      this.events.push({ e: 'join', id: fighter.id, name: fighter.name, skin: fighter.skin, bot: fighter.bot });
+      this.events.push({ e: 'join', id: fighter.id, name: fighter.name, skin: fighter.skin, bot: fighter.bot, acc: fighter.acc });
       return fighter;
     }
 
@@ -283,27 +299,49 @@
     }
 
     grantXp(fighter, amount) {
-      if (fighter.level >= CONFIG.levelCap) return;
+      const cap = levelCapOf(fighter);
+      if (fighter.level >= cap) return;
       fighter.xp += amount;
-      while (fighter.xp >= fighter.nextXp && fighter.level < CONFIG.levelCap) {
+      while (fighter.xp >= fighter.nextXp && fighter.level < cap) {
         fighter.xp -= fighter.nextXp;
         fighter.level++;
         fighter.nextXp = nextXpFor(fighter.level);
-        const weapon = weaponFor(fighter.level);
-        const gained = weapon.hp - fighter.maxHp;
-        fighter.maxHp = weapon.hp;
-        fighter.hp = Math.min(fighter.maxHp, fighter.hp + gained + weapon.hp * 0.25);
+        const maxHp = maxHpFor(fighter);
+        const gained = maxHp - fighter.maxHp;
+        fighter.maxHp = maxHp;
+        fighter.hp = Math.min(maxHp, fighter.hp + gained + maxHp * 0.25);
         this.events.push({ e: 'level', id: fighter.id, level: fighter.level });
       }
-      if (fighter.level >= CONFIG.levelCap) { fighter.xp = 0; fighter.nextXp = nextXpFor(CONFIG.levelCap); }
+      if (fighter.level >= cap) { fighter.xp = 0; fighter.nextXp = nextXpFor(cap); }
     }
 
-    hurt(target, amount, byId, poison = 0) {
+    hurt(target, amount, byId, poison = 0, tier = 0) {
       if (!target.alive || !(amount > 0) || target.spawnGuard > 0) return;
       target.hp -= amount;
-      if (poison > 0) { target.poison = 3; target.poisonDps = poison; target.poisonBy = byId; }
-      this.events.push({ e: 'hit', id: target.id, by: byId, damage: Math.round(amount) });
+      if (poison > 0) {
+        target.poison = CONFIG.poisonSeconds;
+        target.poisonDps = poison;
+        target.poisonBy = byId;
+        target.poisonPulse = CONFIG.poisonPulse;
+      }
+      this.events.push({ e: 'hit', id: target.id, by: byId, damage: Math.round(amount), t: tier });
       if (target.hp <= 0) this.kill(target, byId);
+    }
+
+    stepPoison(fighter, dt) {
+      fighter.poison -= dt;
+      fighter.poisonPulse -= dt;
+      if (!fighter.alive || fighter.spawnGuard > 0) return;
+      const amount = fighter.poisonDps * dt;
+      fighter.hp -= amount;
+      fighter.poisonTaken += amount;
+      const dead = fighter.hp <= 0;
+      if (dead || fighter.poisonPulse <= 0 || fighter.poison <= 0) {
+        fighter.poisonPulse = CONFIG.poisonPulse;
+        if (fighter.poisonTaken >= 0.5) this.events.push({ e: 'hit', id: fighter.id, by: fighter.poisonBy, damage: Math.round(fighter.poisonTaken), p: 1 });
+        fighter.poisonTaken = 0;
+      }
+      if (dead) this.kill(fighter, fighter.poisonBy);
     }
 
     kill(victim, byId) {
@@ -313,6 +351,7 @@
       victim.deaths++;
       victim.respawn = CONFIG.respawnSeconds;
       victim.poison = 0;
+      victim.poisonTaken = 0;
       victim.firing = false;
       const killer = this.fighters.find(fighter => fighter.id === byId);
       if (killer && killer !== victim) {
@@ -324,12 +363,12 @@
     }
 
     respawn(fighter) {
-      const weapon = weaponFor(fighter.level);
       fighter.alive = true;
-      fighter.maxHp = weapon.hp;
-      fighter.hp = weapon.hp;
+      fighter.maxHp = fighter.hp = maxHpFor(fighter);
       fighter.spawnGuard = CONFIG.spawnGuard;
       fighter.fireTimer = 0;
+      fighter.heavyShots = 0;
+      fighter.heavyHit = false;
       fighter.poison = 0;
       this.place(fighter, this.farthestZone(fighter));
       this.events.push({ e: 'spawn', id: fighter.id, x: Math.round(fighter.x), y: Math.round(fighter.y) });
@@ -339,8 +378,9 @@
       const weapon = weaponFor(fighter.level);
       const count = weapon.projectiles + fighter.bonus.projectile;
       const damage = weapon.damage * fighter.bonus.damage * (fighter.bot ? CONFIG.botDamage : 1);
-      const poison = fighter.bonus.poison > 0 ? damage * fighter.bonus.poison : 0;
+      const poison = fighter.bonus.poison > 0 ? Math.min(damage, CONFIG.poisonCap) * fighter.bonus.poison : 0;
       fighter.fireTimer = weapon.interval / fighter.bonus.cadence;
+      const life = weapon.heavy ? Math.max(0.05, (this.heavyReach(fighter, weapon) - 22) / weapon.speed) : CONFIG.shotLife;
       for (let i = 0; i < count; i++) {
         if (this.shots.length >= CONFIG.shotLimit) break;
         const spread = weapon.spread * (count > 1 ? (i / (count - 1) - 0.5) * 2 : (this.random() - 0.5));
@@ -351,14 +391,49 @@
           y: fighter.y - 2 + Math.sin(angle) * 22,
           vx: Math.cos(angle) * weapon.speed, vy: Math.sin(angle) * weapon.speed,
           px: fighter.x, py: fighter.y - 2,
-          damage, poison, owner: fighter.id, tier: weapon.tier, life: CONFIG.shotLife
+          damage, poison, owner: fighter.id, tier: weapon.tier, life, heavy: Boolean(weapon.heavy)
         };
         this.shots.push(shot);
-        this.events.push({
+        if (shot.heavy) fighter.heavyShots++;
+        const event = {
           e: 'shot', id: fighter.id, x: Math.round(shot.x), y: Math.round(shot.y),
           a: Number(angle.toFixed(3)), s: weapon.speed, t: weapon.tier, p: poison > 0 ? 1 : 0
-        });
+        };
+        if (shot.heavy) event.l = Number(life.toFixed(2));
+        this.events.push(event);
       }
+    }
+
+    heavyReach(fighter, weapon) {
+      return Math.min(weapon.range, fighter.aimDistance + 30);
+    }
+
+    speedOf(fighter) {
+      return CONFIG.speed * fighter.bonus.speed * (fighter.bot ? CONFIG.botSpeed : 1);
+    }
+
+    aimAt(fighter, target) {
+      const weapon = weaponFor(fighter.level);
+      let x = target.x;
+      let y = target.y;
+      if (weapon.heavy && target.skin) {
+        const time = Math.hypot(x - fighter.x, y - fighter.y) / weapon.speed;
+        x += target.mx * this.speedOf(target) * time;
+        y += target.my * this.speedOf(target) * time;
+      }
+      fighter.aim = Math.atan2(y - fighter.y, x - fighter.x);
+      fighter.aimDistance = Math.hypot(x - fighter.x, y - fighter.y);
+    }
+
+    settleHeavy(shot, hit) {
+      if (!shot.heavy) return;
+      const owner = this.fighters.find(fighter => fighter.id === shot.owner);
+      if (!owner) return;
+      owner.heavyShots = Math.max(0, owner.heavyShots - 1);
+      owner.heavyHit = owner.heavyHit || hit;
+      if (owner.heavyShots > 0) return;
+      if (owner.heavyHit) owner.fireTimer = Math.max(owner.fireTimer, CONFIG.heavyReload);
+      owner.heavyHit = false;
     }
 
     breakCrate(crate, damage, breaker) {
@@ -404,10 +479,7 @@
 
     stepFighter(fighter, dt) {
       fighter.spawnGuard = Math.max(0, fighter.spawnGuard - dt);
-      if (fighter.poison > 0) {
-        fighter.poison -= dt;
-        this.hurt(fighter, fighter.poisonDps * dt, fighter.poisonBy);
-      }
+      if (fighter.poison > 0) this.stepPoison(fighter, dt);
       if (!fighter.alive) {
         fighter.respawn -= dt;
         if (fighter.respawn <= 0) this.respawn(fighter);
@@ -419,16 +491,17 @@
         fighter.my = 0;
         fighter.firing = false;
       }
-      const speed = CONFIG.speed * fighter.bonus.speed * (fighter.bot ? CONFIG.botSpeed : 1);
+      const speed = this.speedOf(fighter);
       fighter.x = clamp(fighter.x + fighter.mx * speed * dt, bounds.left + CONFIG.radius + 24, bounds.right - CONFIG.radius - 24);
       fighter.y = clamp(fighter.y + fighter.my * speed * dt, bounds.top + CONFIG.radius + 24, bounds.bottom - CONFIG.radius - 24);
       if (!fighter.bot) {
         const target = this.nearestTarget(fighter);
-        if (target) fighter.aim = Math.atan2(target.y - fighter.y, target.x - fighter.x);
+        fighter.aimDistance = Infinity;
+        if (target) this.aimAt(fighter, target);
         else if (Math.hypot(fighter.mx, fighter.my) > 0.08) fighter.aim = Math.atan2(fighter.my, fighter.mx);
       }
       fighter.fireTimer -= dt;
-      if (fighter.firing && fighter.fireTimer <= 0) this.fire(fighter);
+      if (fighter.firing && fighter.fireTimer <= 0 && fighter.heavyShots === 0) this.fire(fighter);
     }
 
     stepShots(dt) {
@@ -456,13 +529,18 @@
           if (hit >= 0 && hit < earliest) { earliest = hit; victim = null; crate = item; }
         }
         if (victim) {
-          this.hurt(victim, shot.damage, shot.owner, shot.poison);
+          this.hurt(victim, shot.damage, shot.owner, shot.poison, shot.tier);
           this.shots.splice(i, 1);
+          this.settleHeavy(shot, true);
         } else if (crate) {
           const breaker = this.fighters.find(fighter => fighter.id === shot.owner);
           if (breaker) this.breakCrate(crate, shot.damage, breaker);
           this.shots.splice(i, 1);
-        } else if (shot.life <= 0) this.shots.splice(i, 1);
+          this.settleHeavy(shot, true);
+        } else if (shot.life <= 0) {
+          this.shots.splice(i, 1);
+          this.settleHeavy(shot, false);
+        }
       }
     }
 
@@ -495,7 +573,7 @@
     }
 
     roster() {
-      return this.fighters.map(fighter => ({ id: fighter.id, name: fighter.name, skin: fighter.skin, bot: fighter.bot }));
+      return this.fighters.map(fighter => ({ id: fighter.id, name: fighter.name, skin: fighter.skin, bot: fighter.bot, acc: fighter.acc }));
     }
 
     crateState() {
@@ -528,8 +606,8 @@
   }
 
   const VesperArena = Object.freeze({
-    TAU, ARENA, WEAPONS, SKINS, BOT_NAMES, CONFIG, ZONES, bounds,
-    clamp, nextXpFor, killXpFor, weaponFor, skinFor, coinsFor, bonusOf, segmentHit, Arena
+    TAU, ARENA, WEAPONS, SKINS, ACCESSORIES, BOT_NAMES, CONFIG, ZONES, bounds,
+    clamp, nextXpFor, killXpFor, weaponFor, skinFor, accessoriesOf, coinsFor, bonusOf, maxHpFor, segmentHit, Arena
   });
 
   if (typeof module === 'object' && module.exports) module.exports = VesperArena;

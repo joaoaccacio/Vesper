@@ -631,7 +631,182 @@
       line(ctx, '#9b6a55', 1, [[-2,-12],[1,-12]]);
       line(ctx, '#57646a', 1, [[2,-11],[7,-11]]);
       oval(ctx, '#7ee8d6', 10.6, -21, 1.1, 1.1);
+    },
+
+    banana(ctx, steps) {
+      const stride = Math.sin(steps) * 1.6;
+      const swing = Math.sin(steps) * 1.3;
+      const body = (color, reach) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(-1.8, -28.4);
+        ctx.quadraticCurveTo(reach, -9, -0.4, 12);
+        ctx.quadraticCurveTo(0.6, -6, -4.4, -28.4);
+        ctx.closePath();
+        ctx.fill();
+      };
+      line(ctx, '#5b3d22', 2.3, [[0.5, 8], [-1.5 + stride, 16]]);
+      line(ctx, '#5b3d22', 2.3, [[4.5, 7], [5.5 - stride, 16]]);
+      oval(ctx, '#7a4e2a', -2 + stride, 17.4, 3.4, 1.8);
+      oval(ctx, '#7a4e2a', 6.2 - stride, 17.4, 3.4, 1.8);
+      line(ctx, '#5b3d22', 1.9, [[0.4, -5], [-5.4, 1.4 - swing]]);
+      oval(ctx, '#f4efe2', -5.8, 2 - swing, 2.1, 2);
+      body('#caa12c', 25);
+      body('#f5d547', 21.5);
+      ctx.strokeStyle = 'rgba(255,246,190,.8)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(-1.6, -23); ctx.quadraticCurveTo(3.4, -8, 0.8, 5); ctx.stroke();
+      ctx.strokeStyle = '#dcb233'; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(-2.4, -26); ctx.quadraticCurveTo(12.4, -8, -0.4, 10); ctx.stroke();
+      polygon(ctx, '#6b4a2a', [[-4.4, -28], [-4, -33.6], [-1.8, -33.6], [-1.8, -28]]);
+      polygon(ctx, '#8a6238', [[-4, -33.6], [-1.8, -33.6], [-1.9, -32.3], [-4, -32.3]]);
+      oval(ctx, '#4a3420', -1, 11.6, 1.6, 1.3);
+      for (const x of [2.8, 7.2]) {
+        oval(ctx, '#fffdf6', x, -13.6, 1.9, 2.2);
+        oval(ctx, '#2a1d10', x + 0.4, -13.3, 1.1, 1.3);
+        oval(ctx, '#ffffff', x, -14, 0.45, 0.45);
+      }
+      oval(ctx, 'rgba(242,140,100,.55)', 1.6, -10, 1.4, 0.8);
+      oval(ctx, 'rgba(242,140,100,.55)', 8.6, -10, 1.4, 0.8);
+      ctx.strokeStyle = '#5b3d22'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(3.4, -9.8); ctx.quadraticCurveTo(5.1, -8, 6.8, -9.8); ctx.stroke();
+      line(ctx, '#5b3d22', 1.9, [[9.4, -4], [13.6, 1.6 + swing]]);
+      oval(ctx, '#f4efe2', 14, 2.2 + swing, 2.1, 2);
+    },
+
+    penguin(ctx, steps) {
+      const stride = Math.sin(steps) * 1.6;
+      const flap = Math.sin(steps) * 0.22;
+      const flipper = (x, angle) => {
+        ctx.save();
+        ctx.translate(x, -8);
+        ctx.rotate(angle);
+        oval(ctx, '#161c27', 0, 6.5, 3.3, 8.2);
+        ctx.restore();
+      };
+      oval(ctx, '#e8892c', -4 + stride, 17.4, 4.2, 1.9);
+      oval(ctx, '#e8892c', 5 - stride, 17.4, 4.2, 1.9);
+      flipper(-9.5, 0.38 + flap);
+      oval(ctx, '#1f2734', 0.5, -5, 12.6, 19);
+      oval(ctx, '#2d3748', -3.6, -11, 5.6, 10);
+      oval(ctx, '#f3f5f7', 2.6, 0, 8.6, 13);
+      oval(ctx, '#dde4ea', 4.2, 3, 5.6, 8.6);
+      oval(ctx, '#f3f5f7', 3.8, -15, 7.2, 5.8);
+      for (const x of [1.6, 7]) {
+        oval(ctx, '#11151c', x, -15.6, 1.5, 1.8);
+        oval(ctx, '#ffffff', x - 0.4, -16.2, 0.5, 0.5);
+      }
+      oval(ctx, 'rgba(245,150,160,.6)', 0.4, -12.2, 1.4, 0.8);
+      oval(ctx, 'rgba(245,150,160,.6)', 9, -12.2, 1.2, 0.8);
+      polygon(ctx, '#f29a32', [[4, -13.6], [11.6, -12.4], [4.2, -11]]);
+      polygon(ctx, '#c9721f', [[4.2, -12.3], [11.6, -12.4], [4.2, -11]]);
+      polygon(ctx, '#c8433d', [[-9.6, -8.6], [10.6, -8.6], [11, -5.6], [-9.8, -5.6]]);
+      polygon(ctx, '#c8433d', [[-7.4, -7], [-11.4, 1.4], [-8.2, 2.2], [-4.8, -6.2]]);
+      line(ctx, '#f0d9c8', 0.9, [[-9.4, -2.2], [-6.8, -1.4]]);
+      line(ctx, '#f0d9c8', 0.9, [[-8.4, -4.6], [-5.8, -3.8]]);
+      line(ctx, '#9e2f2c', 0.8, [[-9.6, -5.8], [11, -5.8]]);
+      flipper(10.8, -0.38 - flap);
     }
+  };
+
+  const HAT_SPOTS = {
+    human: [0.6, -25.8, 1], ghost: [0.4, -24.8, 1], hooded: [0.6, -28, 1.02], vampire: [1, -29.2, 1],
+    mummy: [1, -26.5, 1], zombie: [1, -26.2, 1], jack: [0.6, -28.4, 1.08], kraken: [0.4, -31.4, 1.1],
+    yeti: [0.6, -28.4, 1.08], survivor: [1, -27.8, 1], alien: [0.4, -28, 1.04], spider: [13, -10.5, 0.7],
+    skeleton: [0.4, -30.2, 1.06], orc: [1, -26.4, 1.04], invisible: [0.6, -21, 1.06], cyborg: [1, -27, 1],
+    plague: [1, -24, 1.1], frankenstein: [1, -26.4, 1.04], banana: [-1.6, -26.8, 0.8], penguin: [1.2, -22, 1]
+  };
+
+  function drawHat(ctx) {
+    oval(ctx, 'rgba(0,0,0,.2)', 0, 1.4, 11.6, 2.4);
+    polygon(ctx, '#5e3a1b', [[-16, -3.4], [-12, 0.8], [-6, 2.2], [0, 2.6], [6, 2.2], [12, 0.8], [16, -3.4], [12.6, -0.4], [6, 0.6], [0, 0.8], [-6, 0.6], [-12.6, -0.4]]);
+    polygon(ctx, '#9c6832', [[-7.6, -0.6], [-7.2, -8.6], [-4.8, -11.8], [-1.6, -10.2], [0, -11], [1.6, -10.2], [4.8, -11.8], [7.2, -8.6], [7.6, -0.6]]);
+    polygon(ctx, '#b67c3f', [[-7.2, -8.6], [-4.8, -11.8], [-1.6, -10.2], [-2.4, -2], [-7.4, -1.6]]);
+    line(ctx, '#6d4520', 0.9, [[0, -10.6], [0, -6.6]]);
+    polygon(ctx, '#3b2414', [[-7.5, -4.4], [7.5, -4.4], [7.6, -1.6], [-7.6, -1.6]]);
+    ctx.fillStyle = '#d9b25a'; ctx.fillRect(3.4, -3.9, 2.4, 1.8);
+    polygon(ctx, '#8b5a2b', [[-16, -3.4], [-12.6, -0.4], [-6, 0.6], [0, 0.8], [6, 0.6], [12.6, -0.4], [16, -3.4], [13.4, -3.8], [7, -1.6], [0, -1.2], [-7, -1.6], [-13.4, -3.8]]);
+    line(ctx, '#c08a4a', 0.7, [[-13, -3], [-7, -0.8], [0, -0.4]]);
+  }
+
+  VesperGame.prototype._drawHat = function (ctx, id) {
+    const [x, y, size] = HAT_SPOTS[id] || [1, -27, 1];
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-0.08);
+    ctx.scale(size, size);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    drawHat(ctx);
+    ctx.restore();
+  };
+
+  function drawCoins(ctx, amount) {
+    const count = Math.max(1, Math.min(4, Math.round(amount / 10)));
+    ctx.translate(0, (count - 1) * 2.7 - 5);
+    for (let i = 0; i < count; i++) {
+      const y = 9 - i * 5.4;
+      oval(ctx, '#8f6a1f', 0, y + 1.6, 13, 5);
+      oval(ctx, '#c79a36', 0, y, 13, 5);
+      oval(ctx, '#f0cc6a', 0, y - 0.6, 10, 3.6);
+    }
+    const top = 9 - (count - 1) * 5.4;
+    line(ctx, '#b3862b', 1.1, [[-3.4, top - 0.8], [3.4, top - 0.8]]);
+    oval(ctx, '#fff1c4', -5, top - 1.8, 1.6, 0.7);
+  }
+
+  function drawGift(ctx) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(230,220,200,.35)';
+    ctx.shadowBlur = 8;
+    polygon(ctx, '#0b0b0d', [[-13, -6], [13, -6], [13, 16], [-13, 16]]);
+    ctx.restore();
+    polygon(ctx, '#141417', [[-15, -12], [15, -12], [15, -5], [-15, -5]]);
+    polygon(ctx, '#232328', [[-2.6, -12], [2.6, -12], [2.6, 16], [-2.6, 16]]);
+    ctx.fillStyle = '#18181c';
+    ctx.strokeStyle = 'rgba(235,228,210,.28)'; ctx.lineWidth = 0.8;
+    for (const side of [-1, 1]) {
+      ctx.beginPath(); ctx.ellipse(side * 6, -15, 6, 3.6, side * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    ctx.strokeRect(-13, -6, 26, 22);
+    ctx.strokeRect(-15, -12, 30, 7);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 17px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', 0, 6);
+  }
+
+  VesperGame.prototype.drawRewardArt = function (canvas, reward, characterId) {
+    const ctx = canvas && canvas.getContext('2d');
+    if (!ctx || !canvas.width || !canvas.height || !reward) return;
+    const { width, height } = canvas;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.translate(width / 2, height * 0.55);
+    const scale = Math.min(width, height) / 52;
+    ctx.scale(scale, scale);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (reward.type === 'coins') drawCoins(ctx, reward.amount);
+    else if (reward.type === 'gift') drawGift(ctx);
+    else if (reward.type === 'accessory' && reward.id === 'hat') {
+      ctx.translate(0, 7);
+      ctx.scale(1.6, 1.6);
+      drawHat(ctx);
+    } else {
+      const id = reward.type === 'skin' ? reward.id : characterId;
+      const mini = reward.type === 'accessory';
+      ctx.scale(0.64, 0.64);
+      ctx.translate(mini ? 7 : 0, -4);
+      oval(ctx, 'rgba(0,0,0,.26)', 0, 18, 20, 5.6);
+      this._drawCharacter(ctx, id, 0);
+      if (mini) {
+        ctx.translate(-26, 10);
+        ctx.scale(0.45, 0.45);
+        oval(ctx, 'rgba(0,0,0,.26)', 0, 18, 20, 5.6);
+        this._drawCharacter(ctx, id, 0);
+      }
+    }
+    ctx.restore();
   };
 
   VesperGame.CHARACTERS = Object.freeze([
@@ -645,14 +820,16 @@
     { id: 'kraken', name: 'Kraken', unlockType: 'map', unlockMap: 'sea', accent: '#6fc3cf' },
     { id: 'yeti', name: 'Yeti', unlockType: 'map', unlockMap: 'snow', accent: '#b9d3ea' },
     { id: 'survivor', name: 'Sobrevivente', unlockType: 'all', accent: '#d8c185' },
+    { id: 'banana', name: 'Banana', unlockType: 'daily', unlockDay: 10, accent: '#f1d45c' },
+    { id: 'penguin', name: 'Pinguim', unlockType: 'daily', unlockDay: 15, accent: '#9fc3de' },
     { id: 'alien', name: 'Alien', unlockType: 'coins', accent: '#a4d989' },
     { id: 'spider', name: 'Aranha', unlockType: 'coins', accent: '#bc91c7' },
     { id: 'skeleton', name: 'Esqueleto', unlockType: 'coins', accent: '#d9d1b5' },
     { id: 'orc', name: 'Orc', unlockType: 'coins', accent: '#8fae62' },
     { id: 'invisible', name: 'Homem Invisível', unlockType: 'coins', accent: '#cfe0dc' },
-    { id: 'cyborg', name: 'Cyborg', unlockType: 'coins', accent: '#8ad6d0' },
+    { id: 'frankenstein', name: 'Frankenstein', unlockType: 'coins', accent: '#7fa86a' },
     { id: 'plague', name: 'Médico da Peste', unlockType: 'coins', accent: '#a9b6a0' },
-    { id: 'frankenstein', name: 'Frankenstein', unlockType: 'coins', accent: '#7fa86a' }
+    { id: 'cyborg', name: 'Cyborg', unlockType: 'coins', accent: '#8ad6d0' }
   ].map(character => Object.freeze(character)));
 
   VesperGame.prototype._drawCharacter = function (ctx, id, steps = 0) {
@@ -666,21 +843,29 @@
     ctx.restore();
   };
 
-  VesperGame.prototype.drawCharacterPreview = function (canvas, id, locked = false) {
+  VesperGame.prototype.drawCharacterPreview = function (canvas, id, locked = false, accessories = []) {
     const ctx = canvas.getContext('2d');
     if (!ctx || !canvas.width || !canvas.height) return;
     const { width, height } = canvas;
-    const scale = Math.min(width / 76, height / 80);
+    const mini = accessories.includes('mini');
+    const scale = Math.min(width / (mini ? 92 : 76), height / 80);
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, width, height);
-    ctx.translate(width / 2, height * 0.65);
+    ctx.translate(width / 2 + (mini ? 8 * scale : 0), height * 0.65);
     ctx.scale(scale, scale);
     oval(ctx, 'rgba(0,0,0,.26)', 0, 18, 22, 6);
     ctx.globalAlpha = locked ? 0.8 : 1;
     this._drawCharacter(ctx, id, 0);
+    if (accessories.includes('hat')) this._drawHat(ctx, id);
+    if (mini) {
+      ctx.translate(-30, 10.5);
+      ctx.scale(0.42, 0.42);
+      oval(ctx, 'rgba(0,0,0,.3)', 0, 18, 20, 6);
+      this._drawCharacter(ctx, id, 0);
+    }
     ctx.restore();
   };
 })();

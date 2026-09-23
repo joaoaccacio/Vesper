@@ -172,7 +172,7 @@ class Room {
       if (!bot) return null;
       this.arena.leave(bot.id);
     }
-    const fighter = this.arena.join({ name: profile.name, skin: profile.skin, bot: false });
+    const fighter = this.arena.join({ name: profile.name, skin: profile.skin, acc: profile.acc, bot: false });
     client.room = this;
     client.fighterId = fighter.id;
     this.clients.set(fighter.id, client);
@@ -276,7 +276,8 @@ class Hub {
     if (client.room) return;
     const profile = {
       name: String(message.name || 'Jogador').trim().slice(0, 14) || 'Jogador',
-      skin: String(message.skin || 'alien')
+      skin: String(message.skin || 'alien'),
+      acc: Array.isArray(message.acc) ? message.acc.slice(0, 8).map(String) : []
     };
     if (message.token && this.resume(client, message.token)) return;
     const room = this.roomFor();
