@@ -237,7 +237,7 @@
       id: entry.id, name: entry.name, skin: entry.skin, characterId: entry.skin, bot: Boolean(entry.bot),
       x: 0, y: 0, tx: 0, ty: 0, aim: 0, facing: 1, steps: 0,
       level: 1, xp: 0, hp: 1, maxHp: 1, kills: 0, alive: true, respawn: 0,
-      spawnGuard: CONFIG.spawnGuard, hurt: 0, flash: 0, placed: false
+      spawnGuard: CONFIG.spawnGuard, hurt: 0, flash: 0, placed: false, walk: 0
     };
   }
 
@@ -558,6 +558,7 @@
       me.y += (me.ty - me.y) * correction;
       const moving = Math.hypot(this._movement.x, this._movement.y);
       me.steps += moving * dt * 10;
+      me.walk += ((moving > 0.08 ? 1 : 0) - me.walk) * Math.min(1, dt * 10);
       if (moving > 0.08 && !this._reducedMotion) {
         this._dustTimer -= dt;
         if (this._dustTimer <= 0) { this._spawnStepDust(); this._dustTimer = 0.13 + Math.random() * 0.05; }
@@ -577,6 +578,7 @@
         fighter.y += (fighter.ty - fighter.y) * step;
       }
       fighter.steps += moved > 1 ? dt * 9 : 0;
+      fighter.walk += ((moved > 1 ? 1 : 0) - fighter.walk) * Math.min(1, dt * 10);
     }
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const shot = this.shots[i];
@@ -884,7 +886,6 @@
   };
   VesperGame.prototype._drawFighter = function (ctx, fighter) {
     const you = fighter === this.me;
-    const bob = Math.sin(fighter.steps || this._clock * 2) * 1.1;
     const blink = fighter.spawnGuard > 0 && Math.floor(this._clock * 16) % 2 === 0;
     ctx.save();
     ctx.translate(fighter.x, fighter.y);
@@ -899,7 +900,7 @@
     ctx.beginPath(); ctx.ellipse(0, 14, 20, 8, 0, 0, TAU); ctx.fill();
     ctx.save();
     if (blink) ctx.globalAlpha = 0.55;
-    ctx.translate(0, bob);
+    this._walkPose(ctx, fighter.steps, fighter.walk || 0);
     ctx.save();
     ctx.scale(fighter.facing, 1);
     this._drawCharacter(ctx, fighter.characterId, fighter.steps);

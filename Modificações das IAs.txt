@@ -58,3 +58,12 @@
 - O servidor zera a direcao de quem para de mandar entrada por mais de 0,6 segundo, entao aba fechada ou travada nao deixa mais o lutador andando sozinho ate a parede.
 - Preco e habilidade das skins agora vivem so em vesper-arena.js; vesper-characters.js ficou com nome, cor e desenho. Fonte unica, sem risco de os catalogos divergirem.
 - Arquivos afetados: vesper-arena.js, vesper-online.js, vesper-ui.js, vesper-characters.js, index.html, VESPER/index.html, test-vesper.cjs e test-server.cjs. Entrega validada com 64 testes do jogo, 13 do servidor e partida real conferida com WebSocket ligado, alem do zip de hospedagem extraido e testado do zero.
+
+2026-09-23 — #Claude:
+- Adicionados dois mapas a campanha: Fundo do Mar (naufragio, corais, algas, ancoras, bolhas) e Montanhas Geladas (pinheiros, cabanas, cristais de gelo, lagos congelados, neve caindo). Cada um tem seis inimigos desenhados, um minichefe (Tubarao e Mamute) e o chefe final que vira personagem jogavel: Kraken e Yeti.
+- O Sobrevivente agora exige os seis mapas. A tela de mapas passou a mostrar tres colunas em telas largas e a contagem de mapas deixou de ser fixa em quatro.
+- Bots do Online andam de lado com menos forca e um pouco mais devagar. Em simulacao, o acerto do jogador contra bots subiu de 12% para 21%.
+- Dificil ficou bem mais dificil: 55% mais vida, 16% mais velocidade, 50% mais dano e ondas 30% mais rapidas. Em simulacao com o mesmo jogador automatico, a sobrevivencia caiu de 60 a 110 segundos para 38 a 63, abaixo do Medio.
+- Animacao de andar nos dois modos: balanco curto do corpo e leve gingado ao andar, respiracao sutil parado. Vale para a campanha e para todos os lutadores do Online.
+- Corrigida a emenda visivel entre blocos do piso no mapa de neve e fixado um teste de servidor que falhava quando o lutador nascia colado na parede.
+- Arquivos afetados: vesper-engine.js, vesper-enemies.js, vesper-characters.js, vesper-arena.js, vesper-online.js, vesper-ui.js, vesper-campaign.css, index.html, VESPER/index.html, test-vesper.cjs, test-server.cjs e DESENVOLVIMENTO.md. Validado com 64 testes do jogo e 13 do servidor, tres rodadas seguidas, e inspecao visual das artes e dos dois mapas novos no navegador.

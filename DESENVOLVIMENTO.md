@@ -10,10 +10,11 @@ No modo Online o tiro é manual e a mira é automática: WASD move, a mira trava
 
 ## Campanha
 
-- Quatro mapas de 4.800 × 3.600 unidades, com câmera e personagens limitados às bordas. Depois de escolher o mapa, selecione Fácil, Médio ou Difícil; o modo altera vida, velocidade, dano e ritmo das ondas.
+- Seis mapas de 4.800 × 3.600 unidades, com câmera e personagens limitados às bordas. Depois de escolher o mapa, selecione Fácil, Médio ou Difícil; o modo altera vida, velocidade, dano e ritmo das ondas. No Difícil os monstros têm 55% mais vida, 16% mais velocidade, 50% mais dano e as ondas chegam 30% mais rápido.
 - Minichefe aos 150 segundos e chefe final aos 240 segundos de tempo efetivo da partida. Pausas e escolhas de melhoria congelam esse relógio.
 - Vencer o chefe final encerra a fase e registra a conquista. A fase e a skin conquistada recebem moldura dourada.
-- Castelo/Mansão: Vampiro. Egito Antigo/Deserto: Múmia. Pântano: Zumbi. Halloween: Jack o’ Lantern. Os quatro mapas liberam o Sobrevivente.
+- Castelo/Mansão: Vampiro. Egito Antigo/Deserto: Múmia. Pântano: Zumbi. Halloween: Jack o’ Lantern. Fundo do Mar: Kraken. Montanhas Geladas: Yeti. Concluir todos os mapas libera o Sobrevivente.
+- Os personagens andam com um balanço curto do corpo e um leve gingado, na campanha e no Online; parados, só respiram.
 - Humano, Fantasma e Encapuzado estão disponíveis desde o início. Todos os personagens compartilham os mesmos atributos. As oito skins do Online aparecem na mesma tela, em uma seção própria, e são compradas com as moedas do ranking.
 - O minimapa mostra o mundo inteiro, a área visível e o jogador em vermelho. Ele muda de canto quando cobriria o jogador.
 
@@ -43,7 +44,7 @@ Abrir `VESPER/index.html` direto do disco continua valendo para a campanha offli
 - O servidor roda a 20 pacotes por segundo. Nome e aparencia viajam so na entrada; cada pacote leva posicoes, vida, nivel e abates.
 - Cada servidor tem quinze vagas. Entra-se na sala mais cheia com vaga e uma sala nova abre sozinha quando todas lotam. A sala aceita gente por quatro minutos e some trinta segundos depois do fim.
 - Caiu a conexao? O lugar fica guardado por trinta segundos e volta com nivel, abates e XP intactos.
-- Os bots rodam no servidor. A sala espera oito segundos por gente de verdade e completa o resto com bots, sorteando nomes de uma lista de duzentos nomes comuns nos Estados Unidos. Quando alguem entra, o bot de pior desempenho sai. Eles aparecem marcados com `[BOT]` no ranking e a contagem separa humanos de bots.
+- Os bots rodam no servidor e andam de lado com menos força e um pouco mais devagar que os humanos, para os tiros acertarem com mais frequência. A sala espera oito segundos por gente de verdade e completa o resto com bots, sorteando nomes de uma lista de duzentos nomes comuns nos Estados Unidos. Quando alguem entra, o bot de pior desempenho sai. Eles aparecem marcados com `[BOT]` no ranking e a contagem separa humanos de bots.
 - Abater gente de verdade paga o dobro em moedas; abater bot paga a metade.
 - O mapa e dividido em quinze zonas e cada lutador nasce em uma zona so sua. Ao renascer, vale a zona mais distante de quem esta vivo.
 - Cada partida dura cinco minutos na arena Catedral em Ruinas (4.000 x 3.000 unidades), com praca do ritual no centro, duas colunatas, quatro patios de criptas, braseiros e caixas de XP. A arena tem piso, muralha e vinheta proprios, de contraste baixo.
@@ -56,7 +57,7 @@ As moedas compram as oito skins do Online, que valem somente nessas partidas. Os
 
 ## Inimigos e personagens
 
-Cada cenário tem seis inimigos com desenhos próprios e um minichefe: Cavaleiro no Castelo, Escorpião Gigante no Egito, Sapo Gigante no Pântano e Espantalho no Halloween. As aparências usam os mesmos atributos e movimentos de antes. Os chefes finais continuam sendo os personagens desbloqueáveis de cada mapa. O Sobrevivente carrega um machado de pedra lascada, com cabo de madeira e amarrações de corda.
+Cada cenário tem seis inimigos com desenhos próprios e um minichefe: Cavaleiro no Castelo, Escorpião Gigante no Egito, Sapo Gigante no Pântano, Espantalho no Halloween, Tubarão no Fundo do Mar e Mamute nas Montanhas Geladas. O Fundo do Mar traz caranguejo, água-viva, baiacu, piranha, pirata afogado e enguia elétrica, com naufrágio, corais, algas, âncoras e bolhas subindo. As Montanhas Geladas trazem boneco de neve, coruja das neves, urso polar, pinguim, viking congelado e espírito da nevasca, com pinheiros, cabanas, cristais de gelo, lagos congelados e neve caindo. As aparências usam os mesmos atributos e movimentos de antes. Os chefes finais continuam sendo os personagens desbloqueáveis de cada mapa. O Sobrevivente carrega um machado de pedra lascada, com cabo de madeira e amarrações de corda.
 
 ## Regra do código
 

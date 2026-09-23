@@ -287,6 +287,141 @@
       r(c,'#ba8d56',-7,-28,14,3); o(c,'#66506f',0,-23,17,3.5);
       l(c,'#9eaf7c',3,[[9,-8],[15,1],[14,6]]);
     },
+    'sea-crab'(c,t) {
+      const step=Math.sin(t*9)*2;
+      for(const s of [-1,1]) for(let i=0;i<3;i++) l(c,'#9b3c2e',2,[[s*8,i*4-2],[s*(17+(i%2?step:-step)),i*4-6],[s*20,i*4+2]]);
+      for(const s of [-1,1]) { l(c,'#b54a36',3,[[s*8,-6],[s*14,-14]]); p(c,'#d0613e',[[s*12,-14],[s*22,-20],[s*24,-12],[s*18,-10],[s*22,-6],[s*14,-8]],'#e88a5c'); }
+      o(c,'#b54a36',0,0,13,10); o(c,'#d8704a',-2,-3,9,6);
+      l(c,'#7a2a22',1.2,[[-8,2],[0,5],[8,2]]);
+      for(const s of [-1,1]) { l(c,'#9b3c2e',1.6,[[s*4,-8],[s*5,-15]]); o(c,'#f4efe0',s*5,-16,2.4,2.4); o(c,'#151a1c',s*5.4,-16,1.1,1.1); }
+    },
+    'sea-jelly'(c,t) {
+      o(c,'rgba(214,150,220,.12)',0,-4,20,22);
+      for(let i=0;i<5;i++) { const x=(i-2)*5, w=Math.sin(t*3+i)*3; l(c,i%2?'#c79ad8':'#e2b6ea',1.4,[[x,0],[x+w,8],[x-w,16],[x+w*0.6,22]]); }
+      p(c,'#b77fca',[[-14,0],[-13,-12],[-6,-20],[6,-20],[13,-12],[14,0],[8,3],[0,1],[-8,3]]);
+      p(c,'#dcb0ea',[[-10,-3],[-9,-12],[-3,-17],[-1,-9],[-4,-2]]);
+      o(c,'#f6dcfb',-5,-13,2.4,3);
+      eyes(c,0,-8,'#fff2c8',4);
+    },
+    'sea-puffer'(c,t) {
+      const breathe=Math.sin(t*2.5)*0.8;
+      for(let i=0;i<14;i++) { const a=i/14*Math.PI*2; l(c,'#8d7a3a',2,[[Math.cos(a)*14,Math.sin(a)*13],[Math.cos(a)*(20+breathe),Math.sin(a)*(19+breathe)]]); }
+      o(c,'#c9a84e',0,0,15+breathe,14+breathe); o(c,'#e7d08a',0,5,10,7);
+      for(const [x,y] of [[-7,-6],[6,-8],[-2,-10],[9,-1]]) o(c,'#8d6f32',x,y,1.8,1.4);
+      for(const s of [-1,1]) p(c,'#b2913e',[[s*14,-2],[s*21,-7],[s*20,4]]);
+      eyes(c,0,-4,'#f7e9b4',5);
+      o(c,'#7a4a36',0,4,3,2.2);
+    },
+    'sea-piranha'(c,t) {
+      const wag=Math.sin(t*14)*3;
+      p(c,'#5c6f82',[[12,0],[20,-7+wag],[20,7+wag]]);
+      o(c,'#6f8497',0,0,13,9); o(c,'#c65a4a',-1,4,10,4.5);
+      p(c,'#4d5f70',[[-2,-8],[6,-15],[8,-7]]);
+      o(c,'#151a1c',-7,-2,2.6,2.6); o(c,'#f2d38a',-7.4,-2.4,1,1);
+      l(c,'#2a2f33',1.2,[[-13,2],[-7,4]]);
+      for(let x=-12;x<=-8;x+=2) p(c,'#f4efe0',[[x,2],[x+1,4.6],[x+2,2]]);
+    },
+    'sea-pirate'(c,t) {
+      boneBody(c,t,'#2f5a66','#c9a24a');
+      p(c,'#8d2f35',[[-10,-24],[-8,-29],[8,-29],[11,-23],[4,-26],[-4,-26]]);
+      p(c,'#6f242a',[[9,-25],[15,-21],[12,-18]]);
+      l(c,'#3f8a5e',1.6,[[-6,-8],[-9,0],[-6,6]]);
+      l(c,'#9aa4a8',2.4,[[8,-4],[18,-16]]); p(c,'#c8d0d2',[[16,-14],[22,-26],[19,-13]]); l(c,'#c9a24a',2,[[5,-2],[11,-6]]);
+    },
+    'sea-eel'(c,t) {
+      const pts=[];
+      for(let i=0;i<=8;i++) pts.push([-16+i*4,Math.sin(t*5+i*0.8)*5-i*0.6+4]);
+      l(c,'#1f3a3a',8,pts); l(c,'#3f6f5e',5,pts);
+      for(let i=1;i<8;i+=2) o(c,'#b8f06a',pts[i][0],pts[i][1]-1,1.3,1.3);
+      o(c,'#3f6f5e',-17,pts[0][1],5,4);
+      o(c,'#f2f08a',-19,pts[0][1]-1.5,1.2,1.2);
+      if(Math.sin(t*9)>0.6) l(c,'rgba(200,250,120,.8)',1.2,[[-8,-10],[-4,-5],[-7,-3],[-2,2]]);
+    },
+    'sea-shark'(c,t) {
+      const wag=Math.sin(t*6)*3;
+      p(c,'#4e5f6c',[[14,-2],[26,-12+wag],[22,0],[26,12+wag]]);
+      p(c,'#6b7e8c',[[-20,0],[-10,-10],[10,-10],[18,-2],[10,8],[-10,9]]);
+      p(c,'#dfe6e8',[[-18,2],[-8,8],[8,8],[14,2],[0,4]]);
+      p(c,'#556774',[[-2,-10],[6,-24],[10,-9]]);
+      for(const s of [-1,1]) p(c,'#5a6c79',[[-4,s*6],[2,s*15],[6,s*6]]);
+      o(c,'#151a1c',-12,-4,1.8,1.8); o(c,'#e45a4a',-12.3,-4.3,0.7,0.7);
+      p(c,'#2a1e20',[[-20,1],[-12,2],[-14,6]]);
+      for(let x=-19;x<=-13;x+=2) p(c,'#f4efe0',[[x,1.4],[x+1,3.4],[x+2,1.6]]);
+      for(let i=0;i<3;i++) l(c,'#4e5f6c',0.8,[[-6+i*3,-6],[-5+i*3,-2]]);
+    },
+    'snow-snowman'(c,t) {
+      o(c,'#c7d3de',0,6,12,11); o(c,'#e9f0f5',-3,3,8,7);
+      o(c,'#d3dde6',0,-12,9,9); o(c,'#f2f6f9',-2,-14,5,5);
+      for(const s of [-1,1]) l(c,'#5a4330',1.6,[[s*9,-2],[s*17,-8+Math.sin(t*3)*2],[s*20,-12]]);
+      p(c,'#b8463c',[[-9,-5],[9,-5],[9,-1],[-9,-1]]); p(c,'#b8463c',[[4,-3],[9,5],[5,6]]);
+      o(c,'#1d2226',-3.5,-14,1.5,1.5); o(c,'#1d2226',3.5,-14,1.5,1.5);
+      p(c,'#e0772e',[[0,-12],[8,-10.5],[0,-10]]);
+      for(const y of [3,8]) o(c,'#1d2226',0,y,1.3,1.3);
+      p(c,'#23262c',[[-7,-19],[7,-19],[5,-21],[4,-28],[-4,-28],[-5,-21]]);
+    },
+    'snow-owl'(c,t) {
+      const flap=Math.sin(t*10)*6;
+      for(const s of [-1,1]) p(c,'#dfe6ec',[[s*5,-6],[s*26,-14+flap],[s*22,2+flap],[s*14,0],[s*6,6]],'#9fb0bf');
+      for(const s of [-1,1]) for(let i=0;i<3;i++) l(c,'#8d9daa',0.8,[[s*(10+i*4),-6+flap*0.4],[s*(9+i*4),flap*0.5]]);
+      o(c,'#eef2f5',0,0,8,11); o(c,'#d3dbe2',0,5,6,5);
+      for(const [x,y] of [[-3,3],[2,5],[-1,7]]) l(c,'#8d9daa',0.8,[[x-1,y],[x+1,y]]);
+      for(const s of [-1,1]) { o(c,'#1d2226',s*3,-4,3,3); o(c,'#f2c64a',s*3,-4,1.8,1.8); o(c,'#1d2226',s*3,-4,0.8,0.8); }
+      p(c,'#6d5a3a',[[-1,-1],[1,-1],[0,2]]);
+      p(c,'#dfe6ec',[[-7,-8],[-6,-14],[-3,-9]]); p(c,'#dfe6ec',[[7,-8],[6,-14],[3,-9]]);
+    },
+    'snow-bear'(c,t) {
+      legs(c,t,'#d8e0e6','#a9b4bd');
+      o(c,'#e3e9ee',0,-2,15,13); o(c,'#c9d3db',4,2,10,9);
+      o(c,'#eef2f5',-2,-16,9,8);
+      o(c,'#e3e9ee',-8,-22,3,3); o(c,'#e3e9ee',4,-23,3,3);
+      o(c,'#c9d3db',-2,-12,5,3.5);
+      o(c,'#1d2226',-2,-13.5,1.8,1.2);
+      o(c,'#1d2226',-6,-18,1.2,1.2); o(c,'#1d2226',2,-18,1.2,1.2);
+      l(c,'#9aa6b0',1,[[-4,-10],[-2,-9],[0,-10]]);
+      for(const s of [-1,1]) { o(c,'#e3e9ee',s*14,4,5,6); for(let i=-1;i<=1;i++) l(c,'#5a6670',0.9,[[s*14+i*2,9],[s*14+i*2,11]]); }
+    },
+    'snow-penguin'(c,t) {
+      c.save(); c.rotate(Math.sin(t*12)*0.18);
+      o(c,'#1f252c',0,0,9,13); o(c,'#eef2f5',0,3,6,9);
+      for(const s of [-1,1]) p(c,'#1f252c',[[s*8,-4],[s*14,4],[s*8,6]]);
+      for(const s of [-1,1]) { o(c,'#eef2f5',s*3,-7,1.6,1.8); o(c,'#1d2226',s*3,-7,0.8,0.9); o(c,'#f2a93a',s*4,13,3,1.4); }
+      p(c,'#f2a93a',[[-2.4,-4],[2.4,-4],[0,-1]]);
+      c.restore();
+    },
+    'snow-viking'(c,t) {
+      legs(c,t,'#4a4038','#2e2824');
+      p(c,'#5a4a3e',[[-9,-10],[9,-10],[11,10],[-11,10]],'#8a7058');
+      p(c,'#8a8f94',[[-9,-10],[-4,-10],[-6,4],[-10,4]]);
+      r(c,'#6b4a2c',-10,2,20,3);
+      o(c,'#9fc2d6',0,-18,8,9);
+      p(c,'#dfe8ef',[[-7,-14],[7,-14],[5,-6],[0,-4],[-5,-6]]);
+      eyes(c,0,-19,'#8ff0ff',3.4);
+      p(c,'#8a8f94',[[-9,-21],[-8,-28],[0,-31],[8,-28],[9,-21]],'#b8bec2');
+      for(const s of [-1,1]) p(c,'#e8e0c8',[[s*8,-24],[s*16,-32],[s*13,-24]]);
+      l(c,'#6b4a2c',2.4,[[12,10],[16,-16]]); p(c,'#aebac2',[[14,-14],[22,-18],[22,-8],[16,-10]]);
+    },
+    'snow-spirit'(c,t) {
+      o(c,'rgba(190,225,245,.1)',0,0,22,26);
+      const sway=Math.sin(t*4)*3;
+      p(c,'#b8d8ea',[[-9,-12],[-12,-26],[0,-30],[12,-24],[10,-10],[18,10],[8,4],[10+sway,20],[1,12],[-4+sway,24],[-8,10],[-17,14],[-12,2]]);
+      p(c,'#e6f3fa',[[-6,-14],[-8,-24],[0,-27],[5,-22],[0,-10]]);
+      for(let i=0;i<4;i++) { const a=t*2+i*1.6, x=Math.cos(a)*16, y=Math.sin(a)*14-6; p(c,'#dff4ff',[[x,y],[x+2,y-4],[x+4,y],[x+2,y+4]]); }
+      for(const s of [-1,1]) { o(c,'#27465a',s*3.5,-18,2.2,3); o(c,'#9ff2ff',s*3.5,-18,1,1.4); }
+    },
+    'snow-mammoth'(c,t) {
+      const step=Math.sin(t*5)*1.6;
+      for(const [x,i] of [[-12,0],[-4,1],[6,0],[13,1]]) r(c,'#4a3222',x+(i?step:-step)*0.5,6,6,12);
+      o(c,'#6b4a32',0,-2,20,14);
+      for(let i=0;i<8;i++) l(c,'#8a6444',1.2,[[-16+i*4,-12],[-17+i*4,6]]);
+      o(c,'#7a5436',-16,-8,10,9);
+      l(c,'#5a3c28',4,[[-22,-4],[-26,6],[-22,14]]);
+      c.strokeStyle='#f2ead6'; c.lineWidth=2.4;
+      c.beginPath(); c.moveTo(-20,-2); c.quadraticCurveTo(-32,4,-26,-10); c.stroke();
+      c.beginPath(); c.moveTo(-14,-1); c.quadraticCurveTo(-24,8,-18,-6); c.stroke();
+      o(c,'#1d2226',-18,-12,1.4,1.4); o(c,'#f2d38a',-18.3,-12.3,0.5,0.5);
+      o(c,'#5a3c28',-9,-12,4,6);
+      p(c,'#dfe8ef',[[-8,-16],[8,-17],[14,-12],[0,-13]]);
+    },
     'castle-knight'(c,t) {
       p(c,'#633545',[[-11,-14],[-20,14],[-8,11],[0,17],[9,11],[20,14],[11,-14]],'#975567');
       legs(c,t,'#59646d','#959b9b');
@@ -345,7 +480,15 @@
     halloween: Object.freeze({ enemies: Object.freeze({
       shade: entry('halloween-pumpkin','Abóbora viva'), bat: entry('halloween-crow','Corvo'), brute: entry('halloween-monster','Monstro costurado'),
       crawler: entry('halloween-spider','Aranha'), skeleton: entry('halloween-clown','Palhaço'), wraith: entry('halloween-witch','Bruxinha')
-    }), miniBoss: entry('halloween-scarecrow','ESPANTALHO') })
+    }), miniBoss: entry('halloween-scarecrow','ESPANTALHO') }),
+    sea: Object.freeze({ enemies: Object.freeze({
+      shade: entry('sea-crab','Caranguejo'), bat: entry('sea-jelly','Água-viva'), brute: entry('sea-puffer','Baiacu'),
+      crawler: entry('sea-piranha','Piranha'), skeleton: entry('sea-pirate','Pirata afogado'), wraith: entry('sea-eel','Enguia elétrica')
+    }), miniBoss: entry('sea-shark','TUBARÃO') }),
+    snow: Object.freeze({ enemies: Object.freeze({
+      shade: entry('snow-snowman','Boneco de neve'), bat: entry('snow-owl','Coruja das neves'), brute: entry('snow-bear','Urso polar'),
+      crawler: entry('snow-penguin','Pinguim'), skeleton: entry('snow-viking','Viking congelado'), wraith: entry('snow-spirit','Espírito da nevasca')
+    }), miniBoss: entry('snow-mammoth','MAMUTE') })
   });
 
   VesperGame.prototype._drawThemedEnemyBody = function (ctx, enemy) {

@@ -294,6 +294,8 @@ test('o bot para de atirar quando perde o alvo', () => {
 test('quem para de mandar entrada para de andar no servidor', () => {
   const arena = new Arena();
   const humano = arena.join({ name: 'Guino', skin: 'alien' });
+  humano.x = 0;
+  humano.y = 0;
   arena.input(humano.id, 1, 0, false);
   arena.step(0.05);
   const andou = humano.x;

@@ -307,6 +307,56 @@
       oval(ctx, '#fff0c2', 1, -7.4, 0.7, 0.7);
     },
 
+    kraken(ctx, steps) {
+      const drift = Math.sin(this._clock * 2.4);
+      ctx.lineWidth = 3.4;
+      for (let i = 0; i < 6; i++) {
+        const x = -12 + i * 4.8;
+        const swing = Math.sin(steps * 1.2 + i * 0.9) * 3 + drift;
+        ctx.strokeStyle = i % 2 ? '#7a2e42' : '#8f3a4f';
+        ctx.beginPath(); ctx.moveTo(x, 2); ctx.quadraticCurveTo(x + swing, 10, x - swing * 0.6 + (i < 3 ? -3 : 3), 18); ctx.stroke();
+        oval(ctx, '#e7a8b2', x - swing * 0.3, 11, 0.9, 0.9);
+      }
+      polygon(ctx, '#7a2e42', [[-12,-8],[12,-8],[14,4],[-14,4]]);
+      oval(ctx, '#8f3a4f', 0, -18, 11, 15);
+      oval(ctx, '#a84b5f', -3, -22, 6, 9);
+      for (const [x, y] of [[-6,-28],[5,-25],[-8,-16],[7,-14],[0,-31]]) oval(ctx, '#6a2638', x, y, 1.4, 1.4);
+      glow(ctx, 'rgba(120,230,220,.26)', 1, -12, 12);
+      for (const side of [-1, 1]) {
+        oval(ctx, '#f0e6c8', side * 5, -12, 3.6, 3);
+        oval(ctx, '#3ad2c4', side * 5, -12, 2, 2.1);
+        oval(ctx, '#0f2328', side * 5, -12, 0.9, 1.6);
+      }
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#8f3a4f';
+      ctx.beginPath(); ctx.moveTo(10, -6); ctx.quadraticCurveTo(22, -8 + Math.sin(steps) * 2, 20, -20); ctx.quadraticCurveTo(19, -26, 24, -28); ctx.stroke();
+      oval(ctx, '#e7a8b2', 19, -14, 1, 1); oval(ctx, '#e7a8b2', 21, -21, 0.9, 0.9);
+      ctx.strokeStyle = '#7a2e42';
+      ctx.beginPath(); ctx.moveTo(-10, -6); ctx.quadraticCurveTo(-20, -2, -18, 6); ctx.stroke();
+    },
+
+    yeti(ctx, steps) {
+      const stride = Math.sin(steps) * 1.6;
+      polygon(ctx, '#c9d6e0', [[-9+stride,6],[-3+stride,6],[-2+stride,16],[-10+stride,16]]);
+      polygon(ctx, '#c9d6e0', [[3-stride,6],[9-stride,6],[10-stride,16],[2-stride,16]]);
+      oval(ctx, '#5f7385', -6+stride, 17, 5, 2.2); oval(ctx, '#5f7385', 6-stride, 17, 5, 2.2);
+      polygon(ctx, '#e6eef4', [[-13,-12],[13,-12],[15,4],[10,10],[4,8],[0,11],[-4,8],[-10,10],[-15,4]]);
+      for (let i = 0; i < 6; i++) line(ctx, '#b8c7d4', 0.9, [[-10 + i * 4, -8], [-11 + i * 4, 6]]);
+      polygon(ctx, '#e6eef4', [[-12,-10],[-20,0],[-18,8],[-12,4]]);
+      oval(ctx, '#7e93a6', -17, 9, 3.6, 3.2);
+      polygon(ctx, '#e6eef4', [[12,-10],[19,-2],[17,5],[11,2]]);
+      oval(ctx, '#7e93a6', 17, 6, 3.6, 3.2);
+      oval(ctx, '#eef4f8', 1, -20, 10, 10);
+      polygon(ctx, '#dfe8ef', [[-9,-24],[-6,-32],[-1,-27],[3,-33],[7,-27],[11,-30],[10,-22]]);
+      oval(ctx, '#7e93a6', 1, -17, 6.4, 6);
+      oval(ctx, '#95a8ba', 1, -14, 4, 2.8);
+      line(ctx, '#3f4f5f', 1.4, [[-3,-20],[-0.5,-19]]); line(ctx, '#3f4f5f', 1.4, [[2.5,-19],[5,-20]]);
+      oval(ctx, '#e8f6ff', -1.8, -17.6, 1.3, 1.3); oval(ctx, '#e8f6ff', 3.8, -17.6, 1.3, 1.3);
+      oval(ctx, '#1f2a36', -1.8, -17.4, 0.7, 0.7); oval(ctx, '#1f2a36', 3.8, -17.4, 0.7, 0.7);
+      polygon(ctx, '#3f4f5f', [[-1,-12.6],[3,-12.6],[1,-11]]);
+      polygon(ctx, '#f2f6f8', [[-1.6,-12.4],[-0.8,-10.6],[0,-12.4]]); polygon(ctx, '#f2f6f8', [[2,-12.4],[2.8,-10.6],[3.6,-12.4]]);
+    },
+
     orc(ctx, steps) {
       const stride = Math.sin(steps) * 1.5;
       line(ctx, '#5b4027', 3.2, [[-11, 14], [14, -18]]);
@@ -511,6 +561,8 @@
     { id: 'mummy', name: 'Múmia', unlockType: 'map', unlockMap: 'egypt', accent: '#dabb76' },
     { id: 'zombie', name: 'Zumbi', unlockType: 'map', unlockMap: 'swamp', accent: '#a3ba83' },
     { id: 'jack', name: 'Jack o’ Lantern', unlockType: 'map', unlockMap: 'halloween', accent: '#edab66' },
+    { id: 'kraken', name: 'Kraken', unlockType: 'map', unlockMap: 'sea', accent: '#6fc3cf' },
+    { id: 'yeti', name: 'Yeti', unlockType: 'map', unlockMap: 'snow', accent: '#b9d3ea' },
     { id: 'survivor', name: 'Sobrevivente', unlockType: 'all', accent: '#d8c185' },
     { id: 'alien', name: 'Alien', unlockType: 'coins', accent: '#a4d989' },
     { id: 'spider', name: 'Aranha', unlockType: 'coins', accent: '#bc91c7' },

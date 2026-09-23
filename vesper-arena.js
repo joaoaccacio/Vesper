@@ -65,7 +65,7 @@
   const CONFIG = Object.freeze({
     matchSeconds: number(env.VESPER_MATCH_SECONDS, 300), capacity: number(env.VESPER_CAPACITY, 15), levelCap: 10, respawnSeconds: 4, spawnGuard: 2,
     crates: 22, crateHp: 34, crateXp: 20, crateRespawn: 12, crateRadius: 17,
-    botFill: number(env.VESPER_BOT_FILL, 8), botDamage: 0.6, botRange: 560, botHunt: 1400, botAim: 0.34,
+    botFill: number(env.VESPER_BOT_FILL, 8), botStrafe: 0.3, botSpeed: 0.88, botDamage: 0.6, botRange: 560, botHunt: 1400, botAim: 0.34,
     shotLimit: 180, tagRange: 560, tickRate: 20, joinSeconds: 240, graceSeconds: 30,
     reconnectSeconds: 30, humanReward: 2, botReward: 0.5, inputTimeout: 0.6, snapDistance: 420,
     speed: 210, radius: 14, shotRadius: 4, shotLife: 0.9, zoneColumns: 5, zoneRows: 3
@@ -382,7 +382,7 @@
       const distance = Math.hypot(dx, dy) || 1;
       const prefer = isFighter ? 210 : 24;
       const approach = distance > prefer + 40 ? 1 : distance < prefer - 40 ? -1 : 0;
-      const sideways = isFighter ? 0.7 : 0;
+      const sideways = isFighter ? CONFIG.botStrafe : 0;
       bot.mx = (dx / distance) * approach - (dy / distance) * bot.strafe * sideways;
       bot.my = (dy / distance) * approach + (dx / distance) * bot.strafe * sideways;
       const length = Math.hypot(bot.mx, bot.my) || 1;
@@ -410,7 +410,7 @@
         fighter.my = 0;
         fighter.firing = false;
       }
-      const speed = CONFIG.speed * fighter.bonus.speed;
+      const speed = CONFIG.speed * fighter.bonus.speed * (fighter.bot ? CONFIG.botSpeed : 1);
       fighter.x = clamp(fighter.x + fighter.mx * speed * dt, bounds.left + CONFIG.radius + 24, bounds.right - CONFIG.radius - 24);
       fighter.y = clamp(fighter.y + fighter.my * speed * dt, bounds.top + CONFIG.radius + 24, bounds.bottom - CONFIG.radius - 24);
       if (!fighter.bot) {

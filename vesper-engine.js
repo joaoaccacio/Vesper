@@ -52,7 +52,7 @@ class VesperGame {
   }
   _reset() {
     this.player = {
-      x: 0, y: 0, radius: 14, hp: 100, maxHp: 100, speed: 215,
+      x: 0, y: 0, radius: 14, hp: 100, maxHp: 100, speed: 215, walk: 0,
       damage: 24, projectiles: 1, attackInterval: 0.64, pickup: 88,
       facing: 1, invulnerability: 0, steps: 0
     };
@@ -201,6 +201,7 @@ class VesperGame {
     if (Math.abs(this._movement.x) > 0.08) p.facing = this._movement.x > 0 ? 1 : -1;
     const movementAmount = Math.hypot(this._movement.x, this._movement.y);
     p.steps += movementAmount * dt * 10;
+    p.walk += ((movementAmount > 0.08 ? 1 : 0) - p.walk) * Math.min(1, dt * 10);
     if (movementAmount > 0.08 && !this._reducedMotion) {
       this._dustTimer -= dt;
       if (this._dustTimer <= 0) {
@@ -742,6 +743,7 @@ class VesperGame {
     }
     ctx.globalAlpha = 1;
     if (menu || this.mapId === 'swamp' || this.mapId === 'halloween') this._drawFireflies(ctx);
+    else if (this.mapId === 'sea' || this.mapId === 'snow') this._drawWeather(ctx);
     ctx.restore();
     const vignette = ctx.createRadialGradient(this.width * 0.5, this.height * 0.48, Math.min(this.width, this.height) * 0.12, this.width * 0.5, this.height * 0.5, Math.max(this.width, this.height) * 0.71);
     vignette.addColorStop(0, 'rgba(4,9,8,0)');
@@ -764,7 +766,7 @@ class VesperGame {
     if (this._mapTileCache.has(id)) return this._mapTileCache.get(id);
     const tile = document.createElement('canvas'); tile.width = tile.height = 512;
     const ctx = tile.getContext('2d');
-    const colors = { castle: '#25262e', egypt: '#967649', swamp: '#183b32', halloween: '#272135' };
+    const colors = { castle: '#25262e', egypt: '#967649', swamp: '#183b32', halloween: '#272135', sea: '#16414c', snow: '#7d8d9f' };
     ctx.fillStyle = colors[id]; ctx.fillRect(0, 0, 512, 512);
     if (id === 'castle') {
       for (let row = -1; row < 10; row++) {
@@ -799,6 +801,34 @@ class VesperGame {
         const x = this._hash(i, 5) * 512, y = this._hash(i, 6) * 512;
         ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 3, y - 7); ctx.moveTo(x, y); ctx.lineTo(x + 4, y - 10); ctx.stroke();
       }
+    } else if (id === 'sea') {
+      const depth = ctx.createLinearGradient(0, 0, 512, 512);
+      depth.addColorStop(0, '#1a4b55'); depth.addColorStop(0.5, '#163f4b'); depth.addColorStop(1, '#1b4a52');
+      ctx.fillStyle = depth; ctx.fillRect(0, 0, 512, 512);
+      for (let i = -1; i < 12; i++) {
+        ctx.strokeStyle = i % 2 ? 'rgba(120,196,190,.07)' : 'rgba(8,30,38,.12)'; ctx.lineWidth = i % 3 ? 1.2 : 2.6;
+        ctx.beginPath(); ctx.moveTo(-30, i * 48); ctx.bezierCurveTo(140, i * 48 - 30, 320, i * 48 + 50, 542, i * 48 + 12); ctx.stroke();
+      }
+      for (let i = 0; i < 26; i++) {
+        const x = this._hash(i, 3, 91) * 512, y = this._hash(i, 4, 91) * 512;
+        ctx.fillStyle = i % 3 ? 'rgba(206,196,150,.08)' : 'rgba(10,32,40,.18)';
+        ctx.beginPath(); ctx.ellipse(x, y, 10 + this._hash(i, 5, 91) * 26, 4 + this._hash(i, 6, 91) * 8, this._hash(i, 7, 91) * 3, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (id === 'snow') {
+      for (let i = 0; i < 24; i++) {
+        const x = this._hash(i, 2, 93) * 512, y = this._hash(i, 3, 93) * 512;
+        const radius = 40 + this._hash(i, 4, 93) * 70;
+        for (const dx of [-512, 0, 512]) for (const dy of [-512, 0, 512]) {
+          const drift = ctx.createRadialGradient(x + dx, y + dy, 2, x + dx, y + dy, radius);
+          drift.addColorStop(0, i % 2 ? '#98a8b9' : '#72839a'); drift.addColorStop(1, '#7d8d9f00');
+          ctx.fillStyle = drift; ctx.fillRect(x + dx - 110, y + dy - 110, 220, 220);
+        }
+      }
+      ctx.strokeStyle = 'rgba(226,236,244,.12)'; ctx.lineWidth = 1;
+      for (let i = 0; i < 30; i++) {
+        const x = this._hash(i, 5, 93) * 512, y = this._hash(i, 6, 93) * 512;
+        ctx.beginPath(); ctx.moveTo(x - 3, y); ctx.lineTo(x + 3, y); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 3); ctx.stroke();
+      }
     } else {
       for (let i = 0; i < 95; i++) {
         const x = this._hash(i, 11) * 512, y = this._hash(i, 12) * 512;
@@ -826,7 +856,9 @@ class VesperGame {
       castle: ['pillar', 'flag', 'crypt', 'candle', 'ruinedwall'],
       egypt: ['obelisk', 'urn', 'sarcophagus', 'desertruin', 'palm'],
       swamp: ['willow', 'stump', 'reeds', 'log', 'willow'],
-      halloween: ['pumpkin', 'tomb', 'fence', 'deadTree', 'lantern']
+      halloween: ['pumpkin', 'tomb', 'fence', 'deadTree', 'lantern'],
+      sea: ['coral', 'seaweed', 'rock', 'anchor', 'urn'],
+      snow: ['pine', 'pine', 'rock', 'iceCrystal', 'lantern']
     };
     const features = [];
     for (let x = -3; x <= 3; x++) {
@@ -845,6 +877,14 @@ class VesperGame {
     } else if (id === 'swamp') {
       features.push({ x: -950, y: 750, kind: 'hut', scale: 2.3 }, { x: 1100, y: -760, kind: 'hut', scale: 1.7 }, { x: 0, y: -950, kind: 'willow', scale: 2.2 });
       for (const x of [-1500, -760, 500, 1650]) features.push({ x, y: 300 + Math.sin(x) * 250, kind: 'reeds', scale: 2.2 });
+    } else if (id === 'sea') {
+      features.push({ x: 0, y: -1080, kind: 'shipwreck', scale: 2.4 }, { x: -270, y: -900, kind: 'chest', scale: 1.5 }, { x: 310, y: -860, kind: 'anchor', scale: 1.8 });
+      for (const [x, y] of [[-1300, -900], [1350, 850], [-1250, 950], [1200, -800]]) {
+        features.push({ x, y, kind: 'coral', scale: 2.2 }, { x: x + 170, y: y + 60, kind: 'seaweed', scale: 2 }, { x: x - 150, y: y + 90, kind: 'rock', scale: 1.6 });
+      }
+    } else if (id === 'snow') {
+      features.push({ x: -1000, y: 760, kind: 'cabin', scale: 2.2 }, { x: 1150, y: -780, kind: 'cabin', scale: 1.8 }, { x: 0, y: -1000, kind: 'iceCrystal', scale: 2.6 });
+      for (let i = 0; i < 10; i++) features.push({ x: -2000 + i * 440, y: 520 + Math.sin(i * 1.3) * 140, kind: 'pine', scale: 1.6 + (i % 3) * 0.25 });
     } else {
       features.push({ x: 0, y: -1130, kind: 'hauntedhouse', scale: 2.6 }, { x: -600, y: 320, kind: 'pumpkin', scale: 2.6 }, { x: 650, y: 230, kind: 'pumpkin', scale: 2.1 }, { x: -1200, y: -660, kind: 'deadTree', scale: 2.3 });
       for (let i = 0; i < 9; i++) features.push({ x: 950 + (i % 3) * 100, y: 660 + Math.floor(i / 3) * 95, kind: 'tomb', scale: 1.1 });
@@ -929,6 +969,38 @@ class VesperGame {
           ctx.beginPath(); if (horizontal) { ctx.moveTo(n, bridge.y); ctx.lineTo(n, bridge.y + bridge.h); } else { ctx.moveTo(bridge.x, n); ctx.lineTo(bridge.x + bridge.w, n); } ctx.stroke();
         }
         ctx.strokeStyle = '#9b8755'; ctx.lineWidth = 2; ctx.strokeRect(bridge.x + 5, bridge.y + 5, bridge.w - 10, bridge.h - 10);
+      }
+    } else if (id === 'sea') {
+      for (let i = 0; i < 7; i++) {
+        const x = bounds.left + 300 + i * 720;
+        const beam = ctx.createLinearGradient(x, bounds.top, x + 420, bounds.bottom);
+        beam.addColorStop(0, 'rgba(160,226,220,.06)'); beam.addColorStop(1, 'rgba(160,226,220,0)');
+        ctx.fillStyle = beam;
+        ctx.beginPath(); ctx.moveTo(x, bounds.top); ctx.lineTo(x + 180, bounds.top); ctx.lineTo(x + 620, bounds.bottom); ctx.lineTo(x + 380, bounds.bottom); ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = '#244f55';
+      ctx.beginPath(); ctx.moveTo(-120, bounds.top); ctx.bezierCurveTo(-220, -600, 180, -300, -60, 200); ctx.bezierCurveTo(-260, 700, 160, 1000, -40, bounds.bottom); ctx.lineTo(130, bounds.bottom); ctx.bezierCurveTo(320, 1000, -60, 700, 110, 200); ctx.bezierCurveTo(330, -300, -40, -600, 110, bounds.top); ctx.closePath(); ctx.fill();
+      for (const bed of [{ x: -1150, y: -700 }, { x: 1150, y: 700 }, { x: -1300, y: 1000 }, { x: 1250, y: -950 }, { x: 600, y: 150 }]) {
+        ctx.fillStyle = 'rgba(60,110,80,.2)'; ctx.beginPath(); ctx.ellipse(bed.x, bed.y, 420, 240, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#3f7a5a'; ctx.lineWidth = 2;
+        for (let i = 0; i < 14; i++) {
+          const x = bed.x + Math.sin(i * 2.3) * 300, y = bed.y + Math.cos(i * 1.7) * 160;
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y - 14); ctx.moveTo(x, y); ctx.lineTo(x + 5, y - 16); ctx.stroke();
+        }
+      }
+    } else if (id === 'snow') {
+      ctx.fillStyle = '#6d7d90';
+      ctx.beginPath(); ctx.moveTo(bounds.left, 480); ctx.bezierCurveTo(-1400, 360, -600, 700, 0, 520); ctx.bezierCurveTo(600, 340, 1400, 700, bounds.right, 540); ctx.lineTo(bounds.right, 640); ctx.bezierCurveTo(1400, 800, 600, 440, 0, 620); ctx.bezierCurveTo(-600, 800, -1400, 460, bounds.left, 580); ctx.closePath(); ctx.fill();
+      for (const lake of [{ x: -1100, y: -650, rx: 560, ry: 300 }, { x: 1150, y: 1050, rx: 620, ry: 320 }, { x: 250, y: -350, rx: 360, ry: 210 }]) {
+        ctx.fillStyle = '#a9b9c8'; ctx.beginPath(); ctx.ellipse(lake.x, lake.y, lake.rx + 22, lake.ry + 18, -0.1, 0, Math.PI * 2); ctx.fill();
+        const ice = ctx.createLinearGradient(lake.x - lake.rx, lake.y - lake.ry, lake.x + lake.rx, lake.y + lake.ry);
+        ice.addColorStop(0, '#6f92aa'); ice.addColorStop(1, '#557990');
+        ctx.fillStyle = ice; ctx.beginPath(); ctx.ellipse(lake.x, lake.y, lake.rx, lake.ry, -0.1, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(214,234,246,.35)'; ctx.lineWidth = 1.5;
+        for (let i = 0; i < 5; i++) {
+          const x = lake.x + Math.sin(i * 2.1) * lake.rx * 0.5, y = lake.y + Math.cos(i * 1.4) * lake.ry * 0.5;
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 40, y - 18); ctx.lineTo(x + 70, y + 6); ctx.moveTo(x + 40, y - 18); ctx.lineTo(x + 52, y - 46); ctx.stroke();
+        }
       }
     } else {
       ctx.fillStyle = '#34303e';
@@ -1097,10 +1169,79 @@ class VesperGame {
         light(0, -44, '#ffbd5933', 64); rect('#e1a751', -7, -55, 14, 19); rect('#312d35', -11, -59, 22, 4); rect('#423741', -10, -37, 20, 4);
         line('#6e555c', 2, [[-8, -58], [-8, -35]]); line('#6e555c', 2, [[8, -58], [8, -35]]);
       }
+    } else if (kind === 'coral') {
+      light(0, -24, '#f0907a24', 50);
+      oval('#5c4a44', 0, 6, 20, 7);
+      for (const [x, color, lean] of [[-14, '#c8565e', -0.5], [0, '#e2836a', 0], [14, '#b9607e', 0.5]]) {
+        line(color, 5, [[x * 0.4, 6], [x, -20], [x + lean * 18, -40]]);
+        line(color, 3.5, [[x, -20], [x - 10 + lean * 6, -32]]);
+        line(color, 3.5, [[x, -12], [x + 10 + lean * 6, -26]]);
+        oval('#f6b39a', x + lean * 18, -41, 3, 3);
+      }
+    } else if (kind === 'seaweed') {
+      const sway = Math.sin(this._clock * 1.6 + seed) * 5;
+      ctx.lineWidth = 3.5;
+      for (let i = 0; i < 5; i++) {
+        const x = (i - 2) * 7;
+        ctx.strokeStyle = i % 2 ? '#3f8a5e' : '#2f7053';
+        ctx.beginPath(); ctx.moveTo(x, 8); ctx.quadraticCurveTo(x + sway, -28, x - sway * 0.6, -58 - (i % 3) * 10); ctx.stroke();
+      }
+    } else if (kind === 'rock') {
+      poly(id === 'snow' ? '#4c5664' : '#3c4f55', [[-30, 8], [-24, -14], [-6, -24], [14, -20], [30, -4], [26, 10]]);
+      poly(id === 'snow' ? '#66717f' : '#56707a', [[-24, -14], [-6, -24], [14, -20], [4, -8], [-14, -6]]);
+      poly(id === 'snow' ? '#e3ebf1' : '#4f8a5e', [[-26, -12], [-6, -26], [15, -22], [22, -14], [6, -16], [-12, -10]]);
+    } else if (kind === 'anchor') {
+      line('#5c4a3a', 4, [[0, -52], [0, 4]]);
+      line('#7a6450', 1.4, [[1, -50], [1, 2]]);
+      oval('#5c4a3a', 0, -56, 6, 6); oval('#1d3a40', 0, -56, 3, 3);
+      line('#5c4a3a', 4, [[-14, -40], [14, -40]]);
+      ctx.strokeStyle = '#6a5442'; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.arc(0, -6, 18, 0.15, Math.PI - 0.15); ctx.stroke();
+      poly('#6a5442', [[16, -4], [24, -12], [20, 2]]); poly('#6a5442', [[-16, -4], [-24, -12], [-20, 2]]);
+      oval('#8a6a4a80', 5, -30, 3, 6);
+    } else if (kind === 'shipwreck') {
+      light(0, -40, '#7fd0c820', 90);
+      poly('#3a2a22', [[-70, 0], [-58, -26], [52, -30], [74, -8], [60, 10], [-56, 12]]);
+      poly('#5a4030', [[-58, -26], [52, -30], [48, -18], [-54, -14]]);
+      for (let x = -48; x <= 44; x += 16) line('#2a1e18', 1.4, [[x, -24], [x + 3, 8]]);
+      poly('#1a1512', [[-10, -6], [6, -8], [2, 8], [-12, 8]]);
+      line('#4a3526', 5, [[-12, -28], [-24, -110]]);
+      line('#4a3526', 3, [[-20, -86], [8, -92]]);
+      poly('#8d8773a0', [[-18, -84], [6, -90], [2, -54], [-14, -50]]);
+      line('#6a5a4a', 1, [[-10, -84], [-6, -58]]);
+      oval('#2f7053', 40, -2, 10, 4); line('#3f8a5e', 2.5, [[62, 2], [66, -24], [60, -40]]);
+    } else if (kind === 'chest') {
+      light(0, -10, '#f2c86a30', 44);
+      rect('#5c3d24', -18, -14, 36, 22); rect('#7a5232', -18, -14, 36, 6);
+      poly('#6b472b', [[-18, -14], [-14, -28], [14, -28], [18, -14]]);
+      rect('#c9a24a', -18, -9, 36, 2.5); rect('#c9a24a', -3, -16, 6, 10);
+      oval('#f2d78a', -8, -24, 3, 2); oval('#f2d78a', 6, -25, 3, 2); oval('#ffe9a8', -1, -22, 2.4, 1.6);
+    } else if (kind === 'pine') {
+      rect('#4a3526', -4, -10, 8, 18);
+      for (const [y, w] of [[-18, 30], [-40, 24], [-60, 17], [-78, 10]]) {
+        poly('#27463f', [[-w, y + 6], [0, y - 24], [w, y + 6]]);
+        poly('#355a50', [[-w, y + 6], [0, y - 24], [-w * 0.2, y + 6]]);
+        poly('#dfe8ef', [[-w * 0.85, y + 4], [-w * 0.35, y - 4], [0, y - 2], [w * 0.4, y - 5], [w * 0.85, y + 4]]);
+      }
+      oval('#eef3f7', 0, -103, 4, 3);
+    } else if (kind === 'iceCrystal') {
+      light(0, -30, '#a8dcf430', 56);
+      for (const [x, h, lean, color] of [[-12, 42, -0.3, '#8fc2dc'], [0, 62, 0, '#b8e0f2'], [13, 38, 0.35, '#7fb4d0']]) {
+        const tipX = x + Math.sin(lean) * h, tipY = 4 - Math.cos(lean) * h;
+        poly(color, [[x - 6, 6], [tipX, tipY], [x + 6, 6]]);
+        line('#e8f6fc', 1, [[x - 1, 4], [tipX, tipY + 4]]);
+      }
+    } else if (kind === 'cabin') {
+      rect('#4a3526', -46, -38, 92, 46);
+      for (let y = -32; y < 6; y += 8) line('#3a281c', 2, [[-46, y], [46, y]]);
+      poly('#3a2f2a', [[-58, -36], [0, -80], [58, -36]]);
+      poly('#e3ebf1', [[-62, -34], [0, -84], [62, -34], [52, -30], [0, -72], [-52, -30]]);
+      rect('#2a2320', -9, -22, 18, 30);
+      for (const x of [-30, 30]) { rect('#1d2226', x - 8, -30, 16, 14); rect('#f0b060', x - 6, -28, 12, 10); light(x, -23, '#f2b25a34', 30); }
+      rect('#6a5a4a', 24, -92, 10, 20); oval('#c8ccd080', 29, -100, 5, 4);
     }
   }
   _drawWorldBoundary(ctx, id, bounds, view) {
-    const palette = { castle: ['#1a1d27', '#77707a'], egypt: ['#67563e', '#cbb078'], swamp: ['#152c27', '#56644a'], halloween: ['#211c2e', '#796079'] }[id];
+    const palette = { castle: ['#1a1d27', '#77707a'], egypt: ['#67563e', '#cbb078'], swamp: ['#152c27', '#56644a'], halloween: ['#211c2e', '#796079'], sea: ['#0e2a33', '#4f8a8f'], snow: ['#4b596b', '#c3d1dd'] }[id];
     ctx.strokeStyle = palette[0]; ctx.lineWidth = 48; ctx.strokeRect(bounds.left, bounds.top, bounds.width, bounds.height);
     ctx.strokeStyle = palette[1]; ctx.lineWidth = 3; ctx.strokeRect(bounds.left + 24, bounds.top + 24, bounds.width - 48, bounds.height - 48);
     const post = (x, y) => {
@@ -1143,7 +1284,7 @@ class VesperGame {
   drawMapPreview(canvas, id) {
     const map = VesperGame.MAPS.find(item => item.id === id); if (!map) return;
     const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
-    const colors = { castle: ['#1c1c2b', '#51404f'], egypt: ['#444b59', '#b18a51'], swamp: ['#102e2c', '#3c6750'], halloween: ['#24223f', '#795160'] }[id];
+    const colors = { castle: ['#1c1c2b', '#51404f'], egypt: ['#444b59', '#b18a51'], swamp: ['#102e2c', '#3c6750'], halloween: ['#24223f', '#795160'], sea: ['#0b2638', '#1d5a63'], snow: ['#27324b', '#8fa2b8'] }[id];
     ctx.save(); ctx.setTransform(w / 480, 0, 0, h / 190, 0, 0); ctx.clearRect(0, 0, 480, 190);
     const sky = ctx.createLinearGradient(0, 0, 0, 190); sky.addColorStop(0, colors[0]); sky.addColorStop(1, colors[1]); ctx.fillStyle = sky; ctx.fillRect(0, 0, 480, 190);
     ctx.fillStyle = id === 'egypt' ? '#e4c995' : '#c8c1b580'; ctx.beginPath(); ctx.arc(362, 42, id === 'egypt' ? 23 : 20, 0, Math.PI * 2); ctx.fill();
@@ -1165,6 +1306,13 @@ class VesperGame {
       ctx.fillStyle = '#1e4141'; ctx.beginPath(); ctx.ellipse(240, 173, 194, 27, 0, 0, Math.PI * 2); ctx.fill();
       feature('willow', 351, 143, 1.4, .55); feature('hut', 246, 152, 1.1); feature('willow', 95, 175, 1.55); feature('reeds', 378, 190, 1.2);
       for (let i = 0; i < 13; i++) { ctx.fillStyle = '#bee19590'; ctx.fillRect(70 + this._hash(i, 3) * 330, 60 + this._hash(i, 9) * 112, 1.5, 1.5); }
+    } else if (id === 'sea') {
+      for (let i = 0; i < 14; i++) { ctx.fillStyle = '#bfe7ee70'; ctx.beginPath(); ctx.arc(60 + this._hash(i, 7) * 360, 30 + this._hash(i, 8) * 120, 1 + this._hash(i, 9) * 2, 0, Math.PI * 2); ctx.fill(); }
+      feature('shipwreck', 250, 150, 1.1); feature('coral', 88, 184, 1.1); feature('seaweed', 392, 190, 1.2); feature('anchor', 150, 185, .7); feature('rock', 330, 188, .8);
+    } else if (id === 'snow') {
+      ctx.fillStyle = '#6f8199'; ctx.beginPath(); ctx.moveTo(0, 140); ctx.lineTo(90, 70); ctx.lineTo(170, 125); ctx.lineTo(260, 55); ctx.lineTo(360, 130); ctx.lineTo(480, 80); ctx.lineTo(480, 190); ctx.lineTo(0, 190); ctx.fill();
+      ctx.fillStyle = '#c4d0dc'; for (const [x, y] of [[90, 70], [260, 55], [480, 80]]) { ctx.beginPath(); ctx.moveTo(x - 22, y + 18); ctx.lineTo(x, y); ctx.lineTo(x + 22, y + 18); ctx.fill(); }
+      feature('pine', 70, 182, 1.2); feature('cabin', 250, 170, 1.05); feature('pine', 400, 186, 1.35); feature('iceCrystal', 150, 186, .8); feature('lantern', 330, 182, .7);
     } else {
       feature('deadTree', 89, 160, 1.35, .6); feature('hauntedhouse', 254, 158, 1.05); feature('tomb', 369, 176, .8); feature('pumpkin', 122, 177, .9); feature('pumpkin', 405, 186, .65); feature('fence', 184, 190, .8);
     }
@@ -1321,7 +1469,6 @@ class VesperGame {
   }
   _drawPlayer(ctx) {
     const p = this.player;
-    const bob = Math.sin(p.steps || this._clock * 2) * 1.1;
     const invulnerable = p.invulnerability > 0 && Math.floor(this._clock * 16) % 2 === 0;
     ctx.save(); ctx.translate(p.x, p.y);
     const halo = ctx.createRadialGradient(0, 0, 4, 0, 0, 90);
@@ -1330,11 +1477,17 @@ class VesperGame {
     ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(0, 14, 20, 8, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(203,177,110,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(0, 14, 24, 11, 0, 0, Math.PI * 2); ctx.stroke();
     if (invulnerable) ctx.globalAlpha = 0.6;
-    ctx.translate(0, bob);
+    this._walkPose(ctx, p.steps, p.walk || 0);
     ctx.scale(p.facing, 1);
     this._drawCharacter(ctx, this._character, p.steps);
     ctx.restore();
   }
+  _walkPose(ctx, steps, walk) {
+    const idle = Math.sin(this._clock * 2.2) * 0.5 * (1 - walk);
+    ctx.translate(0, idle - Math.abs(Math.sin(steps)) * 1.8 * walk);
+    ctx.rotate(Math.sin(steps) * 0.05 * walk);
+  }
+
   drawCharacterPreview(canvas, id, locked = false) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -1857,6 +2010,27 @@ class VesperGame {
     }
     ctx.globalAlpha = 1;
   }
+  _drawWeather(ctx) {
+    const view = this._view;
+    const cell = 150;
+    const snow = this.mapId === 'snow';
+    ctx.fillStyle = snow ? '#eef4fa' : '#bfe7ee';
+    for (let x = Math.floor(view.left / cell); x <= Math.ceil(view.right / cell); x++) {
+      for (let y = Math.floor(view.top / cell); y <= Math.ceil(view.bottom / cell); y++) {
+        const seed = this._hash(x, y, 31);
+        const speed = snow ? 26 + seed * 22 : -(18 + seed * 16);
+        const travel = ((this._clock * speed + seed * cell) % cell + cell) % cell;
+        const px = x * cell + this._hash(x, y, 32) * cell + Math.sin(this._clock * 0.8 + seed * 6) * 8;
+        const py = y * cell + travel;
+        const size = snow ? 1.4 + seed * 1.4 : 1 + seed * 2;
+        ctx.globalAlpha = snow ? 0.3 + seed * 0.3 : 0.16 + seed * 0.18;
+        if (snow) ctx.fillRect(px, py, size, size);
+        else { ctx.beginPath(); ctx.arc(px, py, size, 0, Math.PI * 2); ctx.fill(); }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
   _initAudio() {
     try {
       if (!this._audio) {
@@ -1900,12 +2074,14 @@ class VesperGame {
 VesperGame.DIFFICULTIES = Object.freeze([
   { id: 'easy', name: 'Fácil', hint: 'Monstros mais frágeis, lentos e com menos dano.', enemyHealth: 0.78, enemySpeed: 0.92, enemyDamage: 0.75, spawnInterval: 1.14 },
   { id: 'medium', name: 'Médio', hint: 'A experiência equilibrada do jogo.', enemyHealth: 1, enemySpeed: 1, enemyDamage: 1, spawnInterval: 1 },
-  { id: 'hard', name: 'Difícil', hint: 'Monstros mais fortes e ondas mais rápidas.', enemyHealth: 1.28, enemySpeed: 1.09, enemyDamage: 1.22, spawnInterval: 0.84 }
+  { id: 'hard', name: 'Difícil', hint: 'Monstros bem mais fortes, rápidos e numerosos.', enemyHealth: 1.55, enemySpeed: 1.16, enemyDamage: 1.5, spawnInterval: 0.7 }
 ].map(mode => Object.freeze(mode)));
 VesperGame.MAPS = Object.freeze([
   { id: 'castle', name: 'Castelo', subtitle: 'Mansão do Vampiro', unlockCharacter: 'vampire', bossName: 'VAMPIRO', width: 4800, height: 3600, accent: '#c78491' },
   { id: 'egypt', name: 'Egito Antigo', subtitle: 'Deserto e pirâmides', unlockCharacter: 'mummy', bossName: 'MÚMIA', width: 4800, height: 3600, accent: '#e0b75d' },
   { id: 'swamp', name: 'Pântano', subtitle: 'Lagoas e cabanas', unlockCharacter: 'zombie', bossName: 'ZUMBI', width: 4800, height: 3600, accent: '#79b99b' },
-  { id: 'halloween', name: 'Modo Halloween', subtitle: 'Abóboras e cemitério', unlockCharacter: 'jack', bossName: 'JACK O’ LANTERN', width: 4800, height: 3600, accent: '#eaa05f' }
+  { id: 'halloween', name: 'Modo Halloween', subtitle: 'Abóboras e cemitério', unlockCharacter: 'jack', bossName: 'JACK O’ LANTERN', width: 4800, height: 3600, accent: '#eaa05f' },
+  { id: 'sea', name: 'Fundo do Mar', subtitle: 'Naufrágio e recifes', unlockCharacter: 'kraken', bossName: 'KRAKEN', width: 4800, height: 3600, accent: '#5fb8c4' },
+  { id: 'snow', name: 'Montanhas Geladas', subtitle: 'Neve e pinheiros', unlockCharacter: 'yeti', bossName: 'YETI', width: 4800, height: 3600, accent: '#a9c8e6' }
 ].map(map => Object.freeze(map)));
 window.VesperGame = VesperGame;

@@ -515,8 +515,8 @@ test('base movement and enemy speed increase moderately; XP thresholds require m
 });
 function bosses(game) { return game.enemies.filter(e => e.boss && !e.dead); }
 function atTime(game, seconds) { game.elapsed = seconds; game._update(0); }
-const mapIds = ['castle', 'egypt', 'swamp', 'halloween'];
-const mapReward = { castle: 'vampire', egypt: 'mummy', swamp: 'zombie', halloween: 'jack' };
+const mapIds = ['castle', 'egypt', 'swamp', 'halloween', 'sea', 'snow'];
+const mapReward = { castle: 'vampire', egypt: 'mummy', swamp: 'zombie', halloween: 'jack', sea: 'kraken', snow: 'yeti' };
 function within(entity, bounds, radius = entity.radius || 0) {
   assert.ok(entity.x >= bounds.left + radius - 1e-7 && entity.x <= bounds.right - radius + 1e-7, `x=${entity.x} outside world`);
   assert.ok(entity.y >= bounds.top + radius - 1e-7 && entity.y <= bounds.bottom - radius + 1e-7, `y=${entity.y} outside world`);
@@ -554,7 +554,7 @@ test('walking makes small capped dust particles and standing still does not', ()
   game._update(0.05);
   assert.equal(game.particles.filter(particle => particle.dust).length, count);
 });
-test('four selectable finite maps have stable identities and safe map changes', () => {
+test('every selectable finite map has a stable identity and safe map changes', () => {
   const { game } = harness();
   const maps = game.constructor.MAPS;
   assert.deepEqual(Array.from(maps, map => map.id), mapIds);
@@ -569,7 +569,7 @@ test('four selectable finite maps have stable identities and safe map changes', 
     assert.equal(b.top, -1800); assert.equal(b.bottom, 1800);
   }
   assert.equal(game.setMap('unknown'), false);
-  assert.equal(game.mapId, 'halloween');
+  assert.equal(game.mapId, mapIds.at(-1));
   game.start('egypt');
   assert.equal(game.mapId, 'egypt');
   assert.equal(game.setMap('castle'), false, 'A live run cannot silently change maps');
@@ -1059,7 +1059,7 @@ test('offline menu selects each map before starting and character selection retu
   n.get('start-btn').fire('click');
   assert.equal(ui.game.starts, undefined, 'Offline must open the map selector first');
   assert.equal(n.get('menu').dataset.view, 'maps');
-  assert.equal(n.get('map-grid').children.length, 4);
+  assert.equal(n.get('map-grid').children.length, mapIds.length);
   n.get('map-character-btn').fire('click');
   assert.equal(n.get('menu').dataset.view, 'characters');
   const ghost = n.get('character-grid').children.find(card => card.dataset.characterId === 'ghost');
@@ -1095,7 +1095,7 @@ test('minimap changes corner only when it would cover the player', () => {
   assert.equal(n.get('minimap').classList.contains('is-obscuring'), false);
 });
 test('campaign keeps eight heroes while the Online mode adds eight paid skins', () => {
-  const earned = ['human', 'ghost', 'hooded', 'vampire', 'mummy', 'zombie', 'jack', 'survivor'];
+  const earned = ['human', 'ghost', 'hooded', 'vampire', 'mummy', 'zombie', 'jack', 'kraken', 'yeti', 'survivor'];
   const skins = ['alien', 'spider', 'skeleton', 'orc', 'invisible', 'cyborg', 'plague', 'frankenstein'];
   const roster = harness().game.constructor.CHARACTERS;
   assert.deepEqual(Array.from(roster, character => character.id), earned.concat(skins));
@@ -1114,17 +1114,17 @@ test('campaign keeps eight heroes while the Online mode adds eight paid skins', 
     assert.ok(coinCards.slice(1).every(card => card.classList.contains('is-locked')));
   }
 });
-test('each campaign victory persists only its own reward; fourth victory grants survivor and gold frames', () => {
+test('each campaign victory persists only its own reward; the last map grants survivor and gold frames', () => {
   const stored = {}, ui = uiHarness(stored), n = ui.nodes;
   const rewards = ['vampire','mummy','zombie','jack'];
-  for (const [index, id] of ['castle','egypt','swamp','halloween'].entries()) {
+  for (const [index, id] of mapIds.entries()) {
     n.get('start-btn').fire('click');
     n.get('map-grid').children.find(card => card.dataset.mapId === id).fire('click');
     n.get('difficulty-choices').children[1].fire('click');
     ui.game.state = 'victory'; ui.game.callbacks.onState('victory');
     ui.game.callbacks.onVictory({ mapId:id, elapsed:265, kills:300, level:12, bossKills:2 });
     assert.equal(n.get('victory-overlay').hidden, false);
-    assert.equal(n.get('victory-unlocks').children.length, index === 3 ? 2 : 1);
+    assert.equal(n.get('victory-unlocks').children.length, index === mapIds.length - 1 ? 2 : 1);
     assert.equal(JSON.parse(stored['vesper.progress.v2']).completedMaps.length, index + 1);
     n.get('victory-characters-btn').fire('click');
     const cards = n.get('character-grid').children;
@@ -1133,18 +1133,18 @@ test('each campaign victory persists only its own reward; fourth victory grants 
       assert.equal(card.classList.contains('is-earned'), rewardIndex <= index);
       assert.equal(card.getAttribute('aria-disabled'), String(rewardIndex > index));
     }
-    assert.equal(cards.find(card => card.dataset.characterId === 'survivor').classList.contains('is-earned'), index === 3);
+    assert.equal(cards.find(card => card.dataset.characterId === 'survivor').classList.contains('is-earned'), index === mapIds.length - 1);
     n.get('characters-back-btn').fire('click');
     assert.equal(n.get('map-grid').children.filter(card => card.classList.contains('is-completed')).length, index + 1);
     n.get('maps-back-btn').fire('click');
   }
   const reload = uiHarness(stored); reload.nodes.get('characters-btn').fire('click');
-  assert.equal(reload.nodes.get('character-grid').children.filter(card => card.classList.contains('is-earned')).length, 5);
+  assert.equal(reload.nodes.get('character-grid').children.filter(card => card.classList.contains('is-earned')).length, mapIds.length + 1);
   const survivor = reload.nodes.get('character-grid').children.find(card => card.dataset.characterId === 'survivor');
   survivor.fire('click'); assert.equal(stored['vesper.character.v1'], 'survivor');
   assert.equal(uiHarness(stored).game.character, 'survivor', 'Earned selection survives reload');
   reload.game.callbacks.onVictory({mapId:'halloween',elapsed:300,kills:400,level:14});
-  assert.equal(JSON.parse(stored['vesper.progress.v2']).completedMaps.length, 4, 'Repeat clears never duplicate progression');
+  assert.equal(JSON.parse(stored['vesper.progress.v2']).completedMaps.length, mapIds.length, 'Repeat clears never duplicate progression');
   assert.equal(reload.nodes.get('victory-unlocks').children[0].className, 'reward-repeat');
 });
 test('corrupt, unknown, disabled and failed-run storage cases do not grant campaign rewards', () => {
@@ -1179,7 +1179,7 @@ test('all maps render their landmarks and cache full-world overviews; minimap re
     assert.ok(dots.every(dot => dot.r >= 6), 'Red marker stays legible at high pixel density');
   }
 });
-test('all 24 themed enemies and four mini bosses render distinctly without corrupting canvas state', () => {
+test('every themed enemy and mini boss renders distinctly without corrupting canvas state', () => {
   const h = harness(), g = h.game, appearances = new Set(), drawings = new Set();
   const methods = ['beginPath','moveTo','lineTo','closePath','ellipse','arc','fillRect','fill','stroke','scale','translate'];
   let depth = 0, operations = [];
@@ -1208,10 +1208,10 @@ test('all 24 themed enemies and four mini bosses render distinctly without corru
       assert.equal(depth, 0, 'Every sprite must restore canvas transforms');
     }
   }
-  assert.equal(appearances.size, 28); assert.equal(drawings.size, 28);
+  assert.equal(appearances.size, mapIds.length * 7); assert.equal(drawings.size, mapIds.length * 7);
 });
-test('theme animations preserve combat randomness and base enemy balance on all four maps', () => {
-  for (const map of ['castle','egypt','swamp','halloween']) {
+test('theme animations preserve combat randomness and base enemy balance on every map', () => {
+  for (const map of mapIds) {
     const rendered = harness({seed:701}), idle = harness({seed:701});
     for (const h of [rendered,idle]) {
       h.game.start(map); h.game.enemies.length = 0;

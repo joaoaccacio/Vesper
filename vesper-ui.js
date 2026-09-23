@@ -362,7 +362,7 @@
   }
   function unlockRule(character) {
     if (character.unlockType === 'map') return `Conclua ${maps.find(map => map.id === character.unlockMap).name}`;
-    if (character.unlockType === 'all') return `Conclua todos os mapas (${completedMaps.size}/4)`;
+    if (character.unlockType === 'all') return `Conclua todos os mapas (${completedMaps.size}/${maps.length})`;
     if (character.unlockType === 'coins') return 'Moedas ganhas no modo Online';
     return 'Disponível desde o início';
   }
@@ -434,7 +434,7 @@
     updateNewBadge();
   }
   function renderMaps() {
-    const numerals = ['I', 'II', 'III', 'IV'];
+    const numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
     for (const [index, map] of maps.entries()) {
       let card = mapCards.get(map.id);
       const rewardName = characters.find(character => character.id === map.unlockCharacter).name;
@@ -464,7 +464,7 @@
       card.reward.textContent = `${completed ? 'Conquistado' : 'Desbloqueia'}: ${rewardName}`;
       card.button.setAttribute('aria-label', `${map.name}. ${map.subtitle}. ${completed ? 'Concluído.' : `Desbloqueia ${rewardName}.`} Jogar.`);
     }
-    $('maps-progress').textContent = `${completedMaps.size} / 4 CONCLUÍDOS`;
+    $('maps-progress').textContent = `${completedMaps.size} / ${maps.length} CONCLUÍDOS`;
     $('map-character-name').textContent = characters.find(character => character.id === characterId).name;
     drawMapPreviews();
     drawPortraits();
