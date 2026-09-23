@@ -273,6 +273,7 @@ class Hub {
   }
 
   join(client, message) {
+    if (client.room) return;
     const profile = {
       name: String(message.name || 'Jogador').trim().slice(0, 14) || 'Jogador',
       skin: String(message.skin || 'alien')

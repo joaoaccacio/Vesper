@@ -256,7 +256,7 @@
       let best = null;
       let bestDistance = Infinity;
       for (const other of this.fighters) {
-        if (other === fighter || !other.alive) continue;
+        if (other === fighter || !other.alive || other.spawnGuard > 0) continue;
         const distance = (other.x - fighter.x) ** 2 + (other.y - fighter.y) ** 2;
         if (distance < bestDistance) { bestDistance = distance; best = other; }
       }
@@ -272,6 +272,14 @@
         if (distance < bestDistance) { bestDistance = distance; best = crate; }
       }
       return best;
+    }
+
+    nearestTarget(fighter) {
+      const rival = this.nearestRival(fighter);
+      const crate = this.nearestCrate(fighter);
+      if (!rival || !crate) return rival || crate;
+      const distance = target => (target.x - fighter.x) ** 2 + (target.y - fighter.y) ** 2;
+      return distance(crate) < distance(rival) ? crate : rival;
     }
 
     grantXp(fighter, amount) {
@@ -342,6 +350,7 @@
           x: fighter.x + Math.cos(angle) * 22,
           y: fighter.y - 2 + Math.sin(angle) * 22,
           vx: Math.cos(angle) * weapon.speed, vy: Math.sin(angle) * weapon.speed,
+          px: fighter.x, py: fighter.y - 2,
           damage, poison, owner: fighter.id, tier: weapon.tier, life: CONFIG.shotLife
         };
         this.shots.push(shot);
@@ -414,8 +423,8 @@
       fighter.x = clamp(fighter.x + fighter.mx * speed * dt, bounds.left + CONFIG.radius + 24, bounds.right - CONFIG.radius - 24);
       fighter.y = clamp(fighter.y + fighter.my * speed * dt, bounds.top + CONFIG.radius + 24, bounds.bottom - CONFIG.radius - 24);
       if (!fighter.bot) {
-        const rival = this.nearestRival(fighter);
-        if (rival) fighter.aim = Math.atan2(rival.y - fighter.y, rival.x - fighter.x);
+        const target = this.nearestTarget(fighter);
+        if (target) fighter.aim = Math.atan2(target.y - fighter.y, target.x - fighter.x);
         else if (Math.hypot(fighter.mx, fighter.my) > 0.08) fighter.aim = Math.atan2(fighter.my, fighter.mx);
       }
       fighter.fireTimer -= dt;
@@ -425,8 +434,10 @@
     stepShots(dt) {
       for (let i = this.shots.length - 1; i >= 0; i--) {
         const shot = this.shots[i];
-        const fromX = shot.x;
-        const fromY = shot.y;
+        const fromX = shot.px;
+        const fromY = shot.py;
+        shot.px = shot.x;
+        shot.py = shot.y;
         shot.x += shot.vx * dt;
         shot.y += shot.vy * dt;
         shot.life -= dt;

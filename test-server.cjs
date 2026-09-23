@@ -310,6 +310,52 @@ test('quem para de mandar entrada para de andar no servidor', () => {
   assert.ok(humano.x > parado, 'Voltando a mandar entrada, volta a andar');
 });
 
+test('a mira automatica trata caixa de XP como qualquer alvo', () => {
+  const arena = new Arena();
+  const humano = arena.join({ name: 'Guino', skin: 'alien' });
+  const rival = arena.join({ bot: true, skin: 'orc' });
+  humano.x = 0; humano.y = 0; humano.spawnGuard = 0;
+  rival.x = 400; rival.y = 0; rival.spawnGuard = 0; rival.think = 99; rival.target = null;
+  for (const crate of arena.crates) crate.respawn = 99;
+  const caixa = arena.crates[0];
+  caixa.respawn = 0; caixa.x = 0; caixa.y = 150;
+  arena.step(0.05);
+  assert.ok(Math.abs(humano.aim - Math.PI / 2) < 1e-6, 'A caixa mais perto vira o alvo');
+  caixa.y = 600;
+  arena.step(0.05);
+  assert.ok(Math.abs(humano.aim) < 1e-6, 'O rival mais perto vira o alvo');
+  rival.spawnGuard = 1;
+  arena.step(0.05);
+  assert.ok(Math.abs(humano.aim - Math.PI / 2) < 1e-6, 'Quem acabou de nascer e intocavel nao prende a mira');
+});
+
+test('tiro a queima-roupa acerta quem esta colado', () => {
+  const arena = new Arena();
+  const humano = arena.join({ name: 'Guino', skin: 'alien' });
+  const rival = arena.join({ bot: true, skin: 'orc' });
+  for (const crate of arena.crates) crate.respawn = 99;
+  humano.x = 0; humano.y = 0; humano.spawnGuard = 0;
+  rival.x = 6; rival.y = 0; rival.spawnGuard = 0; rival.think = 99; rival.target = null;
+  arena.input(humano.id, 0, 0, true);
+  const events = arena.step(0.05);
+  assert.ok(events.some(event => event.e === 'hit' && event.id === rival.id && event.by === humano.id));
+});
+
+test('o mesmo cliente nao entra duas vezes na partida', async () => {
+  const { server, port } = await listen();
+  const client = new Client(port);
+  try {
+    await client.ready;
+    client.send({ t: 'join', name: 'Guino', skin: 'alien' });
+    const joined = await client.waitFor(message => message.t === 'joined');
+    client.send({ t: 'join', name: 'Guino', skin: 'alien' });
+    await wait(150);
+    const room = server.hub.rooms.get(joined.room);
+    assert.equal(room.arena.humans, 1);
+    assert.equal(client.messages.filter(message => message.t === 'joined').length, 1);
+  } finally { client.close(); server.closeAll(); }
+});
+
 (async () => {
   for (const item of tests) {
     try { await item.run(); passed++; process.stdout.write('PASS ' + item.name + '\n'); }

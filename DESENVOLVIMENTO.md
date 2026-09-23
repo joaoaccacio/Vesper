@@ -6,7 +6,7 @@ Abra `VESPER/index.html` no navegador. O HTML inclui todo o CSS, JavaScript, des
 
 Na campanha, WASD/setas ou controle de toque movem o personagem e os ataques são automáticos. Ao andar, o personagem levanta uma poeira curta e discreta. Esc/P pausa; 1/2 escolhe a melhoria; M alterna o som; F solicita tela cheia.
 
-No modo Online o tiro é manual e a mira é automática: WASD move, a mira trava sozinha no jogador vivo mais próximo e a barra de espaço dispara. Essa versão foi feita e testada para desktop.
+No modo Online o tiro é manual e a mira é automática: WASD move, a mira trava sozinha no alvo mais próximo, seja jogador ou caixa de XP e a barra de espaço dispara. Essa versão foi feita e testada para desktop.
 
 ## Campanha
 
@@ -35,7 +35,7 @@ O terminal mostra o endereco. Abra `http://127.0.0.1:8080` para jogar. Quem esti
 
 Variaveis de ambiente: `PORT`, `HOST`, `VESPER_MATCH_SECONDS`, `VESPER_CAPACITY` e `VESPER_BOT_FILL`. A rota `/status` devolve as salas abertas em JSON.
 
-Abrir `VESPER/index.html` direto do disco continua valendo para a campanha offline. O Online, nesse caso, precisa que voce escreva o endereco de um servidor no campo SERVIDOR.
+Abrir `VESPER/index.html` direto do disco continua valendo para a campanha offline. O Online, nesse caso, procura o servidor em `ws://127.0.0.1:8080`; aberto pelo servidor, o jogo sempre conecta no mesmo endereco da pagina. O jogador nunca ve nem digita endereco de servidor.
 
 ### Como a partida funciona
 
@@ -44,13 +44,13 @@ Abrir `VESPER/index.html` direto do disco continua valendo para a campanha offli
 - O servidor roda a 20 pacotes por segundo. Nome e aparencia viajam so na entrada; cada pacote leva posicoes, vida, nivel e abates.
 - Cada servidor tem quinze vagas. Entra-se na sala mais cheia com vaga e uma sala nova abre sozinha quando todas lotam. A sala aceita gente por quatro minutos e some trinta segundos depois do fim.
 - Caiu a conexao? O lugar fica guardado por trinta segundos e volta com nivel, abates e XP intactos.
-- Os bots rodam no servidor e andam de lado com menos força e um pouco mais devagar que os humanos, para os tiros acertarem com mais frequência. A sala espera oito segundos por gente de verdade e completa o resto com bots, sorteando nomes de uma lista de duzentos nomes comuns nos Estados Unidos. Quando alguem entra, o bot de pior desempenho sai. Eles aparecem marcados com `[BOT]` no ranking e a contagem separa humanos de bots.
+- Os bots rodam no servidor e andam de lado com menos força e um pouco mais devagar que os humanos, para os tiros acertarem com mais frequência. A sala espera oito segundos por gente de verdade e completa o resto com bots, sorteando nomes de uma lista de duzentos nomes comuns nos Estados Unidos. Quando alguem entra, o bot de pior desempenho sai. Para o jogador, bots e humanos sao indistinguiveis em texto: o ranking, o feed e a tela final mostram so nomes e o total de jogadores. A unica diferenca visivel e a cor do nome e do ponto no minimapa.
 - Abater gente de verdade paga o dobro em moedas; abater bot paga a metade.
 - O mapa e dividido em quinze zonas e cada lutador nasce em uma zona so sua. Ao renascer, vale a zona mais distante de quem esta vivo.
 - Cada partida dura cinco minutos na arena Catedral em Ruinas (4.000 x 3.000 unidades), com praca do ritual no centro, duas colunatas, quatro patios de criptas, braseiros e caixas de XP. A arena tem piso, muralha e vinheta proprios, de contraste baixo.
 - Todos nascem no nivel 1 com um revolver e sobem ate o nivel 10, que troca a arma, o dano e a vida maxima: Revolver, Pistola, Pistola Automatica, Escopeta, Submetralhadora, Carabina, Rifle, Fuzil de Assalto, AK-47 e Metralhadora Vesper. A vida vai de 180 a 540 e o dano por segundo de 34 a 170.
 - Cada arma tem desenho proprio, no mesmo traco dos personagens, equipado na mao do lutador e virado para a mira; o mesmo desenho aparece como icone no HUD. Toda arma dispara um tiro por vez: so a habilidade do Cyborg acrescenta um segundo projetil.
-- A mira e automatica, travada no jogador vivo mais proximo; o disparo e manual, na barra de espaco.
+- A mira e automatica, travada no alvo mais proximo (jogador ou caixa de XP), ignorando quem acabou de nascer e ainda esta intocavel; o disparo e manual, na barra de espaco.
 - No fim da partida o ranking ordena todos por nivel e depois por abates, e a posicao define as moedas.
 
 As moedas compram as oito skins do Online, que valem somente nessas partidas. Os dois elencos sao separados no motor: uma skin paga nao vira personagem da campanha e um heroi da campanha nao entra na arena, nem para os bots. O Alien ja vem desbloqueado e cada skin tem uma habilidade propria: Alien nenhuma, Aranha velocidade de ataque +10%, Esqueleto velocidade de ataque +15%, Orc dano +20%, Homem Invisivel velocidade +25%, Cyborg +1 projetil, Medico da Peste tiros que envenenam por tres segundos e Frankenstein dano +30%. A carteira fica salva no navegador em `vesper.online.v1`.

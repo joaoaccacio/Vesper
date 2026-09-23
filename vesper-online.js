@@ -43,14 +43,13 @@
       return {
         coins, owned,
         skin: owned.includes(saved.skin) ? saved.skin : 'alien',
-        name: typeof saved.name === 'string' ? saved.name.slice(0, 14) : '',
-        server: typeof saved.server === 'string' ? saved.server.slice(0, 120) : ''
+        name: typeof saved.name === 'string' ? saved.name.slice(0, 14) : ''
       };
     },
     save(profile) {
       writeJson(STORE.profile, {
         version: 2, coins: profile.coins, owned: profile.owned,
-        skin: profile.skin, name: profile.name, server: profile.server
+        skin: profile.skin, name: profile.name
       });
       return profile;
     },
@@ -78,11 +77,6 @@
     setName(name) {
       const profile = Profile.load();
       profile.name = String(name || '').trim().slice(0, 14);
-      return Profile.save(profile);
-    },
-    setServer(server) {
-      const profile = Profile.load();
-      profile.server = String(server || '').trim().slice(0, 120);
       return Profile.save(profile);
     },
     reward(amount) {
@@ -258,7 +252,6 @@
     this.shots = [];
     this.feed = [];
     this.me = null;
-    this.matchServer = 0;
     this.matchRemaining = CONFIG.matchSeconds;
     this.matchDuration = CONFIG.matchSeconds;
     this.onlineResults = null;
@@ -335,7 +328,6 @@
   VesperGame.prototype._onJoined = function (message) {
     clearTimeout(this._connectTimer);
     this._joined = true;
-    this.matchServer = message.room;
     this.matchRemaining = Number(message.remaining) || CONFIG.matchSeconds;
     this.fighters = (message.roster || []).map(makeMirror);
     this.me = this.fighters.find(fighter => fighter.id === message.id) || null;
@@ -354,11 +346,7 @@
     this._sound('boss');
     this._emitOnlineHud();
     if (this.callbacks.onOnlineJoined) {
-      this.callbacks.onOnlineJoined({
-        server: message.room, capacity: message.capacity, resumed: Boolean(message.resumed),
-        players: this.fighters.length, humans: this.fighters.filter(one => !one.bot).length,
-        bots: this.fighters.filter(one => one.bot).length, address: this._serverUrl
-      });
+      this.callbacks.onOnlineJoined({ players: this.fighters.length, resumed: Boolean(message.resumed) });
     }
   };
 
@@ -410,10 +398,8 @@
           fighter.skin = fighter.characterId = event.skin;
           fighter.bot = Boolean(event.bot);
         }
-        if (!event.bot) this._onlineFeed(event.name + ' entrou na partida');
         continue;
       }
-      if (event.e === 'left') { this._onlineFeed(event.name + ' saiu da partida'); continue; }
       if (event.e === 'shot') {
         const owner = this.fighters.find(fighter => fighter.id === event.id);
         if (owner) owner.flash = 0.06;
@@ -496,10 +482,7 @@
     const mine = ranking.find(entry => entry.you) || { rank: ranking.length, level: 1, kills: 0, coins: 0, name: this._onlineName };
     const profile = Profile.reward(mine.coins || 0);
     this.onlineResults = Object.freeze({
-      server: message.room || this.matchServer, players: ranking.length, ranking,
-      you: mine, coins: mine.coins || 0, balance: profile.coins,
-      humans: ranking.filter(entry => !entry.bot).length,
-      bots: ranking.filter(entry => entry.bot).length
+      players: ranking.length, ranking, you: mine, coins: mine.coins || 0, balance: profile.coins
     });
     this.setMovement(0, 0);
     this._firing = false;
@@ -526,22 +509,22 @@
     const me = this.me;
     const weapon = weaponFor(me.level);
     const board = this._onlineLeaderboard();
-    const humans = this.fighters.filter(fighter => !fighter.bot).length;
+    const rank = board.indexOf(me) + 1;
     this.callbacks.onHud({
       online: true, hp: Math.max(0, me.hp), maxHp: me.maxHp, xp: me.xp, nextXp: Arena.nextXpFor(me.level),
       level: me.level, kills: me.kills, elapsed: Math.max(0, this.matchRemaining),
       remaining: Math.max(0, this.matchRemaining), weapon: weapon.name, weaponTier: weapon.tier,
       bosses: [], bossKills: 0, wave: 1, mapId: ARENA.id, mapName: ARENA.name,
-      server: this.matchServer, players: this.fighters.length, humans, bots: this.fighters.length - humans,
+      players: this.fighters.length,
       alive: this.fighters.reduce((total, one) => total + (one.alive ? 1 : 0), 0),
       respawn: me.alive ? 0 : Math.max(0, me.respawn),
-      rank: board.indexOf(me) + 1,
+      rank,
       leaderboard: board.slice(0, 5).map((one, index) => ({
         rank: index + 1, name: one.name, level: one.level, kills: one.kills,
-        you: one === me, bot: one.bot
+        you: one === me
       })),
       feed: this.feed.slice(-3),
-      stageBossStatus: 'Servidor #' + this.matchServer
+      stageBossStatus: rank + 'º lugar'
     });
   };
 

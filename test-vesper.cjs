@@ -858,8 +858,8 @@ function uiHarness(stored = {}, { blocked = false } = {}) {
     this._mode = 'online';
     this.state = 'playing';
     this.callbacks.onState('playing');
-    this.callbacks.onOnlineJoined({ server: 3, capacity: 15, players: 15, humans: 2, bots: 13, address: options.server });
-    return { server: options.server, connecting: true };
+    this.callbacks.onOnlineJoined({ players: 15, resumed: false });
+    return { connecting: true };
   };
   FakeGame.prototype.leaveOnline = function () { this._mode = null; this.toMenu(); };
   FakeGame.prototype.setFiring = function (firing) { this.firing = Boolean(firing); };
@@ -1242,8 +1242,7 @@ test('the Online client mirrors the server snapshot instead of simulating the ma
   assert.equal(h.game.fighters.length, 3);
   assert.equal(h.game.me.name, 'Guino');
   assert.equal(h.game.me.skin, 'orc');
-  assert.equal(h.events.joined.at(-1).humans, 2);
-  assert.equal(h.events.joined.at(-1).bots, 1);
+  assert.deepEqual(Object.keys(h.events.joined.at(-1)).sort(), ['players', 'resumed'], 'A entrada nao conta humanos nem bots');
   h.snapshot(socket, [
     [1, 300, -200, 0.5, 4, 210, 300, 3, 1, 0, 12],
     [2, -500, 400, 1.2, 9, 100, 500, 7, 1, 0, 5],
@@ -1264,9 +1263,10 @@ test('the Online client mirrors the server snapshot instead of simulating the ma
   h.game._emitOnlineHud();
   const hud = h.events.hud.at(-1);
   assert.equal(hud.online, true);
-  assert.equal(hud.humans, 2);
-  assert.equal(hud.bots, 1);
-  assert.equal(hud.leaderboard[0].bot, true, 'O ranking marca quem e bot');
+  assert.equal(hud.players, 3);
+  assert.equal('humans' in hud || 'bots' in hud || 'server' in hud, false, 'O HUD nao separa humanos de bots');
+  assert.equal(hud.leaderboard.some(entry => 'bot' in entry), false, 'O ranking nao marca quem e bot');
+  assert.ok(/^\d+º lugar$/.test(hud.stageBossStatus), 'O minimapa mostra a posicao, nao o servidor');
 });
 test('the client predicts its own movement and accepts the server correction', () => {
   const h = harness({ width: 1200, height: 800 });
@@ -1325,8 +1325,8 @@ test('the client shows the final ranking from the server and banks the coins', (
   const results = h.game.onlineResults;
   assert.equal(results.you.rank, 1);
   assert.equal(results.coins, 120);
-  assert.equal(results.humans, 1);
-  assert.equal(results.bots, 1);
+  assert.equal(results.players, 2);
+  assert.equal('humans' in results || 'bots' in results || 'server' in results, false);
   assert.equal(h.events.results.at(-1).coins, 120);
   assert.equal(h.sandbox.VesperGame.OnlineProfile.load().coins, 120, 'As moedas ficam guardadas');
 });
@@ -1444,7 +1444,7 @@ test('Online skins stay in the Online mode and campaign heroes stay in the campa
   }
 });
 test('Online coins buy skins in the shop and the chosen skin enters the match', () => {
-  const wallet = JSON.stringify({ version: 2, coins: 400, owned: ['alien'], skin: 'alien', name: '', server: '' });
+  const wallet = JSON.stringify({ version: 2, coins: 400, owned: ['alien'], skin: 'alien', name: '', server: 'ws://antigo:1' });
   const ui = uiHarness({ 'vesper.online.v1': wallet });
   ui.nodes.get('characters-btn').fire('click');
   const cards = ui.nodes.get('coin-grid').children;
@@ -1462,15 +1462,14 @@ test('Online coins buy skins in the shop and the chosen skin enters the match', 
   ui.nodes.get('online-form').fire('submit');
   assert.equal(ui.nodes.get('online-error').hidden, false);
   ui.nodes.get('online-name').value = 'Guino';
-  ui.nodes.get('online-server').value = '192.168.0.10:8080';
   ui.nodes.get('online-form').fire('submit');
   assert.equal(ui.nodes.get('online-loading-view').hidden, false);
-  assert.deepEqual({ ...ui.game.onlineOptions }, { name: 'Guino', skin: 'orc', server: '192.168.0.10:8080' });
-  assert.equal(ui.nodes.get('online-loading-server').textContent, 'ws://192.168.0.10:8080');
-  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).server, '192.168.0.10:8080');
+  assert.deepEqual({ ...ui.game.onlineOptions }, { name: 'Guino', skin: 'orc' }, 'O endereco salvo antigo nao prende o jogador em outro servidor');
+  assert.equal('server' in JSON.parse(ui.stored['vesper.online.v1']), false);
+  assert.equal(/servidor/i.test(ui.nodes.get('online-loading-step').textContent), false);
   assert.equal(ui.game.state, 'playing');
 });
-test('the Online HUD separates humans from bots and fires on the space bar', () => {
+test('the Online HUD hides who is a bot and fires on the space bar', () => {
   const ui = uiHarness();
   ui.nodes.get('online-btn').fire('click');
   ui.nodes.get('online-name').value = 'Guino';
@@ -1478,21 +1477,21 @@ test('the Online HUD separates humans from bots and fires on the space bar', () 
   const hud = respawn => ({
     online: true, hp: 210, maxHp: 300, xp: 5, nextXp: 35, level: 4, kills: 4, elapsed: 120,
     remaining: 120, weapon: 'Escopeta', weaponTier: 4, bosses: [], mapName: 'Catedral em Ruínas',
-    players: 15, humans: 3, bots: 12, alive: 13, respawn, rank: 2, stageBossStatus: 'Servidor #3',
+    players: 15, alive: 13, respawn, rank: 2, stageBossStatus: '2º lugar',
     leaderboard: [
-      { rank: 1, name: 'Ashley', level: 6, kills: 6, you: false, bot: true },
-      { rank: 2, name: 'Guino', level: 4, kills: 4, you: true, bot: false }
+      { rank: 1, name: 'Ashley', level: 6, kills: 6, you: false },
+      { rank: 2, name: 'Guino', level: 4, kills: 4, you: true }
     ],
     feed: ['Guino eliminou Ashley']
   });
   ui.game.callbacks.onHud(hud(0));
   assert.equal(ui.nodes.get('online-hud').hidden, false);
   assert.equal(ui.nodes.get('online-weapon').textContent, 'Escopeta');
-  assert.equal(ui.nodes.get('online-board-count').textContent, '3H · 12B');
+  assert.equal(String(ui.nodes.get('online-board-count').textContent), '15');
   assert.equal(ui.nodes.get('timer').textContent, '02:00');
   const rows = ui.nodes.get('online-board-list').children;
-  assert.equal(rows[0].children[1].textContent, 'Ashley [BOT]');
-  assert.equal(rows[0].className, 'is-bot');
+  assert.equal(rows[0].children[1].textContent, 'Ashley');
+  assert.equal(rows[0].className, '');
   assert.equal(rows[1].className, 'is-you');
   ui.browser.fire('keydown', { code: 'Space' });
   assert.equal(ui.game.firing, true);
@@ -1504,7 +1503,7 @@ test('the Online HUD separates humans from bots and fires on the space bar', () 
   ui.game.callbacks.onHud({ hp: 1, maxHp: 1, xp: 0, nextXp: 1, level: 1, kills: 0, elapsed: 0, bosses: [] });
   assert.equal(ui.nodes.get('online-hud').hidden, true);
 });
-test('the final ranking screen pays the coins, marks bots and starts another match', () => {
+test('the final ranking screen pays the coins without marking bots and starts another match', () => {
   const ui = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 2, coins: 70, owned: ['alien'], skin: 'alien', name: 'Guino', server: '' }) });
   ui.nodes.get('online-btn').fire('click');
   ui.nodes.get('online-name').value = 'Guino';
@@ -1512,7 +1511,7 @@ test('the final ranking screen pays the coins, marks bots and starts another mat
   assert.equal(ui.nodes.get('pause-restart-btn').hidden, true);
   const you = { rank: 1, name: 'Guino', level: 9, kills: 11, you: true, bot: false };
   ui.game.callbacks.onOnlineResults({
-    server: 3, players: 15, coins: 96, balance: 166, humans: 3, bots: 12, you,
+    players: 15, coins: 96, balance: 166, you,
     ranking: [you, { rank: 2, name: 'Ashley', level: 8, kills: 9, you: false, bot: true }]
   });
   ui.game.state = 'results';
@@ -1521,9 +1520,9 @@ test('the final ranking screen pays the coins, marks bots and starts another mat
   const rows = ui.nodes.get('online-results-list').children;
   assert.equal(rows.length, 2);
   assert.ok(rows[0].className.includes('is-you'));
-  assert.ok(rows[1].className.includes('is-bot'));
-  assert.equal(rows[1].children[1].textContent, 'Ashley [BOT]');
-  assert.ok(ui.nodes.get('online-results-server').textContent.includes('3 humanos'));
+  assert.equal(rows[1].className.includes('is-bot'), false);
+  assert.equal(rows[1].children[1].textContent, 'Ashley');
+  assert.equal(ui.nodes.get('online-results-kicker').textContent, 'FIM DA PARTIDA · 15 JOGADORES');
   assert.ok(ui.nodes.get('online-results-reward').children[0].textContent.startsWith('+96'));
   ui.nodes.get('online-again-btn').fire('click');
   assert.equal(ui.game.onlineStarts, 2, 'Jogar novamente entra em outra partida');

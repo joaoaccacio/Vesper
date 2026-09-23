@@ -531,13 +531,12 @@
     renderCharacters();
   }
   const ERRORS = {
-    conexao: 'Nao foi possivel falar com o servidor. Confira o endereco e se ele esta ligado.',
-    tempo: 'O servidor demorou demais para responder.',
-    endereco: 'Endereco de servidor invalido.',
-    queda: 'A conexao com o servidor caiu.',
-    sala: 'A partida foi encerrada pelo servidor.',
-    cheio: 'Todos os servidores estao cheios. Tente de novo em instantes.',
-    'sem-websocket': 'Este navegador nao tem WebSocket.'
+    conexao: 'Não foi possível entrar no Online agora. Tente de novo em instantes.',
+    tempo: 'A conexão demorou demais. Tente de novo.',
+    queda: 'A conexão caiu.',
+    sala: 'A partida foi encerrada.',
+    full: 'Todas as partidas estão cheias. Tente de novo em instantes.',
+    'sem-websocket': 'Este navegador não tem suporte ao Online.'
   };
   function showOnlineError(message) {
     $('online-error').textContent = message;
@@ -549,8 +548,6 @@
     $('online-skin-name').textContent = skin.name;
     $('online-skin-skill').textContent = skin.skill ? skin.skill.label : 'Nenhuma habilidade';
     if (!$('online-name').value) $('online-name').value = profile.name;
-    $('online-server').placeholder = VesperGame.ONLINE.defaultServer();
-    if (!$('online-server').value) $('online-server').value = profile.server;
     showOnlineError('');
   }
   function enterOnline(event) {
@@ -562,31 +559,27 @@
       return;
     }
     profile = VesperGame.OnlineProfile.setName(name);
-    profile = VesperGame.OnlineProfile.setServer($('online-server').value);
     showOnlineError('');
     showMenuView('online-loading');
     connect();
   }
   function connect() {
-    const target = VesperGame.ONLINE.normalizeServer(profile.server) || VesperGame.ONLINE.defaultServer();
     $('online-loading-fill').style.width = '35%';
-    $('online-loading-step').textContent = 'Conectando ao servidor';
-    $('online-loading-server').textContent = target;
-    game.startOnline({ name: profile.name, skin: profile.skin, server: profile.server });
+    $('online-loading-step').textContent = 'Preparando a arena';
+    game.startOnline({ name: profile.name, skin: profile.skin });
   }
-  function onOnlineJoined(info) {
+  function onOnlineJoined() {
     $('online-loading-fill').style.width = '100%';
     $('online-loading-step').textContent = 'Entrando na partida';
-    toast(`Servidor #${info.server} · ${info.humans} ${info.humans === 1 ? 'humano' : 'humanos'} · ${info.bots} bots`, 3000);
   }
   function onOnlineError(reason) {
     nextMenuView = null;
     showMenuView('online');
-    showOnlineError(ERRORS[reason] || 'Nao foi possivel entrar na partida.');
+    showOnlineError(ERRORS[reason] || 'Não foi possível entrar na partida.');
   }
   function renderOnlineHud(data) {
     $('online-weapon').textContent = data.weapon;
-    $('online-board-count').textContent = `${data.humans}H · ${data.bots}B`;
+    $('online-board-count').textContent = data.players;
     if (data.weaponTier !== weaponTier) {
       weaponTier = data.weaponTier;
       game.drawOnlineWeapon($('online-weapon-art'), weaponTier);
@@ -604,9 +597,9 @@
       const entry = data.leaderboard[index];
       row.row.hidden = !entry;
       if (!entry) return;
-      row.row.className = `${entry.you ? 'is-you' : ''}${entry.bot ? ' is-bot' : ''}`.trim();
+      row.row.className = entry.you ? 'is-you' : '';
       row.rank.textContent = entry.rank;
-      row.name.textContent = entry.bot ? `${entry.name} [BOT]` : entry.name;
+      row.name.textContent = entry.name;
       row.score.textContent = `NV.${entry.level} · ${entry.kills}`;
     });
     $('online-feed').textContent = data.feed.slice(-3).join('\n');
@@ -615,16 +608,16 @@
   }
   function onOnlineResults(data) {
     profile = VesperGame.OnlineProfile.load();
-    $('online-results-server').textContent = `SERVIDOR #${data.server} · ${data.humans} ${data.humans === 1 ? 'humano' : 'humanos'} · ${data.bots} bots`;
+    $('online-results-kicker').textContent = `FIM DA PARTIDA · ${data.players} JOGADORES`;
     const rows = data.ranking.slice(0, 8);
     if (!rows.some(row => row.you)) rows.push(data.you);
     const list = $('online-results-list');
     list.replaceChildren();
     for (const row of rows) {
       const item = document.createElement('li');
-      item.className = `${row.you ? 'is-you' : ''}${row.rank <= 3 ? ' is-top' : ''}${row.bot ? ' is-bot' : ''}`.trim();
+      item.className = `${row.you ? 'is-you' : ''}${row.rank <= 3 ? ' is-top' : ''}`.trim();
       const rank = document.createElement('b'); rank.textContent = `${row.rank}º`;
-      const name = document.createElement('span'); name.textContent = row.you ? `${row.name} (você)` : row.bot ? `${row.name} [BOT]` : row.name;
+      const name = document.createElement('span'); name.textContent = row.you ? `${row.name} (você)` : row.name;
       const level = document.createElement('i'); level.textContent = `NÍVEL ${row.level}`;
       const kills = document.createElement('i'); kills.textContent = `${row.kills} ABATES`;
       item.append(rank, name, level, kills);

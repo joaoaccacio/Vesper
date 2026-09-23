@@ -40,7 +40,6 @@
 .online-input::placeholder{color:#7e8d7c;font-size:13px;letter-spacing:0}
 .online-input:focus{outline:none;border-color:#e0c183;box-shadow:0 0 0 1px #e0c18340}
 .online-error{margin:0;min-height:13px;font-size:10px;letter-spacing:.3px;color:#e69a8c}
-.online-address{font:12px var(--sans);letter-spacing:0;padding:10px 14px;color:#cfd8c6}
 .online-form .primary{margin-top:8px}
 .online-meta{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:26px;flex-wrap:wrap}
 .online-skin{display:flex;align-items:center;gap:11px;padding:8px 15px 8px 8px;border:1px solid #cdb27a2b;border-radius:5px;background:#16211b;color:#dcd6ba;text-align:left}
@@ -72,7 +71,6 @@
 .online-board li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .online-board li em{font-style:normal;color:#d0b580}
 .online-board li.is-you{color:#ffe4ab}.online-board li.is-you b{color:#e0c183}.online-board li.is-you em{color:#ffe4ab}
-.online-board li.is-bot{color:#9aa694}.online-board li.is-bot em{color:#a89b74}
 .online-feed{position:absolute;right:max(22px,env(safe-area-inset-right));top:max(232px,calc(env(safe-area-inset-top) + 226px));width:172px;margin:0;font-size:9px;line-height:1.7;color:#93a28b;text-align:right;white-space:pre-line;text-shadow:0 1px 4px #000}
 .online-respawn{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);margin:0;padding:13px 26px;background:#1a1010e8;border:1px solid #c9776b5c;border-radius:4px;font:14px var(--serif);letter-spacing:1.4px;color:#f0c9bb;text-align:center}
 .online-respawn strong{font-size:22px;color:#ffd9c4;margin:0 3px}
@@ -87,7 +85,6 @@
 .results-list li.is-you{border-color:#d8b05f;background:linear-gradient(120deg,#2a2b1c,#161f18);color:#f4e4bd}
 .results-list li.is-you b{color:#ffdfa0}
 .results-list li.is-top b{color:#ffdfa0}
-.results-list li.is-bot{color:#a8b39c}.results-list li.is-bot b{color:#8d9483}
 .results-reward{margin:0 0 22px;font-size:11px;letter-spacing:1px;color:#e3c684}
 .results-reward strong{font:22px var(--serif);color:#ffdfa0;margin-right:6px}
 
@@ -215,8 +212,6 @@
         <form class="online-form" id="online-form" autocomplete="off" novalidate>
           <label class="online-label" for="online-name">SEU NOME</label>
           <input class="online-input" id="online-name" type="text" maxlength="14" spellcheck="false" placeholder="Seu nome" aria-describedby="online-error">
-          <label class="online-label" for="online-server">SERVIDOR</label>
-          <input class="online-input online-address" id="online-server" type="text" maxlength="120" spellcheck="false" placeholder="ws://127.0.0.1:8080">
           <p class="online-error" id="online-error" role="alert" hidden></p>
           <button class="primary" id="online-play-btn" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> ENTRAR NA PARTIDA</button>
         </form>
@@ -228,10 +223,10 @@
         <button class="secondary back-btn" id="online-back-btn"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg> VOLTAR</button>
       </div>
       <div class="menu-panel online-loading-panel" id="online-loading-view" role="region" aria-labelledby="online-loading-title" hidden>
-        <p class="panel-kicker" id="online-loading-server">CONECTANDO</p>
+        <p class="panel-kicker">JOGO ONLINE</p>
         <h2 id="online-loading-title">Entrando na partida…</h2>
         <div class="loading-track" role="progressbar" aria-labelledby="online-loading-title"><span class="loading-fill" id="online-loading-fill"></span></div>
-        <p class="loading-step" id="online-loading-step" aria-live="polite">Procurando servidor</p>
+        <p class="loading-step" id="online-loading-step" aria-live="polite">Preparando a arena</p>
         <button class="secondary back-btn" id="online-cancel-btn"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg> CANCELAR</button>
       </div>
       <div class="menu-panel maps-panel" id="maps-view" role="region" aria-labelledby="maps-title" hidden>
@@ -260,7 +255,7 @@
     <div class="overlay" id="pause-overlay" hidden><section class="dialog pause-dialog" role="dialog" aria-modal="true" aria-labelledby="pause-title"><h2 id="pause-title">PAUSADO</h2><button class="primary" id="resume-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> CONTINUAR</button><button class="secondary" id="pause-restart-btn">RECOMEÇAR</button><button class="secondary" id="pause-menu-btn">MENU INICIAL</button></section></div>
     <div class="overlay" id="gameover-overlay" hidden><section class="dialog gameover-dialog" role="dialog" aria-modal="true" aria-labelledby="gameover-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-skull"/></svg><h2 id="gameover-title">FIM DE JOGO</h2><div class="final-stats"><div><strong id="final-time">00:00</strong><span>TEMPO</span></div><div><strong id="final-kills">0</strong><span>ABATES</span></div><div><strong id="final-bosses">0</strong><span>CHEFES</span></div><div><strong id="final-level">1</strong><span>NÍVEL</span></div></div><button class="primary" id="restart-btn">TENTAR NOVAMENTE</button><p id="record-note" class="record-note"></p><p id="unlock-note" class="unlock-note" hidden></p><button class="secondary" id="gameover-menu-btn">MENU INICIAL</button></section></div>
     <div class="overlay" id="victory-overlay" hidden><section class="dialog victory-dialog" role="dialog" aria-modal="true" aria-labelledby="victory-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-crown"/></svg><p class="dialog-kicker">FASE CONCLUÍDA</p><h2 id="victory-title">Vitória!</h2><div class="victory-stats"><div><strong id="victory-time">04:00</strong><span>TEMPO</span></div><div><strong id="victory-kills">0</strong><span>ABATES</span></div><div><strong id="victory-level">1</strong><span>NÍVEL</span></div></div><div class="victory-unlocks" id="victory-unlocks"></div><div class="victory-buttons"><button class="primary" id="victory-map-btn">ESCOLHER MAPA</button><button class="secondary" id="victory-characters-btn">VER PERSONAGENS</button></div><button class="secondary" id="victory-retry-btn">JOGAR NOVAMENTE</button></section></div>
-    <div class="overlay" id="online-results-overlay" hidden><section class="dialog online-results" role="dialog" aria-modal="true" aria-labelledby="online-results-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-crown"/></svg><p class="dialog-kicker" id="online-results-server">FIM DA PARTIDA</p><h2 id="online-results-title">Ranking final</h2><ol class="results-list" id="online-results-list"></ol><p class="results-reward" id="online-results-reward"></p><div class="victory-buttons"><button class="primary" id="online-again-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> JOGAR NOVAMENTE</button><button class="secondary" id="online-skins-btn">SKINS DO ONLINE</button></div><button class="secondary" id="online-menu-btn">MENU INICIAL</button></section></div>
+    <div class="overlay" id="online-results-overlay" hidden><section class="dialog online-results" role="dialog" aria-modal="true" aria-labelledby="online-results-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-crown"/></svg><p class="dialog-kicker" id="online-results-kicker">FIM DA PARTIDA</p><h2 id="online-results-title">Ranking final</h2><ol class="results-list" id="online-results-list"></ol><p class="results-reward" id="online-results-reward"></p><div class="victory-buttons"><button class="primary" id="online-again-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> JOGAR NOVAMENTE</button><button class="secondary" id="online-skins-btn">SKINS DO ONLINE</button></div><button class="secondary" id="online-menu-btn">MENU INICIAL</button></section></div>
   </main>
   <script data-module="engine">
 class VesperGame {
@@ -3812,7 +3807,7 @@ window.VesperGame = VesperGame;
       let best = null;
       let bestDistance = Infinity;
       for (const other of this.fighters) {
-        if (other === fighter || !other.alive) continue;
+        if (other === fighter || !other.alive || other.spawnGuard > 0) continue;
         const distance = (other.x - fighter.x) ** 2 + (other.y - fighter.y) ** 2;
         if (distance < bestDistance) { bestDistance = distance; best = other; }
       }
@@ -3828,6 +3823,14 @@ window.VesperGame = VesperGame;
         if (distance < bestDistance) { bestDistance = distance; best = crate; }
       }
       return best;
+    }
+
+    nearestTarget(fighter) {
+      const rival = this.nearestRival(fighter);
+      const crate = this.nearestCrate(fighter);
+      if (!rival || !crate) return rival || crate;
+      const distance = target => (target.x - fighter.x) ** 2 + (target.y - fighter.y) ** 2;
+      return distance(crate) < distance(rival) ? crate : rival;
     }
 
     grantXp(fighter, amount) {
@@ -3898,6 +3901,7 @@ window.VesperGame = VesperGame;
           x: fighter.x + Math.cos(angle) * 22,
           y: fighter.y - 2 + Math.sin(angle) * 22,
           vx: Math.cos(angle) * weapon.speed, vy: Math.sin(angle) * weapon.speed,
+          px: fighter.x, py: fighter.y - 2,
           damage, poison, owner: fighter.id, tier: weapon.tier, life: CONFIG.shotLife
         };
         this.shots.push(shot);
@@ -3970,8 +3974,8 @@ window.VesperGame = VesperGame;
       fighter.x = clamp(fighter.x + fighter.mx * speed * dt, bounds.left + CONFIG.radius + 24, bounds.right - CONFIG.radius - 24);
       fighter.y = clamp(fighter.y + fighter.my * speed * dt, bounds.top + CONFIG.radius + 24, bounds.bottom - CONFIG.radius - 24);
       if (!fighter.bot) {
-        const rival = this.nearestRival(fighter);
-        if (rival) fighter.aim = Math.atan2(rival.y - fighter.y, rival.x - fighter.x);
+        const target = this.nearestTarget(fighter);
+        if (target) fighter.aim = Math.atan2(target.y - fighter.y, target.x - fighter.x);
         else if (Math.hypot(fighter.mx, fighter.my) > 0.08) fighter.aim = Math.atan2(fighter.my, fighter.mx);
       }
       fighter.fireTimer -= dt;
@@ -3981,8 +3985,10 @@ window.VesperGame = VesperGame;
     stepShots(dt) {
       for (let i = this.shots.length - 1; i >= 0; i--) {
         const shot = this.shots[i];
-        const fromX = shot.x;
-        const fromY = shot.y;
+        const fromX = shot.px;
+        const fromY = shot.py;
+        shot.px = shot.x;
+        shot.py = shot.y;
         shot.x += shot.vx * dt;
         shot.y += shot.vy * dt;
         shot.life -= dt;
@@ -4128,14 +4134,13 @@ window.VesperGame = VesperGame;
       return {
         coins, owned,
         skin: owned.includes(saved.skin) ? saved.skin : 'alien',
-        name: typeof saved.name === 'string' ? saved.name.slice(0, 14) : '',
-        server: typeof saved.server === 'string' ? saved.server.slice(0, 120) : ''
+        name: typeof saved.name === 'string' ? saved.name.slice(0, 14) : ''
       };
     },
     save(profile) {
       writeJson(STORE.profile, {
         version: 2, coins: profile.coins, owned: profile.owned,
-        skin: profile.skin, name: profile.name, server: profile.server
+        skin: profile.skin, name: profile.name
       });
       return profile;
     },
@@ -4163,11 +4168,6 @@ window.VesperGame = VesperGame;
     setName(name) {
       const profile = Profile.load();
       profile.name = String(name || '').trim().slice(0, 14);
-      return Profile.save(profile);
-    },
-    setServer(server) {
-      const profile = Profile.load();
-      profile.server = String(server || '').trim().slice(0, 120);
       return Profile.save(profile);
     },
     reward(amount) {
@@ -4343,7 +4343,6 @@ window.VesperGame = VesperGame;
     this.shots = [];
     this.feed = [];
     this.me = null;
-    this.matchServer = 0;
     this.matchRemaining = CONFIG.matchSeconds;
     this.matchDuration = CONFIG.matchSeconds;
     this.onlineResults = null;
@@ -4420,7 +4419,6 @@ window.VesperGame = VesperGame;
   VesperGame.prototype._onJoined = function (message) {
     clearTimeout(this._connectTimer);
     this._joined = true;
-    this.matchServer = message.room;
     this.matchRemaining = Number(message.remaining) || CONFIG.matchSeconds;
     this.fighters = (message.roster || []).map(makeMirror);
     this.me = this.fighters.find(fighter => fighter.id === message.id) || null;
@@ -4439,11 +4437,7 @@ window.VesperGame = VesperGame;
     this._sound('boss');
     this._emitOnlineHud();
     if (this.callbacks.onOnlineJoined) {
-      this.callbacks.onOnlineJoined({
-        server: message.room, capacity: message.capacity, resumed: Boolean(message.resumed),
-        players: this.fighters.length, humans: this.fighters.filter(one => !one.bot).length,
-        bots: this.fighters.filter(one => one.bot).length, address: this._serverUrl
-      });
+      this.callbacks.onOnlineJoined({ players: this.fighters.length, resumed: Boolean(message.resumed) });
     }
   };
 
@@ -4495,10 +4489,8 @@ window.VesperGame = VesperGame;
           fighter.skin = fighter.characterId = event.skin;
           fighter.bot = Boolean(event.bot);
         }
-        if (!event.bot) this._onlineFeed(event.name + ' entrou na partida');
         continue;
       }
-      if (event.e === 'left') { this._onlineFeed(event.name + ' saiu da partida'); continue; }
       if (event.e === 'shot') {
         const owner = this.fighters.find(fighter => fighter.id === event.id);
         if (owner) owner.flash = 0.06;
@@ -4581,10 +4573,7 @@ window.VesperGame = VesperGame;
     const mine = ranking.find(entry => entry.you) || { rank: ranking.length, level: 1, kills: 0, coins: 0, name: this._onlineName };
     const profile = Profile.reward(mine.coins || 0);
     this.onlineResults = Object.freeze({
-      server: message.room || this.matchServer, players: ranking.length, ranking,
-      you: mine, coins: mine.coins || 0, balance: profile.coins,
-      humans: ranking.filter(entry => !entry.bot).length,
-      bots: ranking.filter(entry => entry.bot).length
+      players: ranking.length, ranking, you: mine, coins: mine.coins || 0, balance: profile.coins
     });
     this.setMovement(0, 0);
     this._firing = false;
@@ -4611,22 +4600,22 @@ window.VesperGame = VesperGame;
     const me = this.me;
     const weapon = weaponFor(me.level);
     const board = this._onlineLeaderboard();
-    const humans = this.fighters.filter(fighter => !fighter.bot).length;
+    const rank = board.indexOf(me) + 1;
     this.callbacks.onHud({
       online: true, hp: Math.max(0, me.hp), maxHp: me.maxHp, xp: me.xp, nextXp: Arena.nextXpFor(me.level),
       level: me.level, kills: me.kills, elapsed: Math.max(0, this.matchRemaining),
       remaining: Math.max(0, this.matchRemaining), weapon: weapon.name, weaponTier: weapon.tier,
       bosses: [], bossKills: 0, wave: 1, mapId: ARENA.id, mapName: ARENA.name,
-      server: this.matchServer, players: this.fighters.length, humans, bots: this.fighters.length - humans,
+      players: this.fighters.length,
       alive: this.fighters.reduce((total, one) => total + (one.alive ? 1 : 0), 0),
       respawn: me.alive ? 0 : Math.max(0, me.respawn),
-      rank: board.indexOf(me) + 1,
+      rank,
       leaderboard: board.slice(0, 5).map((one, index) => ({
         rank: index + 1, name: one.name, level: one.level, kills: one.kills,
-        you: one === me, bot: one.bot
+        you: one === me
       })),
       feed: this.feed.slice(-3),
-      stageBossStatus: 'Servidor #' + this.matchServer
+      stageBossStatus: rank + 'º lugar'
     });
   };
 
@@ -5605,13 +5594,12 @@ window.VesperGame = VesperGame;
     renderCharacters();
   }
   const ERRORS = {
-    conexao: 'Nao foi possivel falar com o servidor. Confira o endereco e se ele esta ligado.',
-    tempo: 'O servidor demorou demais para responder.',
-    endereco: 'Endereco de servidor invalido.',
-    queda: 'A conexao com o servidor caiu.',
-    sala: 'A partida foi encerrada pelo servidor.',
-    cheio: 'Todos os servidores estao cheios. Tente de novo em instantes.',
-    'sem-websocket': 'Este navegador nao tem WebSocket.'
+    conexao: 'Não foi possível entrar no Online agora. Tente de novo em instantes.',
+    tempo: 'A conexão demorou demais. Tente de novo.',
+    queda: 'A conexão caiu.',
+    sala: 'A partida foi encerrada.',
+    full: 'Todas as partidas estão cheias. Tente de novo em instantes.',
+    'sem-websocket': 'Este navegador não tem suporte ao Online.'
   };
   function showOnlineError(message) {
     $('online-error').textContent = message;
@@ -5623,8 +5611,6 @@ window.VesperGame = VesperGame;
     $('online-skin-name').textContent = skin.name;
     $('online-skin-skill').textContent = skin.skill ? skin.skill.label : 'Nenhuma habilidade';
     if (!$('online-name').value) $('online-name').value = profile.name;
-    $('online-server').placeholder = VesperGame.ONLINE.defaultServer();
-    if (!$('online-server').value) $('online-server').value = profile.server;
     showOnlineError('');
   }
   function enterOnline(event) {
@@ -5636,31 +5622,27 @@ window.VesperGame = VesperGame;
       return;
     }
     profile = VesperGame.OnlineProfile.setName(name);
-    profile = VesperGame.OnlineProfile.setServer($('online-server').value);
     showOnlineError('');
     showMenuView('online-loading');
     connect();
   }
   function connect() {
-    const target = VesperGame.ONLINE.normalizeServer(profile.server) || VesperGame.ONLINE.defaultServer();
     $('online-loading-fill').style.width = '35%';
-    $('online-loading-step').textContent = 'Conectando ao servidor';
-    $('online-loading-server').textContent = target;
-    game.startOnline({ name: profile.name, skin: profile.skin, server: profile.server });
+    $('online-loading-step').textContent = 'Preparando a arena';
+    game.startOnline({ name: profile.name, skin: profile.skin });
   }
-  function onOnlineJoined(info) {
+  function onOnlineJoined() {
     $('online-loading-fill').style.width = '100%';
     $('online-loading-step').textContent = 'Entrando na partida';
-    toast(`Servidor #${info.server} · ${info.humans} ${info.humans === 1 ? 'humano' : 'humanos'} · ${info.bots} bots`, 3000);
   }
   function onOnlineError(reason) {
     nextMenuView = null;
     showMenuView('online');
-    showOnlineError(ERRORS[reason] || 'Nao foi possivel entrar na partida.');
+    showOnlineError(ERRORS[reason] || 'Não foi possível entrar na partida.');
   }
   function renderOnlineHud(data) {
     $('online-weapon').textContent = data.weapon;
-    $('online-board-count').textContent = `${data.humans}H · ${data.bots}B`;
+    $('online-board-count').textContent = data.players;
     if (data.weaponTier !== weaponTier) {
       weaponTier = data.weaponTier;
       game.drawOnlineWeapon($('online-weapon-art'), weaponTier);
@@ -5678,9 +5660,9 @@ window.VesperGame = VesperGame;
       const entry = data.leaderboard[index];
       row.row.hidden = !entry;
       if (!entry) return;
-      row.row.className = `${entry.you ? 'is-you' : ''}${entry.bot ? ' is-bot' : ''}`.trim();
+      row.row.className = entry.you ? 'is-you' : '';
       row.rank.textContent = entry.rank;
-      row.name.textContent = entry.bot ? `${entry.name} [BOT]` : entry.name;
+      row.name.textContent = entry.name;
       row.score.textContent = `NV.${entry.level} · ${entry.kills}`;
     });
     $('online-feed').textContent = data.feed.slice(-3).join('\n');
@@ -5689,16 +5671,16 @@ window.VesperGame = VesperGame;
   }
   function onOnlineResults(data) {
     profile = VesperGame.OnlineProfile.load();
-    $('online-results-server').textContent = `SERVIDOR #${data.server} · ${data.humans} ${data.humans === 1 ? 'humano' : 'humanos'} · ${data.bots} bots`;
+    $('online-results-kicker').textContent = `FIM DA PARTIDA · ${data.players} JOGADORES`;
     const rows = data.ranking.slice(0, 8);
     if (!rows.some(row => row.you)) rows.push(data.you);
     const list = $('online-results-list');
     list.replaceChildren();
     for (const row of rows) {
       const item = document.createElement('li');
-      item.className = `${row.you ? 'is-you' : ''}${row.rank <= 3 ? ' is-top' : ''}${row.bot ? ' is-bot' : ''}`.trim();
+      item.className = `${row.you ? 'is-you' : ''}${row.rank <= 3 ? ' is-top' : ''}`.trim();
       const rank = document.createElement('b'); rank.textContent = `${row.rank}º`;
-      const name = document.createElement('span'); name.textContent = row.you ? `${row.name} (você)` : row.bot ? `${row.name} [BOT]` : row.name;
+      const name = document.createElement('span'); name.textContent = row.you ? `${row.name} (você)` : row.name;
       const level = document.createElement('i'); level.textContent = `NÍVEL ${row.level}`;
       const kills = document.createElement('i'); kills.textContent = `${row.kills} ABATES`;
       item.append(rank, name, level, kills);
