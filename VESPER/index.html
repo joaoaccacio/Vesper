@@ -17,16 +17,16 @@
     .menu{position:absolute;inset:0;z-index:6;display:flex;justify-content:center;align-items:center;padding:35px 22px;background:radial-gradient(ellipse at center,#07120bad 5%,#0610096b 62%,#050e0991);overflow:auto}.menu-content{text-align:center;width:min(100%,460px);margin:auto;padding:35px 35px 30px;background:radial-gradient(ellipse,#08100ce3 0%,#09110b96 55%,transparent 74%)}.menu-seal{width:59px;height:59px;color:var(--gold);filter:drop-shadow(0 0 18px #d4b06625)}h1{font:normal clamp(44px,6vw,72px)/1 var(--serif);letter-spacing:12px;margin:23px -12px 12px 0;color:#f5e4be;text-shadow:0 3px 25px #000}.subtitle{font-size:10px;letter-spacing:4px;color:#c4b58c;margin:0 0 43px}.primary{display:inline-flex;align-items:center;justify-content:center;gap:15px;min-width:230px;min-height:52px;padding:0 28px;border:1px solid #f4d49a;border-radius:3px;background:linear-gradient(120deg,#e6c285,#bd8f4d);color:#221d12;box-shadow:0 4px 30px #dbb36315;font-weight:750;font-size:12px;letter-spacing:1.7px}.primary .icon{width:15px;height:15px}.menu-controls{display:flex;justify-content:center;gap:20px;font-size:10px;color:#b0bfa8;margin-top:30px}.menu-controls span{display:flex;align-items:center;gap:6px}.menu-controls .icon{width:15px;height:15px;color:#bfa770}kbd{font:9px var(--sans);border:1px solid #bbc4a43b;border-radius:3px;padding:4px 6px;background:#1a281477;color:#ccd6ba}.best{font-size:9px;color:#91a486;margin-top:30px;letter-spacing:1.2px}.best strong{font-weight:500;color:#c0bc95;margin-left:5px;font-variant-numeric:tabular-nums}.mobile-copy{display:none!important}
     .overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:36px 24px;background:#060e0bdb;backdrop-filter:blur(6px);overflow:auto;touch-action:pan-y}.dialog{width:min(100%,620px);margin:auto;text-align:center}.dialog-seal{width:36px;height:36px;color:var(--gold)}.dialog-kicker{font-size:10px;letter-spacing:2px;color:var(--gold);margin:15px 0 13px}.dialog h2{font:normal 36px/1.15 var(--serif);letter-spacing:1px;margin:0 0 25px;color:#ece2c8}.choices{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0 0 21px}.upgrade{position:relative;min-height:215px;background:linear-gradient(145deg,#2a3929,#131f18);border:1px solid #b2b5785c;border-radius:4px;padding:24px;text-align:left;transition:background .15s,border-color .15s}.upgrade:hover{background:linear-gradient(145deg,#3d4f32,#213021);border-color:#e5c582}.upgrade-icon{display:grid;place-items:center;width:40px;height:40px;border:1px solid #c6b97e55;background:#b0a95c10;color:var(--gold);border-radius:4px;margin-bottom:18px}.upgrade kbd{position:absolute;right:20px;top:25px}.upgrade h3{font:21px var(--serif);color:#efe3c6;margin:0 0 10px}.upgrade p{font-size:12px;line-height:1.6;color:#b0c0a6;margin:0 0 14px}.upgrade-detail{font-size:10px;color:#d8b879;letter-spacing:.2px}.choice-tip{font-size:9px;color:#9eae8c;letter-spacing:1px;margin:0}.pause-dialog{width:min(100%,350px)}.pause-dialog h2{margin:22px 0 30px;font-size:36px;letter-spacing:5px}.secondary{border:0;background:none;padding:12px 18px;margin:14px auto 0;display:block;color:#bac7ad;font-size:10px;letter-spacing:1px}.gameover-dialog{width:min(100%,540px)}.gameover-dialog .dialog-seal{color:#ce8d71}.gameover-dialog h2{margin:19px 0 25px;font-size:36px}.final-stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #bba97a29;border-bottom:1px solid #bba97a29;padding:24px 0;margin:0 0 30px;gap:14px}.final-stats strong{display:block;font:28px var(--serif);color:#ebd39f;font-variant-numeric:tabular-nums}.final-stats span{display:block;margin-top:9px;font-size:8px;letter-spacing:1px;color:#a1b294}.record-note{color:#c8ae70;font-size:10px;letter-spacing:.6px;margin:19px 0 0;min-height:15px}
     .joystick{display:none;position:absolute;left:max(27px,env(safe-area-inset-left));bottom:max(30px,env(safe-area-inset-bottom));width:112px;height:112px;z-index:4;border:1px solid #c6d7ad3d;border-radius:50%;background:#b1d08f0a;touch-action:none;pointer-events:auto}.joystick:before,.joystick:after{content:'';position:absolute;background:#e4e9ca13}.joystick:before{width:1px;height:80px;left:55px;top:15px}.joystick:after{height:1px;width:80px;top:55px;left:15px}.joystick-knob{position:absolute;width:44px;height:44px;left:33px;top:33px;background:#adca9759;border:1px solid #d6e3b576;border-radius:50%;box-shadow:0 2px 15px #0004}.toast{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);width:max-content;max-width:85%;padding:12px 25px;background:linear-gradient(90deg,transparent,#172214e8 15%,#172214e8 85%,transparent);color:#f5d396;z-index:5;pointer-events:none;text-align:center;font:18px var(--serif);letter-spacing:2px;text-shadow:0 2px 10px #000;transition:opacity .3s}.toast.faded{opacity:0}.arena:not([data-state="playing"]) .toast{visibility:hidden}.arena:not([data-state="playing"]) .joystick{visibility:hidden}
-    .menu-actions{display:flex;flex-direction:column;align-items:center;gap:12px}.menu-actions .primary,.menu-option{width:250px;max-width:100%}.menu-option{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:13px;min-height:46px;padding:0 24px;border:1px solid #d9b37359;border-radius:3px;background:#08110cd1;color:#eadcb8;font-weight:650;font-size:11px;letter-spacing:1.7px;transition:background .15s,border-color .15s}.menu-option:hover{background:#1c291ce0;border-color:#e5c582}.menu-option .icon{width:16px;height:16px;color:var(--gold)}.new-badge{position:absolute;right:-8px;top:-8px;padding:3px 6px;border-radius:2px;background:var(--gold);color:#1d180e;font-size:8px;font-weight:800;letter-spacing:1px;box-shadow:0 2px 8px #0008}
+    .menu-actions{display:grid;grid-template-columns:repeat(2,250px);grid-template-rows:repeat(3,auto);grid-auto-flow:column;justify-content:center;gap:12px 16px}.menu-actions .primary,.menu-option{width:250px;max-width:100%}.menu-option{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:13px;min-height:46px;padding:0 24px;border:1px solid #d9b37359;border-radius:3px;background:#08110cd1;color:#eadcb8;font-weight:650;font-size:11px;letter-spacing:1.7px;transition:background .15s,border-color .15s}.menu-option:hover{background:#1c291ce0;border-color:#e5c582}.menu-option .icon{width:16px;height:16px;color:var(--gold)}.new-badge{position:absolute;right:-8px;top:-8px;padding:3px 6px;border-radius:2px;background:var(--gold);color:#1d180e;font-size:8px;font-weight:800;letter-spacing:1px;box-shadow:0 2px 8px #0008}
     .menu[data-view="online"],.menu[data-view="characters"]{background:#040a07de;backdrop-filter:blur(4px)}.menu-panel{width:min(100%,640px);margin:auto;text-align:center}.panel-kicker{font-size:10px;letter-spacing:2px;color:var(--gold);margin:0 0 12px;font-variant-numeric:tabular-nums}.menu-panel h2{font:normal 34px/1.18 var(--serif);letter-spacing:.5px;color:#ece2c8;margin:0}.back-btn{display:inline-flex;align-items:center;gap:8px;margin:26px auto 0}.back-btn .icon{width:14px;height:14px}
     .characters-hint{font-size:11px;color:#a9b89f;margin:10px 0 24px;letter-spacing:.3px}.character-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}.character-card{position:relative;width:136px;padding:12px 10px 13px;display:flex;flex-direction:column;align-items:center;gap:6px;background:linear-gradient(160deg,#243224,#111a14);border:1px solid #b2b57840;border-radius:4px;transition:background .15s,border-color .15s}.character-card:hover{border-color:#e5c58299}.character-card.is-selected{border-color:#f0cd8a;background:linear-gradient(160deg,#3b4529,#18200f);box-shadow:0 0 0 1px #f0cd8a40,0 8px 26px #d9b3731c}.character-card.is-locked{background:#0b120ee0;border-style:dashed;border-color:#a0b1a033;cursor:not-allowed}.character-card.is-locked:hover{filter:none;border-color:#a0b1a055}.character-card.is-locked:active{transform:none}.character-portrait{display:block;width:96px;height:96px}.character-name{font:normal 17px var(--serif);color:#efe3c6}.is-locked .character-name{color:#98a695}.character-status{display:flex;align-items:center;justify-content:center;gap:5px;min-height:14px;font-size:9px;font-weight:600;letter-spacing:1px;color:#a9b89f;font-variant-numeric:tabular-nums;white-space:nowrap}.character-status .icon{width:12px;height:12px}.is-selected .character-status{color:var(--gold-light)}.is-locked .character-status{color:#c8ae70}.unlock-track{width:86px;height:3px;background:#26302a;border-radius:2px;overflow:hidden}.unlock-fill{display:block;width:0;height:100%;background:linear-gradient(90deg,#8a6c3a,#e0bd7c)}.unlock-note{color:#9fe0b8;font-size:10px;letter-spacing:.8px;margin:8px 0 0}
     @media(pointer:coarse){.joystick{display:block}.desktop-copy{display:none!important}.mobile-copy{display:inline!important}}
     @media(max-width:650px){.game-controls{right:max(13px,env(safe-area-inset-right));top:max(20px,calc(env(safe-area-inset-top) + 14px));gap:4px}.icon-btn{width:30px;height:31px}.icon-btn .icon{width:16px;height:16px}.health{left:max(15px,env(safe-area-inset-left));top:max(21px,calc(env(safe-area-inset-top) + 15px));width:124px}.health-label{gap:6px;margin-bottom:6px}.health-label span{font-size:10px}.health-label .icon{width:12px;height:12px}.health-track{height:6px}.xp-info{font-size:8px;gap:7px;margin-top:7px}.survival{top:max(21px,calc(env(safe-area-inset-top) + 15px))}.timer{font-size:23px;letter-spacing:1px}.kills{margin-top:6px;font-size:10px}.boss-hud{top:max(90px,calc(env(safe-area-inset-top) + 84px));width:calc(100% - 26px);max-height:29dvh}.boss-row{padding:9px 10px 10px;margin-bottom:8px}.boss-name{font-size:9px;letter-spacing:.8px;gap:6px}.boss-health{font-size:8px}.menu-content{padding:30px 0}.menu-seal{width:49px;height:49px}h1{font-size:49px;letter-spacing:9px;margin-right:-9px}.subtitle{font-size:8px;letter-spacing:3px;margin-bottom:34px}.primary{min-width:225px;font-size:11px;min-height:50px}.menu-controls{font-size:9px;gap:16px;margin-top:26px}.best{font-size:8px;margin-top:25px}.overlay{padding:28px 16px}.dialog h2{font-size:27px;letter-spacing:.5px;margin-bottom:22px}.dialog-kicker{font-size:9px;margin:13px 0}.choices{gap:11px}.upgrade{padding:19px 15px;min-height:226px}.upgrade-icon{width:35px;height:35px}.upgrade kbd{right:14px;top:22px}.upgrade h3{font-size:19px}.upgrade p{font-size:11px}.upgrade-detail{font-size:9px}.choice-tip{font-size:8px}.pause-dialog h2{font-size:31px;letter-spacing:4px}.gameover-dialog h2{font-size:31px}.final-stats{gap:6px;padding:22px 0}.final-stats strong{font-size:24px}.final-stats span{font-size:7px;letter-spacing:.6px}.joystick{display:block;width:104px;height:104px;left:23px;bottom:max(27px,env(safe-area-inset-bottom))}.joystick-knob{left:29px;top:29px}.joystick:before{left:51px;top:11px}.joystick:after{top:51px;left:11px}.desktop-copy{display:none!important}.mobile-copy{display:inline!important}.toast{font-size:16px}}
     @media(max-width:360px){.health{width:105px}.game-controls{gap:3px;right:10px}.icon-btn{width:27px;height:29px}.timer{font-size:20px}.survival{left:51%}.upgrade{padding:18px 12px}.upgrade h3{font-size:17px}.upgrade p{font-size:10px}.final-stats strong{font-size:21px}}
     @media(max-height:520px) and (orientation:landscape){.menu{padding:16px}.menu-content{padding:10px 0}.menu-seal{width:29px;height:29px}h1{font-size:43px;letter-spacing:9px;margin-top:12px;margin-bottom:7px}.subtitle{font-size:8px;margin-bottom:20px}.primary{min-height:44px}.menu-controls{margin-top:17px}.best{margin-top:14px}.overlay{padding:20px}.dialog-seal{display:none}.dialog h2{font-size:26px;margin-bottom:17px}.dialog-kicker{font-size:9px;margin:0 0 10px}.choices{margin-bottom:13px}.upgrade{min-height:156px;padding:15px 20px}.upgrade-icon{width:33px;height:33px;float:left;margin:0 13px 10px 0}.upgrade h3{font-size:19px;margin-top:5px}.upgrade p{clear:both;margin-bottom:7px;font-size:11px}.upgrade kbd{top:17px}.pause-dialog h2{margin:0 0 25px}.gameover-dialog h2{margin:0 0 18px}.final-stats{padding:17px 0;margin-bottom:21px}.boss-hud{top:83px;max-height:29dvh}.boss-row{padding:7px 12px;margin-bottom:7px}.boss-heading{margin-bottom:5px}.joystick{width:92px;height:92px;bottom:19px}.joystick-knob{left:23px;top:23px}.joystick:before{left:45px;top:6px}.joystick:after{top:45px;left:6px}}
-    @media(max-width:650px){.menu-actions{gap:10px}.menu-actions .primary,.menu-option{width:240px}.menu-option{min-height:44px;font-size:10px}.menu-panel h2{font-size:25px}.panel-kicker{font-size:9px}.back-btn{margin-top:20px}.characters-hint{font-size:10px;margin:8px 0 18px}.character-grid{gap:8px}.character-card{width:calc((100% - 16px) / 3);max-width:136px;padding:9px 4px 10px;gap:4px}.character-portrait{width:72px;height:72px}.character-name{font-size:14px}.character-status{font-size:8px;letter-spacing:.4px;gap:4px}.character-status .icon{width:10px;height:10px}.unlock-track{width:70%}}
+    @media(max-width:650px){.menu-actions{grid-template-columns:240px;grid-template-rows:none;grid-auto-flow:row;gap:10px}.menu-actions .primary,.menu-option{width:240px}.menu-option{min-height:44px;font-size:10px}.menu-panel h2{font-size:25px}.panel-kicker{font-size:9px}.back-btn{margin-top:20px}.characters-hint{font-size:10px;margin:8px 0 18px}.character-grid{gap:8px}.character-card{width:calc((100% - 16px) / 3);max-width:136px;padding:9px 4px 10px;gap:4px}.character-portrait{width:72px;height:72px}.character-name{font-size:14px}.character-status{font-size:8px;letter-spacing:.4px;gap:4px}.character-status .icon{width:10px;height:10px}.unlock-track{width:70%}}
     @media(max-width:360px){.menu-panel h2{font-size:21px}.character-portrait{width:62px;height:62px}.character-name{font-size:13px}.character-status{font-size:7px;letter-spacing:.2px}}
-    @media(max-height:520px) and (orientation:landscape){#menu-main{width:min(100%,640px)}.menu-actions{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px}.menu-actions .primary,.menu-option{flex:1 1 150px;width:auto;max-width:196px;min-width:0;min-height:42px;padding:0 12px;gap:10px}.menu-panel h2{font-size:24px}.panel-kicker{margin-bottom:6px}.back-btn{margin-top:10px}.characters-panel{width:min(100%,860px)}.characters-hint{display:none}.character-grid{gap:8px;margin-top:12px}.character-card{width:104px;padding:7px 4px 8px;gap:3px}.character-portrait{width:52px;height:52px}.character-name{font-size:14px}.character-status{font-size:8px;letter-spacing:.4px}.character-status .icon{width:10px;height:10px}.unlock-track{width:70%}}
+    @media(max-height:520px) and (orientation:landscape){#menu-main{width:min(100%,640px)}.menu-actions{grid-template-columns:repeat(3,minmax(0,196px));grid-template-rows:none;grid-auto-flow:row;gap:8px}.menu-actions .primary,.menu-option{flex:1 1 150px;width:auto;max-width:196px;min-width:0;min-height:42px;padding:0 12px;gap:10px}.menu-panel h2{font-size:24px}.panel-kicker{margin-bottom:6px}.back-btn{margin-top:10px}.characters-panel{width:min(100%,860px)}.characters-hint{display:none}.character-grid{gap:8px;margin-top:12px}.character-card{width:104px;padding:7px 4px 8px;gap:3px}.character-portrait{width:52px;height:52px}.character-name{font-size:14px}.character-status{font-size:8px;letter-spacing:.4px}.character-status .icon{width:10px;height:10px}.unlock-track{width:70%}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 <style data-module="online">
@@ -133,21 +133,34 @@
 </style>
 <style data-module="admin">
 .admin-login .admin-key{display:block;width:min(100%,300px);margin:6px auto 4px;text-align:center;font-size:18px;letter-spacing:6px}
-.admin-panel{position:fixed;inset:0;z-index:20;overflow:auto;padding:48px max(24px,8vw);background:radial-gradient(ellipse at 50% 0%,#1d0f33 0%,#0a0612 55%,#050308 100%);color:#e9e2ff;font-family:'Segoe UI',system-ui,sans-serif}
-.admin-top{display:flex;align-items:center;justify-content:space-between;max-width:760px;margin:0 auto 34px}
-.admin-top h2{margin:0;font:600 13px/1 'Segoe UI',system-ui,sans-serif;letter-spacing:4px;text-transform:uppercase;color:#b69cff}
-.admin-close{padding:8px 16px;border:1px solid #6d4bd1;border-radius:999px;background:transparent;color:#cdbcff;font-size:12px;letter-spacing:1px}.admin-close:hover{background:#6d4bd122}
-.admin-search{display:block;width:100%;max-width:760px;margin:0 auto;padding:18px 22px;border:1px solid #6d4bd1;border-radius:14px;outline:none;background:#120a22;color:#f4efff;font-size:17px;box-shadow:0 0 0 4px #6d4bd11c}
-.admin-search:focus{border-color:#a78bfa;box-shadow:0 0 0 4px #a78bfa2e}.admin-search::placeholder{color:#8f7cc4}
+.admin-panel{position:fixed;inset:0;z-index:20;isolation:isolate;overflow:auto;padding:48px max(24px,8vw);background:radial-gradient(ellipse at 50% 0%,#1d0f33 0%,#0a0612 55%,#050308 100%);color:#e9e2ff;font-family:'Segoe UI',system-ui,sans-serif}
+.admin-panel::before,.admin-panel::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none}
+.admin-panel::before{background-image:linear-gradient(#b69cff0f 1px,transparent 1px),linear-gradient(90deg,#b69cff0f 1px,transparent 1px);background-size:56px 56px;background-position:center -1px;-webkit-mask-image:radial-gradient(ellipse 70% 55% at 50% 18%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 70% 55% at 50% 18%,#000 10%,transparent 75%)}
+.admin-panel::after{background:radial-gradient(circle at 91% 7%,transparent 0 109px,#b69cff26 110px 111px,transparent 112px 169px,#b69cff17 170px 171px,transparent 172px 239px,#b69cff0d 240px 241px,transparent 242px),radial-gradient(640px circle at 92% -6%,#7c3aed3d,transparent 64%),radial-gradient(560px circle at 2% 104%,#c026d324,transparent 62%)}
+.admin-top{position:relative;display:flex;align-items:center;justify-content:space-between;max-width:760px;margin:0 auto 30px;padding-bottom:20px}
+.admin-top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,#a78bfa73 50%,transparent)}
+.admin-top h2{display:flex;align-items:center;gap:14px;margin:0;font:600 13px/1 'Segoe UI',system-ui,sans-serif;letter-spacing:4px;text-transform:uppercase;color:#cbb8ff}
+.admin-top h2::before{content:'';width:8px;height:8px;border-radius:2px;transform:rotate(45deg);background:linear-gradient(135deg,#f3e8ff,#8b5cf6);box-shadow:0 0 14px #a78bfacc}
+.admin-close{padding:8px 16px;border:1px solid #6d4bd1;border-radius:999px;background:#120a2299;color:#cdbcff;font-size:12px;letter-spacing:1px}.admin-close:hover{background:#6d4bd12e}
+.admin-search{display:block;width:100%;max-width:760px;margin:0 auto;padding:18px 22px;border:1px solid #6d4bd1;border-radius:14px;outline:none;background:linear-gradient(180deg,#170e2dd9,#0f0920d9);color:#f4efff;font-size:17px;box-shadow:0 0 0 4px #6d4bd11c,0 18px 50px #0000008c;backdrop-filter:blur(10px)}
+.admin-search:focus{border-color:#a78bfa;box-shadow:0 0 0 4px #a78bfa2e,0 18px 50px #0000008c}.admin-search::placeholder{color:#8f7cc4}
 .admin-hint{max-width:760px;min-height:18px;margin:12px auto 0;font-size:13px;color:#b69cff}
-.admin-results{display:flex;flex-direction:column;gap:8px;max-width:760px;margin:18px auto 0;padding:0;list-style:none}
-.admin-results li{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #2a1a4a;border-radius:12px;background:#0f0a1c}
+.admin-results{display:flex;flex-direction:column;gap:10px;max-width:760px;margin:18px auto 0;padding:0;list-style:none}
+.admin-results li{display:flex;align-items:center;gap:14px;padding:10px 14px 10px 10px;border:1px solid #2a1a4a;border-radius:14px;background:linear-gradient(180deg,#150e27d9,#0d0919d9);backdrop-filter:blur(8px);transition:border-color .15s,transform .15s,box-shadow .15s}
+.admin-results li:hover{border-color:#4c3290;transform:translateY(-1px);box-shadow:0 10px 30px #0000007a}
+.admin-art{flex:none;width:52px;height:52px;border:1px solid #33215e;border-radius:12px;background:radial-gradient(circle at 50% 38%,#2c1c52,#110a21 72%)}
 .admin-results li div{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0}
 .admin-results strong{font-size:15px;font-weight:600;color:#f4efff}.admin-results span{font-size:12px;color:#8f7cc4}
 .admin-results input{width:110px;padding:8px 10px;border:1px solid #3b2670;border-radius:8px;background:#140c26;color:#f4efff;font-size:14px}
-.admin-results button{padding:8px 14px;border:1px solid #7c5ce6;border-radius:999px;background:#7c5ce6;color:#fff;font-size:12px;letter-spacing:.5px}
-.admin-results button+button{background:transparent;color:#cdbcff}.admin-results button:disabled{opacity:.3;cursor:default}
+.admin-results button{padding:8px 16px;border:1px solid #8b6cf0;border-radius:999px;background:linear-gradient(180deg,#8b6cf0,#6d4bd1);color:#fff;font-size:12px;letter-spacing:.5px;box-shadow:0 4px 14px #6d4bd140}
+.admin-results button+button{background:transparent;color:#cdbcff;box-shadow:none}.admin-results button:disabled{opacity:.3;cursor:default;box-shadow:none}
 .admin-log{max-width:760px;min-height:18px;margin:18px auto 0;font-size:13px;color:#d6c8ff}
+@keyframes admin-rise{from{opacity:0;transform:translateY(10px)}}
+.admin-panel:not([hidden]) :is(.admin-top,.admin-search,.admin-results){animation:admin-rise .45s cubic-bezier(.2,.7,.2,1) both}
+.admin-panel:not([hidden]) .admin-search{animation-delay:.06s}.admin-panel:not([hidden]) .admin-results{animation-delay:.12s}
+#letter-overlay{z-index:30}
+@media(max-width:650px){.admin-panel{padding:28px 16px}.admin-results li{flex-wrap:wrap}.admin-results li div{flex-basis:calc(100% - 62px)}.admin-results input{flex:1;width:auto;min-width:0}.admin-results li button:first-of-type{margin-left:auto}.admin-art{width:44px;height:44px}}
+@media(prefers-reduced-motion:reduce){.admin-panel *{animation:none!important;transition:none!important}}
 
 </style>
 <style data-module="campaign">
@@ -216,9 +229,10 @@
 .letter-from,.letter-body{font-family:var(--serif)}.letter-from{margin:0 0 20px;font-size:22px;font-style:italic;color:#4a3219}.letter-body{margin:0 0 26px;font-size:20px;line-height:1.65}
 .letter .letter-close{margin:0 0 0 auto;padding:10px 4px;color:#6a4c22;font-size:10px;letter-spacing:1.4px}
 @media(prefers-reduced-motion:reduce){.daily-cell.is-ready{animation:none}}
-.admin-link{display:block;margin:8px auto 0;padding:4px 8px;border:0;background:none;color:#b8975f;font-size:9px;letter-spacing:1.2px;opacity:.72;text-decoration:underline;text-underline-offset:3px}.admin-link:hover{opacity:1;color:#e0c183}
+.admin-corner{position:absolute;right:max(22px,env(safe-area-inset-right));bottom:max(22px,calc(env(safe-area-inset-bottom) + 16px));width:40px;height:40px;display:grid;place-items:center;padding:0;border:1px solid #f6dfa6;border-radius:10px;background:linear-gradient(140deg,#f2d690,#c99a4b 58%,#a8782f);color:#17120a;box-shadow:0 6px 18px #0000008c,inset 0 1px 0 #fff7dca6;transition:transform .15s,filter .15s,box-shadow .15s}.admin-corner:hover{transform:translateY(-1px);filter:brightness(1.07);box-shadow:0 8px 22px #0000009e,0 0 0 3px #e5c58233,inset 0 1px 0 #fff7dca6}.admin-corner:focus-visible{outline:2px solid #f3dc9e;outline-offset:3px}.admin-corner .icon{width:22px;height:22px;stroke-width:1.7}.menu:not([data-view="main"]) .admin-corner{display:none}
+@media(max-width:650px){.admin-corner{right:max(13px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));width:36px;height:36px}}
 .new-badge.daily-count{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;right:-9px;top:-9px;font-size:10px;box-shadow:0 0 12px #d9b37399}
-@media(min-width:651px) and (max-height:860px){.menu-content{padding:20px 35px 16px}.menu-seal{width:44px;height:44px}.menu-content h1{margin:10px 0 26px}.menu-actions{gap:8px}.menu-actions .primary{min-height:48px}.menu-option{min-height:42px}.menu-controls{margin-top:18px}.best{margin:14px 0 4px}}
+@media(min-width:651px) and (max-height:860px){.menu-content{padding:20px 35px 16px}.menu-seal{width:44px;height:44px}.menu-content h1{margin:10px 0 26px}.menu-actions{gap:8px 14px}.menu-actions .primary{min-height:48px}.menu-option{min-height:42px}.menu-controls{margin-top:18px}.best{margin:14px 0 4px}}
 
 </style>
 </head>
@@ -246,7 +260,7 @@
     <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.6 9.6h3.6a1.9 1.9 0 0 1 0 3.8h-3.2a1.9 1.9 0 0 0 0 3.8h3.6"/></symbol>
     <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10.5" rx="1"/><path d="M3 10h18V6.6H3ZM12 6.6v13.9M12 6.6c-1.6-3.4-5.4-3.4-5.4-1.2 0 1.4 2.6 1.2 5.4 1.2Zm0 0c1.6-3.4 5.4-3.4 5.4-1.2 0 1.4-2.6 1.2-5.4 1.2Z"/></symbol>
     <symbol id="i-hat" viewBox="0 0 24 24"><path d="M2.5 14.6c2.6 2.6 16.4 2.6 19 0M5.2 14.4c2.2 1.3 11.4 1.3 13.6 0L17.3 7.4c-.4-1.6-2-2.1-3.1-1.1L12 8.1 9.8 6.3c-1.1-1-2.7-.5-3.1 1.1Z"/><path d="M6.4 11.6c3.4.9 7.8.9 11.2 0"/></symbol>
-    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="12" r="4.2"/><path d="M12.2 12H21m-3 0v3.4M21 12v2.6"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="12" r="4.2"/><path d="M12.2 12H21m-3 0v3.4M21 12v2.6"/></symbol><symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4.5" y="5" width="15" height="10.4" rx="1.3" fill="currentColor" fill-opacity=".14"/><path d="M4.4 15.4 2.4 18.6h19.2l-2-3.2M10.2 17h3.6"/></symbol>
     <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/></symbol>
     <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></symbol>
   </defs></svg>
@@ -273,7 +287,7 @@
     </div>
     <div id="toast" class="toast faded" role="status" hidden></div>
     <section class="menu" id="menu" aria-label="Menu inicial" data-view="main">
-      <div class="menu-content" id="menu-main"><svg class="icon menu-seal" aria-hidden="true"><use href="#i-sigil"/></svg><h1>VESPER</h1><div class="menu-actions"><button class="primary" id="start-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> JOGO OFFLINE</button><button class="menu-option" id="online-btn"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg> JOGO ONLINE</button><button class="menu-option" id="private-btn"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> SERVIDOR PRIVADO</button><button class="menu-option" id="characters-btn"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg> PERSONAGENS<span class="new-badge" id="characters-new" hidden>NOVO</span></button><button class="menu-option" id="daily-btn"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg> LOGIN DIÁRIO<span class="new-badge daily-count" id="daily-new" hidden>1</span></button><button class="menu-option" id="trades-btn"><svg class="icon" aria-hidden="true"><use href="#i-swap"/></svg> TROCAS</button></div><div class="menu-controls"><span class="desktop-copy"><kbd>WASD</kbd> / setas</span><span class="mobile-copy">Controle por toque</span><span><svg class="icon" aria-hidden="true"><use href="#i-blade"/></svg>Ataque automático</span></div><p class="best">RECORDE <strong id="best-time">—</strong></p><button class="admin-link" id="admin-btn">Painel de Administrador</button></div>
+      <div class="menu-content" id="menu-main"><svg class="icon menu-seal" aria-hidden="true"><use href="#i-sigil"/></svg><h1>VESPER</h1><div class="menu-actions"><button class="primary" id="start-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> JOGO OFFLINE</button><button class="menu-option" id="online-btn"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg> JOGO ONLINE</button><button class="menu-option" id="private-btn"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> SERVIDOR PRIVADO</button><button class="menu-option" id="characters-btn"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg> PERSONAGENS<span class="new-badge" id="characters-new" hidden>NOVO</span></button><button class="menu-option" id="daily-btn"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg> LOGIN DIÁRIO<span class="new-badge daily-count" id="daily-new" hidden>1</span></button><button class="menu-option" id="trades-btn"><svg class="icon" aria-hidden="true"><use href="#i-swap"/></svg> TROCAS</button></div><div class="menu-controls"><span class="desktop-copy"><kbd>WASD</kbd> / setas</span><span class="mobile-copy">Controle por toque</span><span><svg class="icon" aria-hidden="true"><use href="#i-blade"/></svg>Ataque automático</span></div><p class="best">RECORDE <strong id="best-time">—</strong></p></div><button class="admin-corner" id="admin-btn" title="Painel de Administrador" aria-label="Painel de Administrador"><svg class="icon" aria-hidden="true"><use href="#i-laptop"/></svg></button>
       <div class="menu-panel online-panel" id="online-view" role="region" aria-labelledby="online-title" hidden>
         <p class="panel-kicker">JOGO ONLINE</p>
         <h2 id="online-title">Arena Vesper</h2>
@@ -2757,6 +2771,11 @@ window.VesperGame = VesperGame;
     gradient.addColorStop(0, color); gradient.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = gradient; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   };
+  const radial = (ctx, x, y, radius, stops) => {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    stops.forEach(([at, color]) => gradient.addColorStop(at, color));
+    return gradient;
+  };
   const star = (ctx, color, x, y, radius) => {
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -3379,75 +3398,126 @@ window.VesperGame = VesperGame;
     banana(ctx, steps) {
       const stride = Math.sin(steps) * 1.6;
       const swing = Math.sin(steps) * 1.3;
-      const body = (color, reach) => {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(-1.8, -28.4);
-        ctx.quadraticCurveTo(reach, -9, -0.4, 12);
-        ctx.quadraticCurveTo(0.6, -6, -4.4, -28.4);
-        ctx.closePath();
-        ctx.fill();
+      const ink = '#6e4a10';
+      const limb = (x0, y0, cx, cy, x1, y1) => {
+        ctx.strokeStyle = '#3f2a14'; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(cx, cy, x1, y1); ctx.stroke();
       };
-      line(ctx, '#5b3d22', 2.3, [[0.5, 8], [-1.5 + stride, 16]]);
-      line(ctx, '#5b3d22', 2.3, [[4.5, 7], [5.5 - stride, 16]]);
-      oval(ctx, '#7a4e2a', -2 + stride, 17.4, 3.4, 1.8);
-      oval(ctx, '#7a4e2a', 6.2 - stride, 17.4, 3.4, 1.8);
-      line(ctx, '#5b3d22', 1.9, [[0.4, -5], [-5.4, 1.4 - swing]]);
-      oval(ctx, '#f4efe2', -5.8, 2 - swing, 2.1, 2);
-      body('#caa12c', 25);
-      body('#f5d547', 21.5);
-      ctx.strokeStyle = 'rgba(255,246,190,.8)'; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(-1.6, -23); ctx.quadraticCurveTo(3.4, -8, 0.8, 5); ctx.stroke();
-      ctx.strokeStyle = '#dcb233'; ctx.lineWidth = 0.9;
-      ctx.beginPath(); ctx.moveTo(-2.4, -26); ctx.quadraticCurveTo(12.4, -8, -0.4, 10); ctx.stroke();
-      polygon(ctx, '#6b4a2a', [[-4.4, -28], [-4, -33.6], [-1.8, -33.6], [-1.8, -28]]);
-      polygon(ctx, '#8a6238', [[-4, -33.6], [-1.8, -33.6], [-1.9, -32.3], [-4, -32.3]]);
-      oval(ctx, '#4a3420', -1, 11.6, 1.6, 1.3);
-      for (const x of [2.8, 7.2]) {
-        oval(ctx, '#fffdf6', x, -13.6, 1.9, 2.2);
-        oval(ctx, '#2a1d10', x + 0.4, -13.3, 1.1, 1.3);
-        oval(ctx, '#ffffff', x, -14, 0.45, 0.45);
+      const sneaker = x => {
+        oval(ctx, '#efe8da', x + 0.5, 17.8, 3.9, 1.2);
+        oval(ctx, '#d6413a', x, 16.5, 3.5, 2.1);
+        oval(ctx, '#f39486', x - 1.1, 15.8, 1.3, 0.6);
+        line(ctx, '#fff4ec', 0.5, [[x + 0.4, 15.3], [x + 1.8, 15.9]]);
+      };
+      const glove = (x, y) => {
+        oval(ctx, '#cfc7b4', x + 0.3, y + 0.4, 2.3, 2.1);
+        oval(ctx, '#fdfaf2', x, y, 2.2, 2);
+        oval(ctx, '#fdfaf2', x - 1.6, y - 0.9, 0.9, 0.8);
+      };
+      const outline = () => {
+        ctx.beginPath();
+        ctx.moveTo(-1.4, -27.4);
+        ctx.bezierCurveTo(7.8, -23.6, 14.6, -10.4, 11.4, 1.6);
+        ctx.bezierCurveTo(9.8, 7.6, 5.8, 11.6, 1.6, 13);
+        ctx.bezierCurveTo(-0.4, 11.2, 0.6, -2.4, -1.6, -13);
+        ctx.bezierCurveTo(-2.6, -19.6, -4.2, -24.8, -4.6, -27.4);
+        ctx.closePath();
+      };
+      limb(0.8, 9.6, -0.4 + stride * 0.4, 13, -1 + stride, 16);
+      limb(4.6, 8.6, 5.6 - stride * 0.4, 12.6, 6.2 - stride, 16);
+      sneaker(-1 + stride);
+      sneaker(6.4 - stride);
+      limb(-0.8, -4.6, -5.4, -4.2, -6.8, 1.2 - swing);
+      glove(-7, 1.8 - swing);
+      polygon(ctx, '#7d8a36', [[-4.6, -26.8], [-4.7, -30.6], [-5.5, -33.8], [-3.2, -34.4], [-2.5, -30.8], [-1.5, -26.8]]);
+      polygon(ctx, '#a3b04c', [[-4.2, -27.2], [-4.4, -30.4], [-5, -33.4], [-4.1, -33.6], [-3.5, -30.6], [-3.1, -27.2]]);
+      oval(ctx, '#4a3515', -4.3, -34.1, 1.4, 0.8);
+      outline();
+      ctx.fillStyle = radial(ctx, 1, -15, 27, [[0, '#fff08c'], [0.35, '#ffd83f'], [0.75, '#f5b62b'], [1, '#d88f17']]);
+      ctx.fill();
+      ctx.save();
+      outline();
+      ctx.clip();
+      oval(ctx, 'rgba(205,128,18,.3)', 13.2, -1, 4.4, 15);
+      oval(ctx, 'rgba(205,128,18,.22)', 4, 12.6, 6, 3.4);
+      ctx.strokeStyle = 'rgba(206,140,26,.45)'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-2.2, -25); ctx.bezierCurveTo(6.4, -19.4, 9.6, -6, 6.4, 7); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,251,222,.9)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-3.3, -23); ctx.bezierCurveTo(-2.2, -17, -1.2, -10, -0.3, -3); ctx.stroke();
+      for (const [x, y, r] of [[9.6, -3.2, 0.7], [7.4, 3.4, 0.55], [9.4, 1.2, 0.4], [5.2, 8.2, 0.5]]) oval(ctx, 'rgba(122,74,18,.55)', x, y, r, r * 0.8);
+      ctx.restore();
+      outline();
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.1; ctx.stroke();
+      oval(ctx, '#5a3d17', 1.5, 12.5, 1.5, 1.1);
+      for (const [x, y] of [[2.6, -13.4], [7.3, -13.6]]) {
+        oval(ctx, ink, x, y, 2.3, 2.7);
+        oval(ctx, '#fffdf7', x, y, 1.8, 2.2);
+        oval(ctx, '#2b1a0c', x + 0.45, y + 0.3, 1.15, 1.5);
+        oval(ctx, '#ffffff', x, y - 0.45, 0.5, 0.55);
+        oval(ctx, 'rgba(255,255,255,.8)', x + 0.9, y + 0.95, 0.25, 0.25);
       }
-      oval(ctx, 'rgba(242,140,100,.55)', 1.6, -10, 1.4, 0.8);
-      oval(ctx, 'rgba(242,140,100,.55)', 8.6, -10, 1.4, 0.8);
-      ctx.strokeStyle = '#5b3d22'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(3.4, -9.8); ctx.quadraticCurveTo(5.1, -8, 6.8, -9.8); ctx.stroke();
-      line(ctx, '#5b3d22', 1.9, [[9.4, -4], [13.6, 1.6 + swing]]);
-      oval(ctx, '#f4efe2', 14, 2.2 + swing, 2.1, 2);
+      ctx.strokeStyle = ink; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(1.2, -16.9); ctx.quadraticCurveTo(2.6, -17.9, 3.9, -17.1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(6, -17.2); ctx.quadraticCurveTo(7.4, -18.1, 8.6, -17.2); ctx.stroke();
+      oval(ctx, 'rgba(244,128,96,.5)', 0.9, -10.2, 1.5, 0.9);
+      oval(ctx, 'rgba(244,128,96,.5)', 9.5, -10.4, 1.5, 0.9);
+      ctx.fillStyle = '#6a2a12';
+      ctx.beginPath(); ctx.moveTo(3.2, -10.3); ctx.quadraticCurveTo(5.2, -10.9, 7.2, -10.4); ctx.quadraticCurveTo(6.8, -6.9, 5.2, -6.8); ctx.quadraticCurveTo(3.6, -6.9, 3.2, -10.3); ctx.fill();
+      oval(ctx, '#f07c7c', 5.3, -7.6, 1.3, 0.75);
+      limb(10.4, -3.4, 13.8, -3.6, 14.4, 1.6 + swing);
+      glove(14.6, 2.2 + swing);
     },
 
     penguin(ctx, steps) {
       const stride = Math.sin(steps) * 1.6;
       const flap = Math.sin(steps) * 0.22;
-      const flipper = (x, angle) => {
+      const flutter = Math.sin(steps * 2) * 0.8;
+      const foot = x => {
+        polygon(ctx, '#cf6c19', [[x - 4.2, 17.8], [x + 4.8, 17.8], [x + 3.4, 15.2], [x - 2.8, 15]]);
+        for (const toe of [-2.6, 0.5, 3.5]) oval(ctx, '#f59a31', x + toe, 17.1, 1.7, 1.2);
+      };
+      const flipper = (x, angle, color) => {
         ctx.save();
-        ctx.translate(x, -8);
+        ctx.translate(x, -9.4);
         ctx.rotate(angle);
-        oval(ctx, '#161c27', 0, 6.5, 3.3, 8.2);
+        oval(ctx, '#0a0e15', 0, 7, 3.6, 8.8);
+        oval(ctx, color, -0.2, 6.8, 3, 8.2);
+        oval(ctx, 'rgba(255,255,255,.1)', -1, 4.6, 0.9, 4.2);
         ctx.restore();
       };
-      oval(ctx, '#e8892c', -4 + stride, 17.4, 4.2, 1.9);
-      oval(ctx, '#e8892c', 5 - stride, 17.4, 4.2, 1.9);
-      flipper(-9.5, 0.38 + flap);
-      oval(ctx, '#1f2734', 0.5, -5, 12.6, 19);
-      oval(ctx, '#2d3748', -3.6, -11, 5.6, 10);
-      oval(ctx, '#f3f5f7', 2.6, 0, 8.6, 13);
-      oval(ctx, '#dde4ea', 4.2, 3, 5.6, 8.6);
-      oval(ctx, '#f3f5f7', 3.8, -15, 7.2, 5.8);
-      for (const x of [1.6, 7]) {
-        oval(ctx, '#11151c', x, -15.6, 1.5, 1.8);
-        oval(ctx, '#ffffff', x - 0.4, -16.2, 0.5, 0.5);
+      foot(-4 + stride);
+      foot(5.2 - stride);
+      flipper(-9.8, 0.42 + flap, '#161d2a');
+      oval(ctx, '#0a0e15', 0.6, -4.6, 13.2, 19.6);
+      oval(ctx, radial(ctx, -4, -15, 24, [[0, '#46597a'], [0.4, '#243047'], [1, '#101521']]), 0.6, -4.6, 12.4, 18.8);
+      oval(ctx, 'rgba(255,255,255,.16)', -5, -17.4, 3.4, 1.7, -0.7);
+      oval(ctx, radial(ctx, 1.4, -3, 14, [[0, '#ffffff'], [0.65, '#f1f4f8'], [1, '#d2dce6']]), 2.9, 0.8, 8.8, 13.2);
+      for (const [x, y, rx, ry] of [[1.6, -15.4, 4.1, 4.7], [6.9, -15.6, 4.1, 4.7], [4.3, -11.4, 5.4, 4.2]]) oval(ctx, '#f7f9fb', x, y, rx, ry);
+      for (const x of [2, 6.9]) {
+        oval(ctx, '#0b0f16', x, -15.8, 1.75, 2.15);
+        oval(ctx, '#ffffff', x - 0.5, -16.5, 0.65, 0.72);
+        oval(ctx, 'rgba(255,255,255,.85)', x + 0.6, -15, 0.3, 0.3);
       }
-      oval(ctx, 'rgba(245,150,160,.6)', 0.4, -12.2, 1.4, 0.8);
-      oval(ctx, 'rgba(245,150,160,.6)', 9, -12.2, 1.2, 0.8);
-      polygon(ctx, '#f29a32', [[4, -13.6], [11.6, -12.4], [4.2, -11]]);
-      polygon(ctx, '#c9721f', [[4.2, -12.3], [11.6, -12.4], [4.2, -11]]);
-      polygon(ctx, '#c8433d', [[-9.6, -8.6], [10.6, -8.6], [11, -5.6], [-9.8, -5.6]]);
-      polygon(ctx, '#c8433d', [[-7.4, -7], [-11.4, 1.4], [-8.2, 2.2], [-4.8, -6.2]]);
-      line(ctx, '#f0d9c8', 0.9, [[-9.4, -2.2], [-6.8, -1.4]]);
-      line(ctx, '#f0d9c8', 0.9, [[-8.4, -4.6], [-5.8, -3.8]]);
-      line(ctx, '#9e2f2c', 0.8, [[-9.6, -5.8], [11, -5.8]]);
-      flipper(10.8, -0.38 - flap);
+      oval(ctx, 'rgba(248,140,158,.55)', -0.2, -12.6, 1.4, 0.85);
+      oval(ctx, 'rgba(248,140,158,.55)', 9.6, -13.2, 1.3, 0.8);
+      polygon(ctx, '#f8a93a', [[3.2, -12.8], [6.2, -13.6], [11, -11.8], [6.4, -10.9]]);
+      polygon(ctx, '#dc7619', [[3.6, -11.6], [6.4, -10.9], [9.6, -11], [6, -9.6]]);
+      line(ctx, '#ffd896', 0.5, [[4.6, -12.9], [7.8, -12.4]]);
+      ctx.fillStyle = '#c93833';
+      ctx.beginPath(); ctx.moveTo(-11.2, -9.6); ctx.quadraticCurveTo(0.8, -5.4, 12.6, -9.8); ctx.lineTo(12.8, -6.2); ctx.quadraticCurveTo(0.8, -1.6, -11.4, -5.8); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#8f2522'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-11.2, -5.9); ctx.quadraticCurveTo(0.8, -1.7, 12.7, -6.3); ctx.stroke();
+      for (const x of [-8, -4, 0, 4, 8]) line(ctx, '#e3564c', 0.6, [[x, -8.4 + Math.abs(x) * 0.12], [x + 0.3, -5.2 + Math.abs(x) * 0.14]]);
+      polygon(ctx, '#c93833', [[-8.8, -7.4], [-4.8, -6.6], [-6.2 + flutter * 0.3, 3.8], [-10.4 + flutter, 2.8]]);
+      line(ctx, '#f4e7d7', 1, [[-8.9 + flutter * 0.4, -2.4], [-5.8 + flutter * 0.1, -1.8]]);
+      line(ctx, '#f4e7d7', 1, [[-9.4 + flutter * 0.6, 0.4], [-6 + flutter * 0.2, 1]]);
+      for (let i = 0; i < 4; i++) {
+        const t = i / 3;
+        const x = -10.4 + flutter + (4.2 - flutter * 0.7) * t;
+        const y = 2.8 + t;
+        line(ctx, '#e8574d', 0.6, [[x, y], [x - 0.3 + flutter * 0.2, y + 1.8]]);
+      }
+      flipper(11, -0.42 - flap, '#1c2433');
     },
 
     sheriff(ctx, steps) {
@@ -3489,36 +3559,75 @@ window.VesperGame = VesperGame;
     darkmouse(ctx, steps) {
       const stride = Math.sin(steps) * 2;
       const swing = Math.sin(steps) * 1.8;
-      const ink = '#151515', paper = '#ebe7dc';
-      ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(-5, 5); ctx.quadraticCurveTo(-15, 3, -16, 10); ctx.quadraticCurveTo(-17, 16, -11.5, 16.5); ctx.stroke();
-      line(ctx, ink, 2, [[-2.6, 7], [-3.8 + stride, 15]]);
-      line(ctx, ink, 2, [[2.6, 7], [3.8 - stride, 15]]);
-      oval(ctx, '#262626', -4.6 + stride, 16.8, 5.2, 2.6);
-      oval(ctx, '#262626', 5.4 - stride, 16.8, 5.2, 2.6);
-      oval(ctx, '#7a7a7a', -3.2 + stride, 15.9, 1.8, 0.7);
-      oval(ctx, '#7a7a7a', 6.8 - stride, 15.9, 1.8, 0.7);
-      line(ctx, ink, 2, [[-4, -4], [-9.4, 2 - swing]]);
-      oval(ctx, ink, -9.8, 2.6 - swing, 2.1, 2.1);
-      oval(ctx, ink, 0, -2.4, 6, 7);
-      polygon(ctx, '#555555', [[-6.6, 0.6], [6.6, 0.6], [7, 8], [1.2, 8.4], [0, 5.8], [-1.2, 8.4], [-7, 8]]);
-      oval(ctx, paper, -2.6, 3.2, 1.2, 1.4);
-      oval(ctx, paper, 2.6, 3.2, 1.2, 1.4);
-      line(ctx, ink, 2, [[4, -4], [10, 1.2 + swing]]);
-      oval(ctx, ink, 10.4, 1.8 + swing, 2.1, 2.1);
-      oval(ctx, ink, -6.8, -27.2, 5.8, 5.8);
-      oval(ctx, ink, 7.8, -27.6, 5.8, 5.8);
-      oval(ctx, ink, 0.6, -17.4, 8.4, 8.2);
-      oval(ctx, paper, 2.6, -18.8, 4.2, 4.8);
-      oval(ctx, paper, 7.2, -14.6, 5.4, 3.4);
-      oval(ctx, paper, 3.4, -13.6, 3.6, 2.8);
-      oval(ctx, ink, 12.2, -15.4, 1.9, 1.5);
-      for (const x of [1.4, 4.8]) {
-        oval(ctx, ink, x, -19.8, 1.2, 2.5);
-        polygon(ctx, paper, [[x + 0.2, -21.4], [x + 1.3, -20.6], [x + 0.5, -20]]);
+      const ink = '#101010', paper = '#f1ede2';
+      const hose = (x0, y0, cx, cy, x1, y1, width = 1.9) => {
+        ctx.strokeStyle = ink; ctx.lineWidth = width;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(cx, cy, x1, y1); ctx.stroke();
+      };
+      const shoe = x => {
+        oval(ctx, '#161616', x - 2.4, 16.8, 2.7, 2.4);
+        oval(ctx, '#161616', x + 1.4, 16.4, 5.8, 3.1);
+        oval(ctx, 'rgba(255,255,255,.24)', x + 2.6, 15, 2.6, 0.9);
+        line(ctx, '#4a4a4a', 0.7, [[x - 4.4, 18.3], [x + 6.6, 18.3]]);
+      };
+      const hand = (x, y) => {
+        oval(ctx, ink, x, y, 2.3, 2.1);
+        oval(ctx, ink, x - 1.5, y - 1.3, 0.9, 0.8);
+        oval(ctx, 'rgba(255,255,255,.14)', x - 0.6, y - 0.7, 0.8, 0.5);
+      };
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(-5, 4.4); ctx.bezierCurveTo(-13, 2.6, -17.8, 9.6 + swing * 0.3, -14.4, 14); ctx.bezierCurveTo(-12.4, 16.4, -9.2, 15.2, -9.8, 12.6); ctx.stroke();
+      hose(-3.4, 8, -3.8 + stride * 0.4, 11.8, -4 + stride, 15);
+      hose(3.4, 8, 3.8 - stride * 0.4, 11.8, 4 - stride, 15);
+      shoe(-4.8 + stride);
+      shoe(4.6 - stride);
+      hose(-4.2, -6, -9.4, -4.6, -10.4, 1.6 - swing);
+      hand(-10.6, 2.4 - swing);
+      oval(ctx, ink, 0, -3.4, 6.2, 7.2);
+      oval(ctx, ink, 0, 1.8, 6.9, 5.4);
+      ctx.fillStyle = radial(ctx, -2.4, 1.2, 11, [[0, '#858585'], [1, '#434343']]);
+      ctx.beginPath(); ctx.moveTo(-6.9, 0); ctx.lineTo(6.9, 0); ctx.quadraticCurveTo(8.8, 4.4, 7.8, 8.3); ctx.quadraticCurveTo(4.4, 9.4, 1.2, 8.3); ctx.lineTo(0, 6.2); ctx.lineTo(-1.2, 8.3); ctx.quadraticCurveTo(-4.4, 9.4, -7.8, 8.3); ctx.quadraticCurveTo(-8.8, 4.4, -6.9, 0); ctx.closePath(); ctx.fill();
+      line(ctx, '#2c2c2c', 0.8, [[-6.8, 0.6], [6.8, 0.6]]);
+      for (const x of [-2.5, 2.6]) {
+        oval(ctx, paper, x, 3.4, 1.3, 1.55);
+        oval(ctx, '#a19c90', x - 0.35, 3.3, 0.28, 0.28);
+        oval(ctx, '#a19c90', x + 0.35, 3.3, 0.28, 0.28);
       }
-      ctx.strokeStyle = ink; ctx.lineWidth = 0.9;
-      ctx.beginPath(); ctx.moveTo(4.2, -12.8); ctx.quadraticCurveTo(7.6, -10.4, 11, -12.6); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.arc(0, -3.4, 5.2, 3.5, 4.5); ctx.stroke();
+      hose(4, -6, 9.2, -5, 10.6, 1.4 + swing);
+      hand(10.8, 2 + swing);
+      for (const [x, y] of [[-7.2, -27.6], [7.8, -28.4]]) {
+        oval(ctx, ink, x, y, 5.9, 5.9);
+        ctx.strokeStyle = 'rgba(255,255,255,.13)'; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(x, y, 4.6, 3.6, 4.6); ctx.stroke();
+      }
+      oval(ctx, ink, 0.8, -17.8, 8.2, 8);
+      ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.arc(0.8, -17.8, 6.6, 3.5, 4.4); ctx.stroke();
+      ctx.fillStyle = paper;
+      ctx.beginPath();
+      ctx.moveTo(-3.2, -14.6);
+      ctx.bezierCurveTo(-4.2, -19.4, -1.8, -23.8, 1.4, -23.4);
+      ctx.quadraticCurveTo(2.8, -22.8, 3.4, -21.2);
+      ctx.quadraticCurveTo(4.2, -23.4, 6, -23.4);
+      ctx.bezierCurveTo(8.6, -23.2, 9.4, -20.2, 10.2, -18.8);
+      ctx.bezierCurveTo(12.4, -18.4, 14.8, -17.6, 14.6, -15.4);
+      ctx.bezierCurveTo(14.4, -12.8, 11.6, -12, 8.6, -11.4);
+      ctx.bezierCurveTo(5.4, -10.2, 0.6, -10.2, -1.6, -11.6);
+      ctx.quadraticCurveTo(-3, -12.6, -3.2, -14.6);
+      ctx.fill();
+      for (const [x, y] of [[1.6, -19.2], [5.2, -19.4]]) {
+        oval(ctx, ink, x, y, 1.3, 2.7);
+        polygon(ctx, paper, [[x + 0.2, y - 1.7], [x + 1.4, y - 0.8], [x + 0.5, y - 0.3]]);
+      }
+      oval(ctx, ink, 14.1, -16.4, 2.3, 1.8);
+      oval(ctx, '#8d8d8d', 13.5, -17, 0.7, 0.4);
+      ctx.fillStyle = ink;
+      ctx.beginPath(); ctx.moveTo(6.2, -13.8); ctx.quadraticCurveTo(9.6, -10.4, 12.6, -13); ctx.quadraticCurveTo(9.6, -12.3, 6.2, -13.8); ctx.fill();
+      oval(ctx, '#8d8d8d', 9.6, -11.7, 1.3, 0.55);
+      hose(5.4, -14.6, 9.4, -10.6, 13, -13.3, 0.9);
+      line(ctx, ink, 0.7, [[4.9, -15.1], [5.5, -14.2]]);
     },
 
     soldier(ctx, steps) {
@@ -3553,29 +3662,70 @@ window.VesperGame = VesperGame;
 
     vespermobile(ctx, steps) {
       const turn = steps * 1.2;
+      const flick = Math.sin(turn * 3) * 1.5;
+      const fin = (dx, dy, fill) => {
+        ctx.fillStyle = fill;
+        ctx.beginPath();
+        ctx.moveTo(-9.6 + dx, -4.3);
+        ctx.quadraticCurveTo(-17.4 + dx, -6 + dy, -27.4 + dx, -17.4 + dy);
+        ctx.quadraticCurveTo(-25.4 + dx, -13.6 + dy, -26.8 + dx, -10.8 + dy);
+        ctx.quadraticCurveTo(-24 + dx, -10.2 + dy, -25.2 + dx, -7.2 + dy);
+        ctx.quadraticCurveTo(-22.8 + dx, -6.6 + dy, -23.4 + dx, -3.2);
+        ctx.closePath();
+        ctx.fill();
+      };
       ctx.save();
       ctx.translate(0, 3 - Math.abs(Math.sin(steps * 2)) * 0.6);
-      polygon(ctx, '#0f1014', [[-22, 2], [-20, -14], [-15, -4]]);
-      polygon(ctx, '#1d1f25', [[-21, 0], [-19.6, -11], [-16.4, -4]]);
-      polygon(ctx, '#131418', [[-22, 8], [-21, -2], [-12, -6], [-4, -12], [6, -12], [12, -6], [22, -3], [24, 4], [22, 9]]);
-      line(ctx, '#3b3f4a', 1, [[-20, -2], [-12, -5.4], [-4, -11.2], [6, -11.2], [11.6, -5.4], [21.6, -2.4]]);
-      polygon(ctx, '#23303a', [[-3.4, -11], [5.4, -11], [10, -6], [-6.6, -6]]);
-      polygon(ctx, 'rgba(140,190,220,.35)', [[-2, -10.4], [3, -10.4], [5.6, -6.8], [-3.6, -6.8]]);
-      line(ctx, '#2c2f37', 1.2, [[-19, 3], [18, 3]]);
-      oval(ctx, '#2a2c33', 20.4, 1.2, 3, 3.4);
-      glow(ctx, 'rgba(255,170,60,.45)', 22, 1, 8);
-      oval(ctx, '#f0a33c', 20.8, 1.2, 1.8, 2.2);
-      polygon(ctx, '#ffd98a', [[21, -2.8], [23.4, -1.6], [21.2, -1]]);
-      polygon(ctx, 'rgba(255,120,40,.7)', [[-22, 4], [-27 - Math.sin(turn * 3) * 1.5, 5], [-22, 6]]);
-      polygon(ctx, '#c9a24f', [[-1.6, -1.8], [0, 1.6], [1.6, -1.8], [0.7, -1.8], [0, -0.2], [-0.7, -1.8]]);
-      for (const x of [-13, 13]) {
-        oval(ctx, '#0a0a0c', x, 8.6, 5.4, 5.4);
-        oval(ctx, '#3b3e46', x, 8.6, 3.2, 3.2);
-        ctx.strokeStyle = '#8a8f99'; ctx.lineWidth = 0.9;
-        for (let i = 0; i < 3; i++) {
-          const angle = turn + i * TAU / 3;
-          ctx.beginPath(); ctx.moveTo(x, 8.6); ctx.lineTo(x + Math.cos(angle) * 3, 8.6 + Math.sin(angle) * 3); ctx.stroke();
+      fin(3.6, -1.4, '#07080a');
+      polygon(ctx, 'rgba(255,120,40,.75)', [[-26.2, 2.6], [-31.8 - flick, 3.8], [-26.2, 5]]);
+      polygon(ctx, 'rgba(255,232,170,.9)', [[-26, 3.2], [-29.2 - flick * 0.6, 3.8], [-26, 4.4]]);
+      const paint = radial(ctx, 0, -15, 27, [[0, '#4a5160'], [0.42, '#1f232b'], [1, '#08090c']]);
+      ctx.fillStyle = paint;
+      ctx.beginPath();
+      ctx.moveTo(-24.6, 6.8);
+      ctx.lineTo(-25.6, 1.2);
+      ctx.quadraticCurveTo(-24.2, -2.6, -18.6, -3.2);
+      ctx.lineTo(-9.4, -4.4);
+      ctx.lineTo(10.4, -5);
+      ctx.lineTo(20.6, -3.4);
+      ctx.quadraticCurveTo(26.4, -2.2, 27.2, 1.8);
+      ctx.quadraticCurveTo(26.6, 5.6, 22.8, 7);
+      ctx.closePath();
+      ctx.fill();
+      fin(0, 0, paint);
+      ctx.strokeStyle = 'rgba(165,176,200,.55)'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(-10.4, -4.4); ctx.quadraticCurveTo(-17.4, -6.1, -27, -17); ctx.stroke();
+      ctx.fillStyle = radial(ctx, 0, -10, 11, [[0, '#35546a'], [0.6, '#15232e'], [1, '#0a1117']]);
+      ctx.beginPath(); ctx.moveTo(-7.6, -4.5); ctx.quadraticCurveTo(-4, -11.2, 1.8, -11.4); ctx.quadraticCurveTo(7.2, -11, 9.8, -4.9); ctx.closePath(); ctx.fill();
+      polygon(ctx, 'rgba(185,222,242,.3)', [[-3.4, -9.8], [0.8, -10.7], [-2.6, -5.2], [-5.2, -5]]);
+      polygon(ctx, 'rgba(185,222,242,.18)', [[2.2, -10.6], [3.6, -10.5], [0.8, -5], [-0.4, -5]]);
+      ctx.strokeStyle = '#3d4350'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(-7.6, -4.5); ctx.quadraticCurveTo(-4, -11.2, 1.8, -11.4); ctx.quadraticCurveTo(7.2, -11, 9.8, -4.9); ctx.stroke();
+      line(ctx, 'rgba(165,176,200,.5)', 0.7, [[-23.8, -1.6], [-18.6, -2.9], [-9.4, -4]]);
+      line(ctx, 'rgba(165,176,200,.5)', 0.7, [[10.6, -4.6], [20.4, -3], [25.4, -1.2]]);
+      line(ctx, 'rgba(214,176,92,.85)', 0.6, [[-23.2, 2.4], [24.6, 2]]);
+      line(ctx, '#2a2e37', 0.6, [[-5.6, -3.8], [-5.2, 5.6]]);
+      line(ctx, '#2a2e37', 0.6, [[8.6, -4.4], [8.2, 5.4]]);
+      polygon(ctx, '#e3bf66', [[0, -2], [1.4, 1.3], [2.8, -2], [2.1, -2], [1.4, -0.3], [0.7, -2]]);
+      glow(ctx, 'rgba(255,196,110,.5)', 26, 0, 7);
+      polygon(ctx, '#fff2cf', [[22, -1.6], [26.4, -0.5], [25.8, 0.6], [21.8, -0.4]]);
+      glow(ctx, 'rgba(255,60,60,.4)', -24.8, 0.3, 3.4);
+      polygon(ctx, '#e0303a', [[-25.4, -0.5], [-23.4, -0.9], [-23.4, 0.7], [-25.3, 1.1]]);
+      oval(ctx, '#15171c', -25.8, 3.8, 1.6, 1.7);
+      oval(ctx, '#ff9a3c', -25.9, 3.8, 0.9, 1);
+      for (const x of [-13, 14]) {
+        ctx.fillStyle = '#040405'; ctx.beginPath(); ctx.ellipse(x, 7, 7, 5.6, 0, Math.PI, TAU); ctx.fill();
+        oval(ctx, '#0b0b0d', x, 8.6, 5.8, 5.8);
+        oval(ctx, '#23262d', x, 8.6, 4.3, 4.3);
+        oval(ctx, radial(ctx, x - 1.2, 7.2, 5.4, [[0, '#9aa1ae'], [1, '#3a3f49']]), x, 8.6, 3.7, 3.7);
+        ctx.strokeStyle = '#16181d'; ctx.lineWidth = 1.1;
+        for (let i = 0; i < 5; i++) {
+          const angle = turn + i * TAU / 5;
+          ctx.beginPath(); ctx.moveTo(x + Math.cos(angle) * 1.2, 8.6 + Math.sin(angle) * 1.2); ctx.lineTo(x + Math.cos(angle + 0.35) * 3.5, 8.6 + Math.sin(angle + 0.35) * 3.5); ctx.stroke();
         }
+        oval(ctx, '#d4ae57', x, 8.6, 1.1, 1.1);
+        ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(x, 8.6, 5.1, 3.6, 4.9); ctx.stroke();
       }
       ctx.restore();
     }
@@ -6694,7 +6844,7 @@ window.VesperGame = VesperGame;
     };
   }
 
-  VesperGame.createAdmin = ({ progress, onChange }) => {
+  VesperGame.createAdmin = ({ progress, onChange, game, openGift }) => {
     const Profile = VesperGame.OnlineProfile;
     const login = $('admin-login-overlay');
     const panel = $('admin-panel');
@@ -6706,19 +6856,22 @@ window.VesperGame = VesperGame;
     panel.hidden = true;
 
     const catalog = () => {
-      const items = [{ id: 'coins', name: 'Moedas', kind: 'Moedas' }];
+      const items = [
+        { id: 'coins', name: 'Moedas', kind: 'Moedas', art: { type: 'coins', amount: 30 } },
+        { id: 'gift', name: 'Presente misterioso', kind: 'Presente do login diário', art: { type: 'gift' } }
+      ];
       for (const skin of VesperGame.ONLINE.SKINS) {
         if (skin.id === 'alien') continue;
         const character = VesperGame.CHARACTERS.find(item => item.id === skin.id);
-        items.push({ id: 'skin:' + skin.id, name: character.name, kind: character.both ? 'Skin offline e online' : 'Skin do Online' });
+        items.push({ id: 'skin:' + skin.id, name: character.name, kind: character.both ? 'Skin offline e online' : 'Skin do Online', art: { type: 'skin', id: skin.id } });
       }
-      for (const accessory of VesperGame.ONLINE.ACCESSORIES) items.push({ id: 'acc:' + accessory.id, name: accessory.name, kind: 'Acessório' });
-      for (const character of VesperGame.CHARACTERS.filter(item => item.unlockType === 'map')) items.push({ id: 'map:' + character.unlockMap, name: character.name, kind: 'Personagem do offline' });
+      for (const accessory of VesperGame.ONLINE.ACCESSORIES) items.push({ id: 'acc:' + accessory.id, name: accessory.name, kind: 'Acessório', art: { type: 'accessory', id: accessory.id } });
+      for (const character of VesperGame.CHARACTERS.filter(item => item.unlockType === 'map')) items.push({ id: 'map:' + character.unlockMap, name: character.name, kind: 'Personagem do offline', art: { type: 'skin', id: character.id } });
       return items;
     };
 
     const owns = item => {
-      if (item.id === 'coins') return true;
+      if (item.id === 'coins' || item.id === 'gift') return true;
       if (item.id.startsWith('map:')) return progress.has(item.id.slice(4));
       return Profile.has(item.id);
     };
@@ -6726,6 +6879,11 @@ window.VesperGame = VesperGame;
     const log = text => { $('admin-log').textContent = text; };
 
     function change(item, add, amount) {
+      if (item.id === 'gift') {
+        log('Presente misterioso aberto.');
+        openGift();
+        return;
+      }
       if (item.id === 'coins') {
         const value = Math.max(0, Math.floor(Number(amount) || 0));
         if (!value) { log('Digite uma quantidade de moedas.'); return; }
@@ -6750,16 +6908,22 @@ window.VesperGame = VesperGame;
       const top = ranked[0];
       $('admin-hint').textContent = !plain(query) ? 'Digite o nome de uma skin, acessório, personagem ou "moedas".'
         : !top ? 'Nada encontrado.' : plain(query).replace(/\d+/g, '').trim() !== plain(top.item.name) ? `Você quis dizer: ${top.item.name}?` : '';
+      const skin = Profile.load().skin;
       results.replaceChildren(...ranked.map(({ item }) => {
         const row = document.createElement('li');
+        const art = document.createElement('canvas');
+        art.className = 'admin-art';
+        art.width = art.height = 104;
+        art.setAttribute('aria-hidden', 'true');
+        game.drawRewardArt(art, item.art, skin);
         const name = document.createElement('strong');
         name.textContent = item.name;
         const kind = document.createElement('span');
         const has = owns(item);
-        kind.textContent = item.id === 'coins' ? `Saldo: ${Profile.load().coins.toLocaleString('pt-BR')}` : `${item.kind} · ${has ? 'você tem' : 'você não tem'}`;
+        kind.textContent = item.id === 'coins' ? `Saldo: ${Profile.load().coins.toLocaleString('pt-BR')}` : item.id === 'gift' ? item.kind : `${item.kind} · ${has ? 'você tem' : 'você não tem'}`;
         const info = document.createElement('div');
         info.append(name, kind);
-        row.append(info);
+        row.append(art, info);
         let input = null;
         if (item.id === 'coins') {
           input = document.createElement('input');
@@ -6767,11 +6931,11 @@ window.VesperGame = VesperGame;
           input.setAttribute('aria-label', 'Quantidade de moedas');
           row.append(input);
         }
-        for (const add of [true, false]) {
+        for (const add of item.id === 'gift' ? [true] : [true, false]) {
           const button = document.createElement('button');
           button.type = 'button';
           button.textContent = add ? 'pegar' : 'remover';
-          button.disabled = item.id !== 'coins' && has === add;
+          button.disabled = item.id !== 'coins' && item.id !== 'gift' && has === add;
           button.addEventListener('click', () => change(item, add, input && input.value));
           row.append(button);
         }
@@ -6829,7 +6993,7 @@ window.VesperGame = VesperGame;
     $('admin-close-btn').addEventListener('click', closePanel);
     search.addEventListener('input', render);
     window.addEventListener('keydown', event => {
-      if (event.code !== 'Escape') return;
+      if (event.code !== 'Escape' || !$('letter-overlay').hidden) return;
       if (!panel.hidden) closePanel();
       else if (!login.hidden) closeLogin();
       else return;
@@ -7371,7 +7535,8 @@ window.VesperGame = VesperGame;
   }
   function closeLetter() {
     ui['letter-overlay'].hidden = true;
-    if (menuView === 'daily') $('daily-back-btn').focus({ preventScroll: true });
+    if (admin.active) $('admin-search').focus({ preventScroll: true });
+    else if (menuView === 'daily') $('daily-back-btn').focus({ preventScroll: true });
   }
   function renderAccessories() {
     profile = VesperGame.OnlineProfile.load();
@@ -7816,7 +7981,9 @@ window.VesperGame = VesperGame;
       has: id => completedMaps.has(id),
       set: (id, done) => { if (done) completedMaps.add(id); else completedMaps.delete(id); saveProgress(); }
     },
-    onChange: refreshAccount
+    onChange: refreshAccount,
+    game,
+    openGift: openLetter
   });
   game.setCharacter(characterId);
   game.setAccessories(profile.worn);

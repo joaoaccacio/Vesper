@@ -24,6 +24,11 @@
     gradient.addColorStop(0, color); gradient.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = gradient; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   };
+  const radial = (ctx, x, y, radius, stops) => {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    stops.forEach(([at, color]) => gradient.addColorStop(at, color));
+    return gradient;
+  };
   const star = (ctx, color, x, y, radius) => {
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -646,75 +651,126 @@
     banana(ctx, steps) {
       const stride = Math.sin(steps) * 1.6;
       const swing = Math.sin(steps) * 1.3;
-      const body = (color, reach) => {
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(-1.8, -28.4);
-        ctx.quadraticCurveTo(reach, -9, -0.4, 12);
-        ctx.quadraticCurveTo(0.6, -6, -4.4, -28.4);
-        ctx.closePath();
-        ctx.fill();
+      const ink = '#6e4a10';
+      const limb = (x0, y0, cx, cy, x1, y1) => {
+        ctx.strokeStyle = '#3f2a14'; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(cx, cy, x1, y1); ctx.stroke();
       };
-      line(ctx, '#5b3d22', 2.3, [[0.5, 8], [-1.5 + stride, 16]]);
-      line(ctx, '#5b3d22', 2.3, [[4.5, 7], [5.5 - stride, 16]]);
-      oval(ctx, '#7a4e2a', -2 + stride, 17.4, 3.4, 1.8);
-      oval(ctx, '#7a4e2a', 6.2 - stride, 17.4, 3.4, 1.8);
-      line(ctx, '#5b3d22', 1.9, [[0.4, -5], [-5.4, 1.4 - swing]]);
-      oval(ctx, '#f4efe2', -5.8, 2 - swing, 2.1, 2);
-      body('#caa12c', 25);
-      body('#f5d547', 21.5);
-      ctx.strokeStyle = 'rgba(255,246,190,.8)'; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(-1.6, -23); ctx.quadraticCurveTo(3.4, -8, 0.8, 5); ctx.stroke();
-      ctx.strokeStyle = '#dcb233'; ctx.lineWidth = 0.9;
-      ctx.beginPath(); ctx.moveTo(-2.4, -26); ctx.quadraticCurveTo(12.4, -8, -0.4, 10); ctx.stroke();
-      polygon(ctx, '#6b4a2a', [[-4.4, -28], [-4, -33.6], [-1.8, -33.6], [-1.8, -28]]);
-      polygon(ctx, '#8a6238', [[-4, -33.6], [-1.8, -33.6], [-1.9, -32.3], [-4, -32.3]]);
-      oval(ctx, '#4a3420', -1, 11.6, 1.6, 1.3);
-      for (const x of [2.8, 7.2]) {
-        oval(ctx, '#fffdf6', x, -13.6, 1.9, 2.2);
-        oval(ctx, '#2a1d10', x + 0.4, -13.3, 1.1, 1.3);
-        oval(ctx, '#ffffff', x, -14, 0.45, 0.45);
+      const sneaker = x => {
+        oval(ctx, '#efe8da', x + 0.5, 17.8, 3.9, 1.2);
+        oval(ctx, '#d6413a', x, 16.5, 3.5, 2.1);
+        oval(ctx, '#f39486', x - 1.1, 15.8, 1.3, 0.6);
+        line(ctx, '#fff4ec', 0.5, [[x + 0.4, 15.3], [x + 1.8, 15.9]]);
+      };
+      const glove = (x, y) => {
+        oval(ctx, '#cfc7b4', x + 0.3, y + 0.4, 2.3, 2.1);
+        oval(ctx, '#fdfaf2', x, y, 2.2, 2);
+        oval(ctx, '#fdfaf2', x - 1.6, y - 0.9, 0.9, 0.8);
+      };
+      const outline = () => {
+        ctx.beginPath();
+        ctx.moveTo(-1.4, -27.4);
+        ctx.bezierCurveTo(7.8, -23.6, 14.6, -10.4, 11.4, 1.6);
+        ctx.bezierCurveTo(9.8, 7.6, 5.8, 11.6, 1.6, 13);
+        ctx.bezierCurveTo(-0.4, 11.2, 0.6, -2.4, -1.6, -13);
+        ctx.bezierCurveTo(-2.6, -19.6, -4.2, -24.8, -4.6, -27.4);
+        ctx.closePath();
+      };
+      limb(0.8, 9.6, -0.4 + stride * 0.4, 13, -1 + stride, 16);
+      limb(4.6, 8.6, 5.6 - stride * 0.4, 12.6, 6.2 - stride, 16);
+      sneaker(-1 + stride);
+      sneaker(6.4 - stride);
+      limb(-0.8, -4.6, -5.4, -4.2, -6.8, 1.2 - swing);
+      glove(-7, 1.8 - swing);
+      polygon(ctx, '#7d8a36', [[-4.6, -26.8], [-4.7, -30.6], [-5.5, -33.8], [-3.2, -34.4], [-2.5, -30.8], [-1.5, -26.8]]);
+      polygon(ctx, '#a3b04c', [[-4.2, -27.2], [-4.4, -30.4], [-5, -33.4], [-4.1, -33.6], [-3.5, -30.6], [-3.1, -27.2]]);
+      oval(ctx, '#4a3515', -4.3, -34.1, 1.4, 0.8);
+      outline();
+      ctx.fillStyle = radial(ctx, 1, -15, 27, [[0, '#fff08c'], [0.35, '#ffd83f'], [0.75, '#f5b62b'], [1, '#d88f17']]);
+      ctx.fill();
+      ctx.save();
+      outline();
+      ctx.clip();
+      oval(ctx, 'rgba(205,128,18,.3)', 13.2, -1, 4.4, 15);
+      oval(ctx, 'rgba(205,128,18,.22)', 4, 12.6, 6, 3.4);
+      ctx.strokeStyle = 'rgba(206,140,26,.45)'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-2.2, -25); ctx.bezierCurveTo(6.4, -19.4, 9.6, -6, 6.4, 7); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,251,222,.9)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-3.3, -23); ctx.bezierCurveTo(-2.2, -17, -1.2, -10, -0.3, -3); ctx.stroke();
+      for (const [x, y, r] of [[9.6, -3.2, 0.7], [7.4, 3.4, 0.55], [9.4, 1.2, 0.4], [5.2, 8.2, 0.5]]) oval(ctx, 'rgba(122,74,18,.55)', x, y, r, r * 0.8);
+      ctx.restore();
+      outline();
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.1; ctx.stroke();
+      oval(ctx, '#5a3d17', 1.5, 12.5, 1.5, 1.1);
+      for (const [x, y] of [[2.6, -13.4], [7.3, -13.6]]) {
+        oval(ctx, ink, x, y, 2.3, 2.7);
+        oval(ctx, '#fffdf7', x, y, 1.8, 2.2);
+        oval(ctx, '#2b1a0c', x + 0.45, y + 0.3, 1.15, 1.5);
+        oval(ctx, '#ffffff', x, y - 0.45, 0.5, 0.55);
+        oval(ctx, 'rgba(255,255,255,.8)', x + 0.9, y + 0.95, 0.25, 0.25);
       }
-      oval(ctx, 'rgba(242,140,100,.55)', 1.6, -10, 1.4, 0.8);
-      oval(ctx, 'rgba(242,140,100,.55)', 8.6, -10, 1.4, 0.8);
-      ctx.strokeStyle = '#5b3d22'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(3.4, -9.8); ctx.quadraticCurveTo(5.1, -8, 6.8, -9.8); ctx.stroke();
-      line(ctx, '#5b3d22', 1.9, [[9.4, -4], [13.6, 1.6 + swing]]);
-      oval(ctx, '#f4efe2', 14, 2.2 + swing, 2.1, 2);
+      ctx.strokeStyle = ink; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(1.2, -16.9); ctx.quadraticCurveTo(2.6, -17.9, 3.9, -17.1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(6, -17.2); ctx.quadraticCurveTo(7.4, -18.1, 8.6, -17.2); ctx.stroke();
+      oval(ctx, 'rgba(244,128,96,.5)', 0.9, -10.2, 1.5, 0.9);
+      oval(ctx, 'rgba(244,128,96,.5)', 9.5, -10.4, 1.5, 0.9);
+      ctx.fillStyle = '#6a2a12';
+      ctx.beginPath(); ctx.moveTo(3.2, -10.3); ctx.quadraticCurveTo(5.2, -10.9, 7.2, -10.4); ctx.quadraticCurveTo(6.8, -6.9, 5.2, -6.8); ctx.quadraticCurveTo(3.6, -6.9, 3.2, -10.3); ctx.fill();
+      oval(ctx, '#f07c7c', 5.3, -7.6, 1.3, 0.75);
+      limb(10.4, -3.4, 13.8, -3.6, 14.4, 1.6 + swing);
+      glove(14.6, 2.2 + swing);
     },
 
     penguin(ctx, steps) {
       const stride = Math.sin(steps) * 1.6;
       const flap = Math.sin(steps) * 0.22;
-      const flipper = (x, angle) => {
+      const flutter = Math.sin(steps * 2) * 0.8;
+      const foot = x => {
+        polygon(ctx, '#cf6c19', [[x - 4.2, 17.8], [x + 4.8, 17.8], [x + 3.4, 15.2], [x - 2.8, 15]]);
+        for (const toe of [-2.6, 0.5, 3.5]) oval(ctx, '#f59a31', x + toe, 17.1, 1.7, 1.2);
+      };
+      const flipper = (x, angle, color) => {
         ctx.save();
-        ctx.translate(x, -8);
+        ctx.translate(x, -9.4);
         ctx.rotate(angle);
-        oval(ctx, '#161c27', 0, 6.5, 3.3, 8.2);
+        oval(ctx, '#0a0e15', 0, 7, 3.6, 8.8);
+        oval(ctx, color, -0.2, 6.8, 3, 8.2);
+        oval(ctx, 'rgba(255,255,255,.1)', -1, 4.6, 0.9, 4.2);
         ctx.restore();
       };
-      oval(ctx, '#e8892c', -4 + stride, 17.4, 4.2, 1.9);
-      oval(ctx, '#e8892c', 5 - stride, 17.4, 4.2, 1.9);
-      flipper(-9.5, 0.38 + flap);
-      oval(ctx, '#1f2734', 0.5, -5, 12.6, 19);
-      oval(ctx, '#2d3748', -3.6, -11, 5.6, 10);
-      oval(ctx, '#f3f5f7', 2.6, 0, 8.6, 13);
-      oval(ctx, '#dde4ea', 4.2, 3, 5.6, 8.6);
-      oval(ctx, '#f3f5f7', 3.8, -15, 7.2, 5.8);
-      for (const x of [1.6, 7]) {
-        oval(ctx, '#11151c', x, -15.6, 1.5, 1.8);
-        oval(ctx, '#ffffff', x - 0.4, -16.2, 0.5, 0.5);
+      foot(-4 + stride);
+      foot(5.2 - stride);
+      flipper(-9.8, 0.42 + flap, '#161d2a');
+      oval(ctx, '#0a0e15', 0.6, -4.6, 13.2, 19.6);
+      oval(ctx, radial(ctx, -4, -15, 24, [[0, '#46597a'], [0.4, '#243047'], [1, '#101521']]), 0.6, -4.6, 12.4, 18.8);
+      oval(ctx, 'rgba(255,255,255,.16)', -5, -17.4, 3.4, 1.7, -0.7);
+      oval(ctx, radial(ctx, 1.4, -3, 14, [[0, '#ffffff'], [0.65, '#f1f4f8'], [1, '#d2dce6']]), 2.9, 0.8, 8.8, 13.2);
+      for (const [x, y, rx, ry] of [[1.6, -15.4, 4.1, 4.7], [6.9, -15.6, 4.1, 4.7], [4.3, -11.4, 5.4, 4.2]]) oval(ctx, '#f7f9fb', x, y, rx, ry);
+      for (const x of [2, 6.9]) {
+        oval(ctx, '#0b0f16', x, -15.8, 1.75, 2.15);
+        oval(ctx, '#ffffff', x - 0.5, -16.5, 0.65, 0.72);
+        oval(ctx, 'rgba(255,255,255,.85)', x + 0.6, -15, 0.3, 0.3);
       }
-      oval(ctx, 'rgba(245,150,160,.6)', 0.4, -12.2, 1.4, 0.8);
-      oval(ctx, 'rgba(245,150,160,.6)', 9, -12.2, 1.2, 0.8);
-      polygon(ctx, '#f29a32', [[4, -13.6], [11.6, -12.4], [4.2, -11]]);
-      polygon(ctx, '#c9721f', [[4.2, -12.3], [11.6, -12.4], [4.2, -11]]);
-      polygon(ctx, '#c8433d', [[-9.6, -8.6], [10.6, -8.6], [11, -5.6], [-9.8, -5.6]]);
-      polygon(ctx, '#c8433d', [[-7.4, -7], [-11.4, 1.4], [-8.2, 2.2], [-4.8, -6.2]]);
-      line(ctx, '#f0d9c8', 0.9, [[-9.4, -2.2], [-6.8, -1.4]]);
-      line(ctx, '#f0d9c8', 0.9, [[-8.4, -4.6], [-5.8, -3.8]]);
-      line(ctx, '#9e2f2c', 0.8, [[-9.6, -5.8], [11, -5.8]]);
-      flipper(10.8, -0.38 - flap);
+      oval(ctx, 'rgba(248,140,158,.55)', -0.2, -12.6, 1.4, 0.85);
+      oval(ctx, 'rgba(248,140,158,.55)', 9.6, -13.2, 1.3, 0.8);
+      polygon(ctx, '#f8a93a', [[3.2, -12.8], [6.2, -13.6], [11, -11.8], [6.4, -10.9]]);
+      polygon(ctx, '#dc7619', [[3.6, -11.6], [6.4, -10.9], [9.6, -11], [6, -9.6]]);
+      line(ctx, '#ffd896', 0.5, [[4.6, -12.9], [7.8, -12.4]]);
+      ctx.fillStyle = '#c93833';
+      ctx.beginPath(); ctx.moveTo(-11.2, -9.6); ctx.quadraticCurveTo(0.8, -5.4, 12.6, -9.8); ctx.lineTo(12.8, -6.2); ctx.quadraticCurveTo(0.8, -1.6, -11.4, -5.8); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#8f2522'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-11.2, -5.9); ctx.quadraticCurveTo(0.8, -1.7, 12.7, -6.3); ctx.stroke();
+      for (const x of [-8, -4, 0, 4, 8]) line(ctx, '#e3564c', 0.6, [[x, -8.4 + Math.abs(x) * 0.12], [x + 0.3, -5.2 + Math.abs(x) * 0.14]]);
+      polygon(ctx, '#c93833', [[-8.8, -7.4], [-4.8, -6.6], [-6.2 + flutter * 0.3, 3.8], [-10.4 + flutter, 2.8]]);
+      line(ctx, '#f4e7d7', 1, [[-8.9 + flutter * 0.4, -2.4], [-5.8 + flutter * 0.1, -1.8]]);
+      line(ctx, '#f4e7d7', 1, [[-9.4 + flutter * 0.6, 0.4], [-6 + flutter * 0.2, 1]]);
+      for (let i = 0; i < 4; i++) {
+        const t = i / 3;
+        const x = -10.4 + flutter + (4.2 - flutter * 0.7) * t;
+        const y = 2.8 + t;
+        line(ctx, '#e8574d', 0.6, [[x, y], [x - 0.3 + flutter * 0.2, y + 1.8]]);
+      }
+      flipper(11, -0.42 - flap, '#1c2433');
     },
 
     sheriff(ctx, steps) {
@@ -756,36 +812,75 @@
     darkmouse(ctx, steps) {
       const stride = Math.sin(steps) * 2;
       const swing = Math.sin(steps) * 1.8;
-      const ink = '#151515', paper = '#ebe7dc';
-      ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(-5, 5); ctx.quadraticCurveTo(-15, 3, -16, 10); ctx.quadraticCurveTo(-17, 16, -11.5, 16.5); ctx.stroke();
-      line(ctx, ink, 2, [[-2.6, 7], [-3.8 + stride, 15]]);
-      line(ctx, ink, 2, [[2.6, 7], [3.8 - stride, 15]]);
-      oval(ctx, '#262626', -4.6 + stride, 16.8, 5.2, 2.6);
-      oval(ctx, '#262626', 5.4 - stride, 16.8, 5.2, 2.6);
-      oval(ctx, '#7a7a7a', -3.2 + stride, 15.9, 1.8, 0.7);
-      oval(ctx, '#7a7a7a', 6.8 - stride, 15.9, 1.8, 0.7);
-      line(ctx, ink, 2, [[-4, -4], [-9.4, 2 - swing]]);
-      oval(ctx, ink, -9.8, 2.6 - swing, 2.1, 2.1);
-      oval(ctx, ink, 0, -2.4, 6, 7);
-      polygon(ctx, '#555555', [[-6.6, 0.6], [6.6, 0.6], [7, 8], [1.2, 8.4], [0, 5.8], [-1.2, 8.4], [-7, 8]]);
-      oval(ctx, paper, -2.6, 3.2, 1.2, 1.4);
-      oval(ctx, paper, 2.6, 3.2, 1.2, 1.4);
-      line(ctx, ink, 2, [[4, -4], [10, 1.2 + swing]]);
-      oval(ctx, ink, 10.4, 1.8 + swing, 2.1, 2.1);
-      oval(ctx, ink, -6.8, -27.2, 5.8, 5.8);
-      oval(ctx, ink, 7.8, -27.6, 5.8, 5.8);
-      oval(ctx, ink, 0.6, -17.4, 8.4, 8.2);
-      oval(ctx, paper, 2.6, -18.8, 4.2, 4.8);
-      oval(ctx, paper, 7.2, -14.6, 5.4, 3.4);
-      oval(ctx, paper, 3.4, -13.6, 3.6, 2.8);
-      oval(ctx, ink, 12.2, -15.4, 1.9, 1.5);
-      for (const x of [1.4, 4.8]) {
-        oval(ctx, ink, x, -19.8, 1.2, 2.5);
-        polygon(ctx, paper, [[x + 0.2, -21.4], [x + 1.3, -20.6], [x + 0.5, -20]]);
+      const ink = '#101010', paper = '#f1ede2';
+      const hose = (x0, y0, cx, cy, x1, y1, width = 1.9) => {
+        ctx.strokeStyle = ink; ctx.lineWidth = width;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(cx, cy, x1, y1); ctx.stroke();
+      };
+      const shoe = x => {
+        oval(ctx, '#161616', x - 2.4, 16.8, 2.7, 2.4);
+        oval(ctx, '#161616', x + 1.4, 16.4, 5.8, 3.1);
+        oval(ctx, 'rgba(255,255,255,.24)', x + 2.6, 15, 2.6, 0.9);
+        line(ctx, '#4a4a4a', 0.7, [[x - 4.4, 18.3], [x + 6.6, 18.3]]);
+      };
+      const hand = (x, y) => {
+        oval(ctx, ink, x, y, 2.3, 2.1);
+        oval(ctx, ink, x - 1.5, y - 1.3, 0.9, 0.8);
+        oval(ctx, 'rgba(255,255,255,.14)', x - 0.6, y - 0.7, 0.8, 0.5);
+      };
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(-5, 4.4); ctx.bezierCurveTo(-13, 2.6, -17.8, 9.6 + swing * 0.3, -14.4, 14); ctx.bezierCurveTo(-12.4, 16.4, -9.2, 15.2, -9.8, 12.6); ctx.stroke();
+      hose(-3.4, 8, -3.8 + stride * 0.4, 11.8, -4 + stride, 15);
+      hose(3.4, 8, 3.8 - stride * 0.4, 11.8, 4 - stride, 15);
+      shoe(-4.8 + stride);
+      shoe(4.6 - stride);
+      hose(-4.2, -6, -9.4, -4.6, -10.4, 1.6 - swing);
+      hand(-10.6, 2.4 - swing);
+      oval(ctx, ink, 0, -3.4, 6.2, 7.2);
+      oval(ctx, ink, 0, 1.8, 6.9, 5.4);
+      ctx.fillStyle = radial(ctx, -2.4, 1.2, 11, [[0, '#858585'], [1, '#434343']]);
+      ctx.beginPath(); ctx.moveTo(-6.9, 0); ctx.lineTo(6.9, 0); ctx.quadraticCurveTo(8.8, 4.4, 7.8, 8.3); ctx.quadraticCurveTo(4.4, 9.4, 1.2, 8.3); ctx.lineTo(0, 6.2); ctx.lineTo(-1.2, 8.3); ctx.quadraticCurveTo(-4.4, 9.4, -7.8, 8.3); ctx.quadraticCurveTo(-8.8, 4.4, -6.9, 0); ctx.closePath(); ctx.fill();
+      line(ctx, '#2c2c2c', 0.8, [[-6.8, 0.6], [6.8, 0.6]]);
+      for (const x of [-2.5, 2.6]) {
+        oval(ctx, paper, x, 3.4, 1.3, 1.55);
+        oval(ctx, '#a19c90', x - 0.35, 3.3, 0.28, 0.28);
+        oval(ctx, '#a19c90', x + 0.35, 3.3, 0.28, 0.28);
       }
-      ctx.strokeStyle = ink; ctx.lineWidth = 0.9;
-      ctx.beginPath(); ctx.moveTo(4.2, -12.8); ctx.quadraticCurveTo(7.6, -10.4, 11, -12.6); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.arc(0, -3.4, 5.2, 3.5, 4.5); ctx.stroke();
+      hose(4, -6, 9.2, -5, 10.6, 1.4 + swing);
+      hand(10.8, 2 + swing);
+      for (const [x, y] of [[-7.2, -27.6], [7.8, -28.4]]) {
+        oval(ctx, ink, x, y, 5.9, 5.9);
+        ctx.strokeStyle = 'rgba(255,255,255,.13)'; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(x, y, 4.6, 3.6, 4.6); ctx.stroke();
+      }
+      oval(ctx, ink, 0.8, -17.8, 8.2, 8);
+      ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.arc(0.8, -17.8, 6.6, 3.5, 4.4); ctx.stroke();
+      ctx.fillStyle = paper;
+      ctx.beginPath();
+      ctx.moveTo(-3.2, -14.6);
+      ctx.bezierCurveTo(-4.2, -19.4, -1.8, -23.8, 1.4, -23.4);
+      ctx.quadraticCurveTo(2.8, -22.8, 3.4, -21.2);
+      ctx.quadraticCurveTo(4.2, -23.4, 6, -23.4);
+      ctx.bezierCurveTo(8.6, -23.2, 9.4, -20.2, 10.2, -18.8);
+      ctx.bezierCurveTo(12.4, -18.4, 14.8, -17.6, 14.6, -15.4);
+      ctx.bezierCurveTo(14.4, -12.8, 11.6, -12, 8.6, -11.4);
+      ctx.bezierCurveTo(5.4, -10.2, 0.6, -10.2, -1.6, -11.6);
+      ctx.quadraticCurveTo(-3, -12.6, -3.2, -14.6);
+      ctx.fill();
+      for (const [x, y] of [[1.6, -19.2], [5.2, -19.4]]) {
+        oval(ctx, ink, x, y, 1.3, 2.7);
+        polygon(ctx, paper, [[x + 0.2, y - 1.7], [x + 1.4, y - 0.8], [x + 0.5, y - 0.3]]);
+      }
+      oval(ctx, ink, 14.1, -16.4, 2.3, 1.8);
+      oval(ctx, '#8d8d8d', 13.5, -17, 0.7, 0.4);
+      ctx.fillStyle = ink;
+      ctx.beginPath(); ctx.moveTo(6.2, -13.8); ctx.quadraticCurveTo(9.6, -10.4, 12.6, -13); ctx.quadraticCurveTo(9.6, -12.3, 6.2, -13.8); ctx.fill();
+      oval(ctx, '#8d8d8d', 9.6, -11.7, 1.3, 0.55);
+      hose(5.4, -14.6, 9.4, -10.6, 13, -13.3, 0.9);
+      line(ctx, ink, 0.7, [[4.9, -15.1], [5.5, -14.2]]);
     },
 
     soldier(ctx, steps) {
@@ -820,29 +915,70 @@
 
     vespermobile(ctx, steps) {
       const turn = steps * 1.2;
+      const flick = Math.sin(turn * 3) * 1.5;
+      const fin = (dx, dy, fill) => {
+        ctx.fillStyle = fill;
+        ctx.beginPath();
+        ctx.moveTo(-9.6 + dx, -4.3);
+        ctx.quadraticCurveTo(-17.4 + dx, -6 + dy, -27.4 + dx, -17.4 + dy);
+        ctx.quadraticCurveTo(-25.4 + dx, -13.6 + dy, -26.8 + dx, -10.8 + dy);
+        ctx.quadraticCurveTo(-24 + dx, -10.2 + dy, -25.2 + dx, -7.2 + dy);
+        ctx.quadraticCurveTo(-22.8 + dx, -6.6 + dy, -23.4 + dx, -3.2);
+        ctx.closePath();
+        ctx.fill();
+      };
       ctx.save();
       ctx.translate(0, 3 - Math.abs(Math.sin(steps * 2)) * 0.6);
-      polygon(ctx, '#0f1014', [[-22, 2], [-20, -14], [-15, -4]]);
-      polygon(ctx, '#1d1f25', [[-21, 0], [-19.6, -11], [-16.4, -4]]);
-      polygon(ctx, '#131418', [[-22, 8], [-21, -2], [-12, -6], [-4, -12], [6, -12], [12, -6], [22, -3], [24, 4], [22, 9]]);
-      line(ctx, '#3b3f4a', 1, [[-20, -2], [-12, -5.4], [-4, -11.2], [6, -11.2], [11.6, -5.4], [21.6, -2.4]]);
-      polygon(ctx, '#23303a', [[-3.4, -11], [5.4, -11], [10, -6], [-6.6, -6]]);
-      polygon(ctx, 'rgba(140,190,220,.35)', [[-2, -10.4], [3, -10.4], [5.6, -6.8], [-3.6, -6.8]]);
-      line(ctx, '#2c2f37', 1.2, [[-19, 3], [18, 3]]);
-      oval(ctx, '#2a2c33', 20.4, 1.2, 3, 3.4);
-      glow(ctx, 'rgba(255,170,60,.45)', 22, 1, 8);
-      oval(ctx, '#f0a33c', 20.8, 1.2, 1.8, 2.2);
-      polygon(ctx, '#ffd98a', [[21, -2.8], [23.4, -1.6], [21.2, -1]]);
-      polygon(ctx, 'rgba(255,120,40,.7)', [[-22, 4], [-27 - Math.sin(turn * 3) * 1.5, 5], [-22, 6]]);
-      polygon(ctx, '#c9a24f', [[-1.6, -1.8], [0, 1.6], [1.6, -1.8], [0.7, -1.8], [0, -0.2], [-0.7, -1.8]]);
-      for (const x of [-13, 13]) {
-        oval(ctx, '#0a0a0c', x, 8.6, 5.4, 5.4);
-        oval(ctx, '#3b3e46', x, 8.6, 3.2, 3.2);
-        ctx.strokeStyle = '#8a8f99'; ctx.lineWidth = 0.9;
-        for (let i = 0; i < 3; i++) {
-          const angle = turn + i * TAU / 3;
-          ctx.beginPath(); ctx.moveTo(x, 8.6); ctx.lineTo(x + Math.cos(angle) * 3, 8.6 + Math.sin(angle) * 3); ctx.stroke();
+      fin(3.6, -1.4, '#07080a');
+      polygon(ctx, 'rgba(255,120,40,.75)', [[-26.2, 2.6], [-31.8 - flick, 3.8], [-26.2, 5]]);
+      polygon(ctx, 'rgba(255,232,170,.9)', [[-26, 3.2], [-29.2 - flick * 0.6, 3.8], [-26, 4.4]]);
+      const paint = radial(ctx, 0, -15, 27, [[0, '#4a5160'], [0.42, '#1f232b'], [1, '#08090c']]);
+      ctx.fillStyle = paint;
+      ctx.beginPath();
+      ctx.moveTo(-24.6, 6.8);
+      ctx.lineTo(-25.6, 1.2);
+      ctx.quadraticCurveTo(-24.2, -2.6, -18.6, -3.2);
+      ctx.lineTo(-9.4, -4.4);
+      ctx.lineTo(10.4, -5);
+      ctx.lineTo(20.6, -3.4);
+      ctx.quadraticCurveTo(26.4, -2.2, 27.2, 1.8);
+      ctx.quadraticCurveTo(26.6, 5.6, 22.8, 7);
+      ctx.closePath();
+      ctx.fill();
+      fin(0, 0, paint);
+      ctx.strokeStyle = 'rgba(165,176,200,.55)'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(-10.4, -4.4); ctx.quadraticCurveTo(-17.4, -6.1, -27, -17); ctx.stroke();
+      ctx.fillStyle = radial(ctx, 0, -10, 11, [[0, '#35546a'], [0.6, '#15232e'], [1, '#0a1117']]);
+      ctx.beginPath(); ctx.moveTo(-7.6, -4.5); ctx.quadraticCurveTo(-4, -11.2, 1.8, -11.4); ctx.quadraticCurveTo(7.2, -11, 9.8, -4.9); ctx.closePath(); ctx.fill();
+      polygon(ctx, 'rgba(185,222,242,.3)', [[-3.4, -9.8], [0.8, -10.7], [-2.6, -5.2], [-5.2, -5]]);
+      polygon(ctx, 'rgba(185,222,242,.18)', [[2.2, -10.6], [3.6, -10.5], [0.8, -5], [-0.4, -5]]);
+      ctx.strokeStyle = '#3d4350'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(-7.6, -4.5); ctx.quadraticCurveTo(-4, -11.2, 1.8, -11.4); ctx.quadraticCurveTo(7.2, -11, 9.8, -4.9); ctx.stroke();
+      line(ctx, 'rgba(165,176,200,.5)', 0.7, [[-23.8, -1.6], [-18.6, -2.9], [-9.4, -4]]);
+      line(ctx, 'rgba(165,176,200,.5)', 0.7, [[10.6, -4.6], [20.4, -3], [25.4, -1.2]]);
+      line(ctx, 'rgba(214,176,92,.85)', 0.6, [[-23.2, 2.4], [24.6, 2]]);
+      line(ctx, '#2a2e37', 0.6, [[-5.6, -3.8], [-5.2, 5.6]]);
+      line(ctx, '#2a2e37', 0.6, [[8.6, -4.4], [8.2, 5.4]]);
+      polygon(ctx, '#e3bf66', [[0, -2], [1.4, 1.3], [2.8, -2], [2.1, -2], [1.4, -0.3], [0.7, -2]]);
+      glow(ctx, 'rgba(255,196,110,.5)', 26, 0, 7);
+      polygon(ctx, '#fff2cf', [[22, -1.6], [26.4, -0.5], [25.8, 0.6], [21.8, -0.4]]);
+      glow(ctx, 'rgba(255,60,60,.4)', -24.8, 0.3, 3.4);
+      polygon(ctx, '#e0303a', [[-25.4, -0.5], [-23.4, -0.9], [-23.4, 0.7], [-25.3, 1.1]]);
+      oval(ctx, '#15171c', -25.8, 3.8, 1.6, 1.7);
+      oval(ctx, '#ff9a3c', -25.9, 3.8, 0.9, 1);
+      for (const x of [-13, 14]) {
+        ctx.fillStyle = '#040405'; ctx.beginPath(); ctx.ellipse(x, 7, 7, 5.6, 0, Math.PI, TAU); ctx.fill();
+        oval(ctx, '#0b0b0d', x, 8.6, 5.8, 5.8);
+        oval(ctx, '#23262d', x, 8.6, 4.3, 4.3);
+        oval(ctx, radial(ctx, x - 1.2, 7.2, 5.4, [[0, '#9aa1ae'], [1, '#3a3f49']]), x, 8.6, 3.7, 3.7);
+        ctx.strokeStyle = '#16181d'; ctx.lineWidth = 1.1;
+        for (let i = 0; i < 5; i++) {
+          const angle = turn + i * TAU / 5;
+          ctx.beginPath(); ctx.moveTo(x + Math.cos(angle) * 1.2, 8.6 + Math.sin(angle) * 1.2); ctx.lineTo(x + Math.cos(angle + 0.35) * 3.5, 8.6 + Math.sin(angle + 0.35) * 3.5); ctx.stroke();
         }
+        oval(ctx, '#d4ae57', x, 8.6, 1.1, 1.1);
+        ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(x, 8.6, 5.1, 3.6, 4.9); ctx.stroke();
       }
       ctx.restore();
     }

@@ -60,7 +60,7 @@
     };
   }
 
-  VesperGame.createAdmin = ({ progress, onChange }) => {
+  VesperGame.createAdmin = ({ progress, onChange, game, openGift }) => {
     const Profile = VesperGame.OnlineProfile;
     const login = $('admin-login-overlay');
     const panel = $('admin-panel');
@@ -72,19 +72,22 @@
     panel.hidden = true;
 
     const catalog = () => {
-      const items = [{ id: 'coins', name: 'Moedas', kind: 'Moedas' }];
+      const items = [
+        { id: 'coins', name: 'Moedas', kind: 'Moedas', art: { type: 'coins', amount: 30 } },
+        { id: 'gift', name: 'Presente misterioso', kind: 'Presente do login diário', art: { type: 'gift' } }
+      ];
       for (const skin of VesperGame.ONLINE.SKINS) {
         if (skin.id === 'alien') continue;
         const character = VesperGame.CHARACTERS.find(item => item.id === skin.id);
-        items.push({ id: 'skin:' + skin.id, name: character.name, kind: character.both ? 'Skin offline e online' : 'Skin do Online' });
+        items.push({ id: 'skin:' + skin.id, name: character.name, kind: character.both ? 'Skin offline e online' : 'Skin do Online', art: { type: 'skin', id: skin.id } });
       }
-      for (const accessory of VesperGame.ONLINE.ACCESSORIES) items.push({ id: 'acc:' + accessory.id, name: accessory.name, kind: 'Acessório' });
-      for (const character of VesperGame.CHARACTERS.filter(item => item.unlockType === 'map')) items.push({ id: 'map:' + character.unlockMap, name: character.name, kind: 'Personagem do offline' });
+      for (const accessory of VesperGame.ONLINE.ACCESSORIES) items.push({ id: 'acc:' + accessory.id, name: accessory.name, kind: 'Acessório', art: { type: 'accessory', id: accessory.id } });
+      for (const character of VesperGame.CHARACTERS.filter(item => item.unlockType === 'map')) items.push({ id: 'map:' + character.unlockMap, name: character.name, kind: 'Personagem do offline', art: { type: 'skin', id: character.id } });
       return items;
     };
 
     const owns = item => {
-      if (item.id === 'coins') return true;
+      if (item.id === 'coins' || item.id === 'gift') return true;
       if (item.id.startsWith('map:')) return progress.has(item.id.slice(4));
       return Profile.has(item.id);
     };
@@ -92,6 +95,11 @@
     const log = text => { $('admin-log').textContent = text; };
 
     function change(item, add, amount) {
+      if (item.id === 'gift') {
+        log('Presente misterioso aberto.');
+        openGift();
+        return;
+      }
       if (item.id === 'coins') {
         const value = Math.max(0, Math.floor(Number(amount) || 0));
         if (!value) { log('Digite uma quantidade de moedas.'); return; }
@@ -116,16 +124,22 @@
       const top = ranked[0];
       $('admin-hint').textContent = !plain(query) ? 'Digite o nome de uma skin, acessório, personagem ou "moedas".'
         : !top ? 'Nada encontrado.' : plain(query).replace(/\d+/g, '').trim() !== plain(top.item.name) ? `Você quis dizer: ${top.item.name}?` : '';
+      const skin = Profile.load().skin;
       results.replaceChildren(...ranked.map(({ item }) => {
         const row = document.createElement('li');
+        const art = document.createElement('canvas');
+        art.className = 'admin-art';
+        art.width = art.height = 104;
+        art.setAttribute('aria-hidden', 'true');
+        game.drawRewardArt(art, item.art, skin);
         const name = document.createElement('strong');
         name.textContent = item.name;
         const kind = document.createElement('span');
         const has = owns(item);
-        kind.textContent = item.id === 'coins' ? `Saldo: ${Profile.load().coins.toLocaleString('pt-BR')}` : `${item.kind} · ${has ? 'você tem' : 'você não tem'}`;
+        kind.textContent = item.id === 'coins' ? `Saldo: ${Profile.load().coins.toLocaleString('pt-BR')}` : item.id === 'gift' ? item.kind : `${item.kind} · ${has ? 'você tem' : 'você não tem'}`;
         const info = document.createElement('div');
         info.append(name, kind);
-        row.append(info);
+        row.append(art, info);
         let input = null;
         if (item.id === 'coins') {
           input = document.createElement('input');
@@ -133,11 +147,11 @@
           input.setAttribute('aria-label', 'Quantidade de moedas');
           row.append(input);
         }
-        for (const add of [true, false]) {
+        for (const add of item.id === 'gift' ? [true] : [true, false]) {
           const button = document.createElement('button');
           button.type = 'button';
           button.textContent = add ? 'pegar' : 'remover';
-          button.disabled = item.id !== 'coins' && has === add;
+          button.disabled = item.id !== 'coins' && item.id !== 'gift' && has === add;
           button.addEventListener('click', () => change(item, add, input && input.value));
           row.append(button);
         }
@@ -195,7 +209,7 @@
     $('admin-close-btn').addEventListener('click', closePanel);
     search.addEventListener('input', render);
     window.addEventListener('keydown', event => {
-      if (event.code !== 'Escape') return;
+      if (event.code !== 'Escape' || !$('letter-overlay').hidden) return;
       if (!panel.hidden) closePanel();
       else if (!login.hidden) closeLogin();
       else return;

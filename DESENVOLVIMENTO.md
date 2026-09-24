@@ -75,7 +75,7 @@ Com a variavel `DATABASE_URL`, o servidor guarda anuncios, ofertas e entregas nu
 
 ## Painel de administrador
 
-O link discreto "Painel de Administrador" fica embaixo do RECORDE. A senha digitada aparece so como asteriscos e e conferida no servidor, que guarda apenas um resumo PBKDF2-SHA256 com sal e 600 mil rodadas; a senha nunca fica no codigo do jogo nem nos arquivos. Depois de 5 erros no mesmo endereco, o servidor bloqueia novas tentativas por 10 minutos. O painel roxo e preto tem uma busca que sugere o nome mais proximo quando a palavra vem errada ou incompleta, e permite pegar ou remover da propria conta moedas, skins, acessorios e personagens do offline (que dependem do mapa concluido).
+O botao dourado com um notebook, no canto inferior direito da tela inicial, abre o Painel de Administrador. A senha digitada aparece so como asteriscos e e conferida no servidor, que guarda apenas um resumo PBKDF2-SHA256 com sal e 600 mil rodadas; a senha nunca fica no codigo do jogo nem nos arquivos. Depois de 5 erros no mesmo endereco, o servidor bloqueia novas tentativas por 10 minutos. O painel roxo e preto tem uma busca que sugere o nome mais proximo quando a palavra vem errada ou incompleta, e permite pegar ou remover da propria conta moedas, skins, acessorios e personagens do offline (que dependem do mapa concluido). Cada item aparece com o desenho dele, e o Presente misterioso do login diario pode ser aberto por la. O fundo tem grade, aneis e brilhos discretos.
 
 ## Inimigos e personagens
 

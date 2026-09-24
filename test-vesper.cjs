@@ -1836,6 +1836,7 @@ test('both-mode skins and accessories can be bought from their screens', () => {
 });
 test('the admin panel masks the password and suggests the closest item name', () => {
   const ui = uiHarness();
+  ui.nodes.get('letter-overlay').hidden = true;
   ui.nodes.get('admin-btn').fire('click');
   assert.equal(ui.nodes.get('admin-login-overlay').hidden, false);
   const key = ui.nodes.get('admin-key');
@@ -1851,19 +1852,34 @@ test('the admin panel masks the password and suggests the closest item name', ()
   search.fire('input');
   assert.equal(ui.nodes.get('admin-hint').textContent, 'Você quis dizer: Coroa?');
   const row = ui.nodes.get('admin-results').children[0];
-  assert.equal(row.children[0].children[0].textContent, 'Coroa');
-  row.children[1].fire('click');
+  assert.equal(row.children[0].className, 'admin-art', 'Cada item mostra o desenho dele');
+  assert.equal(row.children[1].children[0].textContent, 'Coroa');
+  row.children[2].fire('click');
   assert.deepEqual(JSON.parse(ui.stored['vesper.online.v1']).accessories, ['crown'], 'Pegar coloca o item na conta');
   search.value = '250 moedas';
   search.fire('input');
   const coins = ui.nodes.get('admin-results').children[0];
-  assert.equal(coins.children[1].value, '250');
-  coins.children[2].fire('click');
+  assert.equal(coins.children[2].value, '250');
+  coins.children[3].fire('click');
   assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins, 250);
   search.value = 'yeti';
   search.fire('input');
-  ui.nodes.get('admin-results').children[0].children[1].fire('click');
+  ui.nodes.get('admin-results').children[0].children[2].fire('click');
   assert.ok(JSON.parse(ui.stored['vesper.progress.v2']).completedMaps.includes('snow'), 'Personagem do offline vem pelo mapa');
+  search.value = 'presente';
+  search.fire('input');
+  const gift = ui.nodes.get('admin-results').children[0];
+  assert.equal(gift.children[1].children[0].textContent, 'Presente misterioso');
+  assert.equal(gift.children.length, 3, 'O presente so tem o botao de pegar');
+  ui.nodes.get('admin-panel').hidden = false;
+  gift.children[2].fire('click');
+  assert.equal(ui.nodes.get('letter-overlay').hidden, false, 'Pegar o presente abre a carta');
+  ui.browser.fire('keydown', { code: 'Escape', stopImmediatePropagation() {} });
+  assert.equal(ui.nodes.get('letter-overlay').hidden, true);
+  assert.equal(ui.nodes.get('admin-panel').hidden, false, 'Esc fecha so a carta e o painel continua aberto');
+  ui.browser.fire('keydown', { code: 'Escape', stopImmediatePropagation() {} });
+  assert.equal(ui.nodes.get('admin-panel').hidden, true);
+  assert.ok(ui.game.rewardArts >= 4);
 });
 test('private rooms show the code and who joined with each skin', () => {
   const ui = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 4, coins: 0, owned: ['alien'], skin: 'alien', name: 'Guino', daily: 15, lastClaim: '2000-01-01' }) });

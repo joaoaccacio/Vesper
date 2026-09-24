@@ -1,16 +1,29 @@
 .admin-login .admin-key{display:block;width:min(100%,300px);margin:6px auto 4px;text-align:center;font-size:18px;letter-spacing:6px}
-.admin-panel{position:fixed;inset:0;z-index:20;overflow:auto;padding:48px max(24px,8vw);background:radial-gradient(ellipse at 50% 0%,#1d0f33 0%,#0a0612 55%,#050308 100%);color:#e9e2ff;font-family:'Segoe UI',system-ui,sans-serif}
-.admin-top{display:flex;align-items:center;justify-content:space-between;max-width:760px;margin:0 auto 34px}
-.admin-top h2{margin:0;font:600 13px/1 'Segoe UI',system-ui,sans-serif;letter-spacing:4px;text-transform:uppercase;color:#b69cff}
-.admin-close{padding:8px 16px;border:1px solid #6d4bd1;border-radius:999px;background:transparent;color:#cdbcff;font-size:12px;letter-spacing:1px}.admin-close:hover{background:#6d4bd122}
-.admin-search{display:block;width:100%;max-width:760px;margin:0 auto;padding:18px 22px;border:1px solid #6d4bd1;border-radius:14px;outline:none;background:#120a22;color:#f4efff;font-size:17px;box-shadow:0 0 0 4px #6d4bd11c}
-.admin-search:focus{border-color:#a78bfa;box-shadow:0 0 0 4px #a78bfa2e}.admin-search::placeholder{color:#8f7cc4}
+.admin-panel{position:fixed;inset:0;z-index:20;isolation:isolate;overflow:auto;padding:48px max(24px,8vw);background:radial-gradient(ellipse at 50% 0%,#1d0f33 0%,#0a0612 55%,#050308 100%);color:#e9e2ff;font-family:'Segoe UI',system-ui,sans-serif}
+.admin-panel::before,.admin-panel::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none}
+.admin-panel::before{background-image:linear-gradient(#b69cff0f 1px,transparent 1px),linear-gradient(90deg,#b69cff0f 1px,transparent 1px);background-size:56px 56px;background-position:center -1px;-webkit-mask-image:radial-gradient(ellipse 70% 55% at 50% 18%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 70% 55% at 50% 18%,#000 10%,transparent 75%)}
+.admin-panel::after{background:radial-gradient(circle at 91% 7%,transparent 0 109px,#b69cff26 110px 111px,transparent 112px 169px,#b69cff17 170px 171px,transparent 172px 239px,#b69cff0d 240px 241px,transparent 242px),radial-gradient(640px circle at 92% -6%,#7c3aed3d,transparent 64%),radial-gradient(560px circle at 2% 104%,#c026d324,transparent 62%)}
+.admin-top{position:relative;display:flex;align-items:center;justify-content:space-between;max-width:760px;margin:0 auto 30px;padding-bottom:20px}
+.admin-top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,#a78bfa73 50%,transparent)}
+.admin-top h2{display:flex;align-items:center;gap:14px;margin:0;font:600 13px/1 'Segoe UI',system-ui,sans-serif;letter-spacing:4px;text-transform:uppercase;color:#cbb8ff}
+.admin-top h2::before{content:'';width:8px;height:8px;border-radius:2px;transform:rotate(45deg);background:linear-gradient(135deg,#f3e8ff,#8b5cf6);box-shadow:0 0 14px #a78bfacc}
+.admin-close{padding:8px 16px;border:1px solid #6d4bd1;border-radius:999px;background:#120a2299;color:#cdbcff;font-size:12px;letter-spacing:1px}.admin-close:hover{background:#6d4bd12e}
+.admin-search{display:block;width:100%;max-width:760px;margin:0 auto;padding:18px 22px;border:1px solid #6d4bd1;border-radius:14px;outline:none;background:linear-gradient(180deg,#170e2dd9,#0f0920d9);color:#f4efff;font-size:17px;box-shadow:0 0 0 4px #6d4bd11c,0 18px 50px #0000008c;backdrop-filter:blur(10px)}
+.admin-search:focus{border-color:#a78bfa;box-shadow:0 0 0 4px #a78bfa2e,0 18px 50px #0000008c}.admin-search::placeholder{color:#8f7cc4}
 .admin-hint{max-width:760px;min-height:18px;margin:12px auto 0;font-size:13px;color:#b69cff}
-.admin-results{display:flex;flex-direction:column;gap:8px;max-width:760px;margin:18px auto 0;padding:0;list-style:none}
-.admin-results li{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #2a1a4a;border-radius:12px;background:#0f0a1c}
+.admin-results{display:flex;flex-direction:column;gap:10px;max-width:760px;margin:18px auto 0;padding:0;list-style:none}
+.admin-results li{display:flex;align-items:center;gap:14px;padding:10px 14px 10px 10px;border:1px solid #2a1a4a;border-radius:14px;background:linear-gradient(180deg,#150e27d9,#0d0919d9);backdrop-filter:blur(8px);transition:border-color .15s,transform .15s,box-shadow .15s}
+.admin-results li:hover{border-color:#4c3290;transform:translateY(-1px);box-shadow:0 10px 30px #0000007a}
+.admin-art{flex:none;width:52px;height:52px;border:1px solid #33215e;border-radius:12px;background:radial-gradient(circle at 50% 38%,#2c1c52,#110a21 72%)}
 .admin-results li div{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0}
 .admin-results strong{font-size:15px;font-weight:600;color:#f4efff}.admin-results span{font-size:12px;color:#8f7cc4}
 .admin-results input{width:110px;padding:8px 10px;border:1px solid #3b2670;border-radius:8px;background:#140c26;color:#f4efff;font-size:14px}
-.admin-results button{padding:8px 14px;border:1px solid #7c5ce6;border-radius:999px;background:#7c5ce6;color:#fff;font-size:12px;letter-spacing:.5px}
-.admin-results button+button{background:transparent;color:#cdbcff}.admin-results button:disabled{opacity:.3;cursor:default}
+.admin-results button{padding:8px 16px;border:1px solid #8b6cf0;border-radius:999px;background:linear-gradient(180deg,#8b6cf0,#6d4bd1);color:#fff;font-size:12px;letter-spacing:.5px;box-shadow:0 4px 14px #6d4bd140}
+.admin-results button+button{background:transparent;color:#cdbcff;box-shadow:none}.admin-results button:disabled{opacity:.3;cursor:default;box-shadow:none}
 .admin-log{max-width:760px;min-height:18px;margin:18px auto 0;font-size:13px;color:#d6c8ff}
+@keyframes admin-rise{from{opacity:0;transform:translateY(10px)}}
+.admin-panel:not([hidden]) :is(.admin-top,.admin-search,.admin-results){animation:admin-rise .45s cubic-bezier(.2,.7,.2,1) both}
+.admin-panel:not([hidden]) .admin-search{animation-delay:.06s}.admin-panel:not([hidden]) .admin-results{animation-delay:.12s}
+#letter-overlay{z-index:30}
+@media(max-width:650px){.admin-panel{padding:28px 16px}.admin-results li{flex-wrap:wrap}.admin-results li div{flex-basis:calc(100% - 62px)}.admin-results input{flex:1;width:auto;min-width:0}.admin-results li button:first-of-type{margin-left:auto}.admin-art{width:44px;height:44px}}
+@media(prefers-reduced-motion:reduce){.admin-panel *{animation:none!important;transition:none!important}}

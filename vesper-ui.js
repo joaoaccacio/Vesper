@@ -518,7 +518,8 @@
   }
   function closeLetter() {
     ui['letter-overlay'].hidden = true;
-    if (menuView === 'daily') $('daily-back-btn').focus({ preventScroll: true });
+    if (admin.active) $('admin-search').focus({ preventScroll: true });
+    else if (menuView === 'daily') $('daily-back-btn').focus({ preventScroll: true });
   }
   function renderAccessories() {
     profile = VesperGame.OnlineProfile.load();
@@ -963,7 +964,9 @@
       has: id => completedMaps.has(id),
       set: (id, done) => { if (done) completedMaps.add(id); else completedMaps.delete(id); saveProgress(); }
     },
-    onChange: refreshAccount
+    onChange: refreshAccount,
+    game,
+    openGift: openLetter
   });
   game.setCharacter(characterId);
   game.setAccessories(profile.worn);

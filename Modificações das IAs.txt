@@ -104,3 +104,9 @@
 2026-09-24 — #Claude:
 - Trocas com banco de dados: com a variavel DATABASE_URL o servidor guarda a loja num Postgres (tabela vesper_store criada sozinha). Cada operacao roda numa transacao com trava de linha e a resposta so sai depois que o banco confirmou; queda do banco devolve erro sem apagar nada e o servidor volta a usar o banco quando ele volta. Sem DATABASE_URL continua em data/market.json. Escolhido o plano gratuito da Neon porque o Postgres gratuito do Render expira em 30 dias.
 - Arquivos afetados: vesper-market.cjs, vesper-server.cjs, package.json (pacote pg), .gitignore, test-server.cjs e DESENVOLVIMENTO.md. Validado com os testes do jogo e 29 do servidor, incluindo um que falha se a trava do banco for retirada, e com o servidor ligado com e sem DATABASE_URL.
+
+2026-09-24 — #Claude:
+- Menu principal em duas colunas (Offline, Online e Servidor Privado de um lado; Personagens, Login Diario e Trocas do outro).
+- Painel de Administrador: o link virou um botao dourado quadrado com notebook preto no canto inferior direito da tela inicial; o painel ganhou grade, aneis e brilhos discretos, desenho de cada item ao lado do nome (moedas, skins, acessorios e personagens) e o Presente misterioso, que abre a carta por cima do painel (Esc fecha so a carta).
+- Banana, Pinguim, Dark Mouse e Vesper-Movel redesenhados com volume, contorno e mais detalhes; chapeu, bone e coroa conferidos em cada um.
+- Arquivos afetados: index.html, VESPER/index.html, vesper-characters.js, vesper-admin.js, vesper-admin.css, vesper-campaign.css, vesper-ui.js, test-vesper.cjs e DESENVOLVIMENTO.md. Validado com 72 testes do jogo e 29 do servidor, galeria das skins andando sem erro e conferencia no navegador do botao, do painel e da carta.
