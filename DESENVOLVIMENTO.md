@@ -10,19 +10,19 @@ No modo Online o tiro é manual e a mira é automática: WASD move, a mira trava
 
 ## Campanha
 
-- Seis mapas de 4.800 × 3.600 unidades, com câmera e personagens limitados às bordas. Depois de escolher o mapa, selecione Fácil, Médio ou Difícil; o modo altera vida, velocidade, dano e ritmo das ondas. No Difícil os monstros têm 55% mais vida, 16% mais velocidade, 50% mais dano e as ondas chegam 30% mais rápido.
+- Oito mapas de 4.800 × 3.600 unidades, com câmera e personagens limitados às bordas. Depois de escolher o mapa, selecione Fácil, Médio ou Difícil; o modo altera vida, velocidade, dano e ritmo das ondas. No Difícil os monstros têm 55% mais vida, 16% mais velocidade, 50% mais dano e as ondas chegam 30% mais rápido.
 - Minichefe aos 120 segundos e chefe final aos 240 segundos de tempo efetivo da partida. Pausas e escolhas de melhoria congelam esse relógio.
 - Vencer o chefe final encerra a fase e registra a conquista. A fase e a skin conquistada recebem moldura dourada.
-- Castelo/Mansão: Vampiro. Egito Antigo/Deserto: Múmia. Pântano: Zumbi. Halloween: Jack o’ Lantern. Fundo do Mar: Kraken. Montanhas Geladas: Yeti. Concluir todos os mapas libera o Sobrevivente.
+- Castelo/Mansão: Vampiro. Egito Antigo/Deserto: Múmia. Pântano: Zumbi. Halloween: Jack o’ Lantern. Fundo do Mar: Kraken. Montanhas Geladas: Yeti. Cidade Sombria: Dark Mouse. Velho Oeste: Xerife. Concluir todos os mapas libera o Sobrevivente.
 - Os personagens andam com um balanço curto do corpo e um leve gingado, na campanha e no Online; parados, só respiram.
-- Humano, Fantasma e Encapuzado estão disponíveis desde o início. Todos os personagens compartilham os mesmos atributos. A tela de Personagens tem três seções: os heróis da campanha, as skins dos dois modos (Banana e Pinguim, ganhas no login diário e usadas no offline e no Online ao mesmo tempo) e as oito skins do Online, compradas com as moedas do ranking. No topo fica o botão Acessórios.
+- Humano, Fantasma e Encapuzado estão disponíveis desde o início. Todos os personagens compartilham os mesmos atributos. A tela de Personagens tem três seções: os heróis da campanha, as skins dos dois modos (Banana e Pinguim, ganhas no login diário; Soldado por 350 moedas e Vesper-Móvel por 7.000, usadas no offline e no Online ao mesmo tempo) e as oito skins do Online, compradas com as moedas do ranking. No topo fica o botão Acessórios.
 - O minimapa mostra o mundo inteiro, a área visível e o jogador em vermelho. Ele muda de canto quando cobriria o jogador.
 
 O progresso é salvo no navegador em `vesper.progress.v2`; recordes antigos não liberam conquistas da campanha.
 
 ## Modo Online
 
-O Online tem servidor proprio. Ele nao usa nada de fora: o servidor e um arquivo Node sem dependencias que serve o jogo e a partida na mesma porta.
+O Online tem servidor proprio: um arquivo Node que serve o jogo e a partida na mesma porta. O unico pacote e o `pg`, usado so quando as Trocas ficam num banco de dados (`npm install` instala).
 
 ### Subir o servidor
 
@@ -33,7 +33,7 @@ node vesper-server.cjs
 
 O terminal mostra o endereco. Abra `http://127.0.0.1:8080` para jogar. Quem estiver na mesma rede entra pelo IP da maquina, por exemplo `http://192.168.0.10:8080`. Para jogar com gente de outra casa, o servidor precisa estar acessivel pela internet: uma hospedagem Node (`npm start`), um tunel ou redirecionamento de porta no roteador. O campo SERVIDOR na tela do Online aceita `meu-servidor.com:8080`, `http://...` ou `ws://...`; em branco, o jogo usa o endereco da propria pagina.
 
-Variaveis de ambiente: `PORT`, `HOST`, `VESPER_MATCH_SECONDS`, `VESPER_CAPACITY` e `VESPER_BOT_FILL`. A rota `/status` devolve as salas abertas em JSON.
+Variaveis de ambiente: `PORT`, `HOST`, `VESPER_MATCH_SECONDS`, `VESPER_CAPACITY`, `VESPER_BOT_FILL`, `VESPER_DATA_DIR` e `DATABASE_URL`. A rota `/status` devolve as salas abertas em JSON.
 
 Abrir `VESPER/index.html` direto do disco continua valendo para a campanha offline. O Online, nesse caso, procura o servidor em `ws://127.0.0.1:8080`; aberto pelo servidor, o jogo sempre conecta no mesmo endereco da pagina. O jogador nunca ve nem digita endereco de servidor.
 
@@ -59,13 +59,27 @@ As moedas compram as oito skins do Online, que valem somente nessas partidas. Os
 
 ## Login diario e acessorios
 
-O login diario tem 15 dias e libera um premio por dia de calendario, sem zerar quem pula dias: moedas nos dias 1, 2, 4, 5, 6, 8, 9, 11, 12 e 14 (15 a 40), Chapeu de Cowboy no dia 3, Mini Voce no dia 7, skin Banana no dia 10, presente misterioso no dia 13 (uma carta do ADM que pode ser relida) e skin Pinguim no dia 15. A tela abre sozinha quando ha premio e o botao LOGIN DIARIO do menu mostra PREMIO.
+O login diario tem 15 dias e libera um premio por dia de calendario, sem zerar quem pula dias: moedas nos dias 1, 2, 4, 5, 6, 8, 9, 11, 12 e 14 (15 a 40), Chapeu de Cowboy no dia 3, Mini Voce no dia 7, skin Banana no dia 10, presente misterioso no dia 13 (uma carta do ADM que pode ser relida) e skin Pinguim no dia 15. O jogo sempre abre na tela inicial; quando ha premio, o botao LOGIN DIARIO mostra um contador dourado com a quantidade liberada.
 
-Os acessorios valem nos dois modos e podem ser usados juntos. O chapeu se ajusta a cabeca de cada personagem. O Mini Voce e uma copia pequena do personagem que segue o dono. No Online os outros jogadores veem os acessorios, e os bots tambem aparecem com eles de vez em quando, para ninguem descobrir quem e bot.
+Os acessorios valem nos dois modos. Chapeu de Cowboy e Mini Voce vem do login diario; Bone Azul (800 moedas, levemente torto) e Coroa (3.000 moedas) sao comprados na tela de Acessorios. So um item de cabeca por vez (chapeu, bone ou coroa), mais o Mini Voce. Os itens de cabeca se ajustam a cabeca de cada personagem. O Mini Voce e uma copia pequena do personagem que segue o dono. No Online os outros jogadores veem os acessorios, e os bots tambem aparecem com eles de vez em quando, para ninguem descobrir quem e bot.
+
+## Servidor privado
+
+O botao SERVIDOR PRIVADO fica embaixo do JOGO ONLINE. Quem cria recebe um codigo aleatorio de 6 digitos para passar aos amigos; quem entra digita o codigo. A sala de espera mostra o nome e a skin de cada jogador, e so o criador pode comecar. Nao ha bots e ninguem entra depois do comeco. Se o criador sai da sala de espera, a sala fecha e todos sao avisados.
+
+## Trocas
+
+O botao TROCAS abre a Loja Global. Podem ser anunciadas skins do Online, skins dos dois modos e acessorios (o Alien gratis nao). Quem se interessa manda uma oferta em moedas e/ou itens; o dono aceita ou recusa. Recusar nao muda nada e o anuncio continua no ar ate o dono retirar. As moedas e itens oferecidos ficam reservados enquanto a oferta esta aberta e voltam se ela for recusada, cancelada ou se o item for vendido para outra pessoa.
+
+Com a variavel `DATABASE_URL`, o servidor guarda anuncios, ofertas e entregas num banco Postgres. A tabela `vesper_store` e criada sozinha, cada operacao roda numa transacao com trava e o jogador so recebe a resposta depois que o banco confirmou, entao nada se perde nem com duas instancias ligadas ao mesmo tempo, como durante uma atualizacao no Render. Se o banco cair, a operacao volta com erro sem mexer em nada e o servidor volta a usar o banco quando ele volta. Sem `DATABASE_URL`, a loja fica em `data/market.json` (ou na pasta de `VESPER_DATA_DIR`). As mudancas na conta de cada jogador chegam como entregas numeradas, aplicadas uma unica vez quando o jogo abre ou quando a tela de Trocas atualiza. No plano gratuito do Render o disco nao e permanente, entao la a loja precisa do banco. O Postgres gratuito do Render expira em 30 dias; o plano gratuito da Neon nao expira. Basta colar o endereco de conexao da Neon na variavel `DATABASE_URL` do servico no Render, com Build Command `npm install`. O log do Render mostra "Trocas guardadas no banco de dados" quando a conexao funciona.
+
+## Painel de administrador
+
+O link discreto "Painel de Administrador" fica embaixo do RECORDE. A senha digitada aparece so como asteriscos e e conferida no servidor, que guarda apenas um resumo PBKDF2-SHA256 com sal e 600 mil rodadas; a senha nunca fica no codigo do jogo nem nos arquivos. Depois de 5 erros no mesmo endereco, o servidor bloqueia novas tentativas por 10 minutos. O painel roxo e preto tem uma busca que sugere o nome mais proximo quando a palavra vem errada ou incompleta, e permite pegar ou remover da propria conta moedas, skins, acessorios e personagens do offline (que dependem do mapa concluido).
 
 ## Inimigos e personagens
 
-Cada cenário tem seis inimigos com desenhos próprios e um minichefe: Cavaleiro no Castelo, Escorpião Gigante no Egito, Sapo Gigante no Pântano, Espantalho no Halloween, Tubarão no Fundo do Mar e Mamute nas Montanhas Geladas. O Fundo do Mar traz caranguejo, água-viva, baiacu, piranha, pirata afogado e enguia elétrica, com naufrágio, corais, algas, âncoras e bolhas subindo. As Montanhas Geladas trazem boneco de neve, coruja das neves, urso polar, pinguim, viking congelado e espírito da nevasca, com pinheiros, cabanas, cristais de gelo, lagos congelados e neve caindo. As aparências usam os mesmos atributos e movimentos de antes. Os chefes finais continuam sendo os personagens desbloqueáveis de cada mapa. O Sobrevivente carrega um machado de pedra lascada, com cabo de madeira e amarrações de corda.
+Cada cenário tem seis inimigos com desenhos próprios e um minichefe: Cavaleiro no Castelo, Escorpião Gigante no Egito, Sapo Gigante no Pântano, Espantalho no Halloween, Tubarão no Fundo do Mar, Mamute nas Montanhas Geladas, Gângster na Cidade Sombria e Pistoleiro no Velho Oeste. A Cidade Sombria é uma cidade à noite, com ruas, faixas de pedestre, praças, prédios com janelas acesas, postes e carros; traz ladrão, drone, segurança, gato de rua, punk e vulto. O Velho Oeste tem rua de terra com calçadas de madeira, trilhos, saloon, caixa d'água, carroças, cactos e barris; traz bandido, abutre, touro, cascavel, cacto vivo e coiote. O Dark Mouse segue apenas o visual do curta de 1928, já em domínio público nos Estados Unidos: preto, cinza e branco, sem luvas e sem shorts vermelhos. O Fundo do Mar traz caranguejo, água-viva, baiacu, piranha, pirata afogado e enguia elétrica, com naufrágio, corais, algas, âncoras e bolhas subindo. As Montanhas Geladas trazem boneco de neve, coruja das neves, urso polar, pinguim, viking congelado e espírito da nevasca, com pinheiros, cabanas, cristais de gelo, lagos congelados e neve caindo. As aparências usam os mesmos atributos e movimentos de antes. Os chefes finais continuam sendo os personagens desbloqueáveis de cada mapa. O Sobrevivente carrega um machado de pedra lascada, com cabo de madeira e amarrações de corda.
 
 ## Regra do código
 
@@ -77,21 +91,25 @@ O código deste projeto não leva comentários, por ordem do usuário. Nomes de 
 - `vesper-characters.js`: catálogo único e desenhos das aparências.
 - `vesper-enemies.js`: desenhos e nomes dos seis inimigos e do minichefe de cada cenário.
 - `vesper-arena.js`: nucleo da partida online, usado pelo servidor e pelo cliente. Armas, habilidades, bots, zonas de nascimento, XP e ranking.
-- `vesper-online.js`: cliente do Online. Conexao, espelho do estado do servidor, desenhos da arena, das armas e dos lutadores.
-- `vesper-server.cjs`: servidor HTTP e WebSocket, salas, autoridade da partida e bots.
+- `vesper-online.js`: cliente do Online. Conta do jogador, conexao, espelho do estado do servidor, salas privadas, desenhos da arena, das armas e dos lutadores.
+- `vesper-trades.js`: tela de Trocas.
+- `vesper-admin.js`: painel de administrador.
+- `vesper-server.cjs`: servidor HTTP e WebSocket, salas publicas e privadas, autoridade da partida, bots e conferencia da senha do painel.
+- `vesper-market.cjs`: loja de Trocas no servidor.
 - `vesper-ui.js`: menus, controles, acessibilidade, seleção de mapas e salvamento.
 - `vesper-campaign.css`: estilos das telas da campanha.
-- `vesper-online.css`: estilos das telas, do HUD e do ranking do Online.
+- `vesper-online.css`: estilos das telas, do HUD e do ranking do Online, do servidor privado e das Trocas.
+- `vesper-admin.css`: estilo do painel de administrador.
 - `index.html`: matriz do HTML unificado usada pelo construtor.
 - `VESPER/index.html`: versão final pronta para abrir e jogar.
 
-Depois de editar as fontes, execute `node build.cjs`. A construção verifica a sintaxe, incorpora os seis módulos e as duas folhas de estilo, rejeita dependências externas e atualiza também `VESPER/index.html`.
+Depois de editar as fontes, execute `node build.cjs`. A construção verifica a sintaxe, incorpora os oito módulos e as três folhas de estilo, rejeita dependências externas e atualiza também `VESPER/index.html`.
 
 ## Verificação
 
 `node test-vesper.cjs` executa as verificações do motor e da interface: combate, movimento, pausa, XP, limites, encontros, vitória, salvamento, skins, minimapa, integridade do HTML unificado e, no Online, o espelho do estado do servidor, a predição local, os eventos, o ranking final, a separação entre modos e os desenhos da arena e das armas.
 
-`node test-server.cjs` sobe o servidor de verdade e conecta clientes WebSocket reais: quadro do protocolo, duas pessoas na mesma sala, autoridade sobre movimento e cadência de tiro, sala cheia abrindo outra sala, bots preenchendo e cedendo lugar, reconexão com o mesmo lugar, ranking final com moedas e resistência a mensagem inválida. `npm test` roda as duas suítes.
+`node test-server.cjs` sobe o servidor de verdade e conecta clientes WebSocket reais: quadro do protocolo, duas pessoas na mesma sala, autoridade sobre movimento e cadência de tiro, sala cheia abrindo outra sala, bots preenchendo e cedendo lugar, reconexão com o mesmo lugar, ranking final com moedas, resistência a mensagem inválida, servidor privado por código, bloqueio de tentativas da senha do painel, o ciclo completo das Trocas e as Trocas no banco de dados (trava entre duas instâncias e queda do banco). `npm test` roda as duas suítes.
 
 `node sim-balance.cjs 360 7 42` simula oito partidas com atributos normais, coletando gemas e escolhendo somente melhorias oferecidas. O comando gera temporariamente `balance-report.json`, ignorado pelo Git e descartável. O controlador é automatizado; os resultados não substituem testes de dificuldade com jogadores humanos.
 

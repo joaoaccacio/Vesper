@@ -5,7 +5,12 @@ process.env.VESPER_BOT_FILL = process.env.VESPER_BOT_FILL || '0.4';
 process.env.VESPER_CAPACITY = process.env.VESPER_CAPACITY || '4';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const http = require('node:http');
 const { createServer, encodeFrame } = require('./vesper-server.cjs');
+const { Market, FileStore, PgStore } = require('./vesper-market.cjs');
 const VesperArena = require('./vesper-arena.js');
 
 const { CONFIG, Arena } = VesperArena;
@@ -18,7 +23,7 @@ function test(name, run) { tests.push({ name, run }); }
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function listen() {
-  const server = createServer();
+  const server = createServer({ dataDir: null });
   return new Promise(resolve => {
     server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port }));
   });
@@ -476,6 +481,207 @@ test('a mira das armas especiais adianta o alvo que esta andando', () => {
   arena.aimAt(human, target);
   assert.ok(human.aim > 0.3, 'Com arma especial mira onde o alvo vai estar');
   assert.ok(human.aimDistance > 300, 'E o projetil voa ate o ponto previsto');
+});
+
+test('servidor privado: codigo de 6 digitos, sala de espera, sem bots e so o criador comeca', async () => {
+  const { server, port } = await listen();
+  const host = new Client(port), friend = new Client(port), late = new Client(port), lost = new Client(port);
+  try {
+    await Promise.all([host.ready, friend.ready, late.ready, lost.ready]);
+    host.send({ t: 'create', name: 'Guino', skin: 'banana', acc: ['crown'] });
+    const lobby = await host.waitFor(message => message.t === 'lobby');
+    assert.match(lobby.code, /^\d{6}$/);
+    assert.equal(lobby.host, true);
+    lost.send({ t: 'enter', code: lobby.code === '000000' ? '000001' : '000000', name: 'X' });
+    assert.equal((await lost.waitFor(message => message.t === 'error')).reason, 'code');
+    friend.send({ t: 'enter', code: lobby.code, name: 'Amiga', skin: 'soldier' });
+    const seen = await friend.waitFor(message => message.t === 'lobby');
+    assert.equal(seen.host, false);
+    assert.deepEqual(seen.players.map(player => player.name), ['Guino', 'Amiga']);
+    assert.deepEqual(seen.players[0].acc, ['crown']);
+    await host.waitFor(message => message.t === 'lobby' && message.players.length === 2);
+    friend.send({ t: 'start' });
+    await wait(120);
+    assert.equal(friend.messages.some(message => message.t === 'joined'), false, 'So o criador comeca');
+    host.send({ t: 'start' });
+    await host.waitFor(message => message.t === 'joined');
+    await friend.waitFor(message => message.t === 'joined');
+    await wait(700);
+    const room = server.hub.codes.get(lobby.code);
+    assert.equal(room.arena.bots, 0, 'Servidor privado nao tem bots');
+    assert.equal(room.arena.fighters.length, 2);
+    late.send({ t: 'enter', code: lobby.code, name: 'Atrasado' });
+    assert.equal((await late.waitFor(message => message.t === 'error')).reason, 'started');
+    const status = JSON.parse(await new Promise(resolve => http.get('http://127.0.0.1:' + port + '/status', response => {
+      let body = ''; response.on('data', chunk => { body += chunk; }); response.on('end', () => resolve(body));
+    })));
+    assert.equal(status.rooms.length, 0, 'Sala privada nao aparece no status publico');
+  } finally { for (const client of [host, friend, late, lost]) client.close(); server.closeAll(); }
+});
+
+test('quando o criador sai da sala de espera todos sao avisados e o codigo morre', async () => {
+  const { server, port } = await listen();
+  const host = new Client(port), friend = new Client(port), again = new Client(port), open = new Client(port);
+  try {
+    await Promise.all([host.ready, friend.ready, again.ready, open.ready]);
+    host.send({ t: 'create', name: 'Guino' });
+    const { code } = await host.waitFor(message => message.t === 'lobby');
+    open.send({ t: 'join', name: 'Publico' });
+    const joined = await open.waitFor(message => message.t === 'joined');
+    assert.notEqual(server.hub.rooms.get(joined.room).code, code, 'Partida publica nunca cai na sala privada');
+    friend.send({ t: 'enter', code, name: 'Amiga' });
+    await friend.waitFor(message => message.t === 'lobby');
+    host.send({ t: 'bye' });
+    assert.equal((await friend.waitFor(message => message.t === 'closed')).reason, 'host');
+    again.send({ t: 'enter', code, name: 'Outra' });
+    assert.equal((await again.waitFor(message => message.t === 'error')).reason, 'code');
+  } finally { for (const client of [host, friend, again, open]) client.close(); server.closeAll(); }
+});
+
+test('senha do painel de admin e conferida no servidor e barrada depois de varias tentativas', async () => {
+  const { server, port } = await listen();
+  const client = new Client(port);
+  try {
+    await client.ready;
+    for (let i = 1; i <= 5; i++) {
+      client.send({ t: 'admin', rid: i, key: 'errada' + i });
+      const reply = await client.waitFor(message => message.t === 'admin' && message.rid === i, 8000);
+      assert.equal(reply.ok, false);
+      assert.equal(reply.wait, undefined);
+    }
+    client.send({ t: 'admin', rid: 6, key: 'outra' });
+    const blocked = await client.waitFor(message => message.t === 'admin' && message.rid === 6);
+    assert.equal(blocked.ok, false);
+    assert.ok(blocked.wait >= 1, 'Depois de cinco erros precisa esperar');
+    const source = fs.readFileSync(path.join(__dirname, 'vesper-server.cjs'), 'utf8');
+    assert.ok(/salt: '[0-9a-f]{32}', hash: '[0-9a-f]{64}', rounds: \d+/.test(source), 'So o resumo da senha fica no codigo');
+  } finally { client.close(); server.closeAll(); }
+});
+
+test('trocas: anunciar, ofertar, recusar, aceitar e retirar mexem so no que foi combinado', async () => {
+  const market = new Market();
+  const seller = 'a'.repeat(32), buyer = 'b'.repeat(32), rival = 'c'.repeat(32);
+  const replies = [];
+  const client = { send: message => replies.push(message) };
+  const ask = async (account, name, op, extra = {}) => { await market.handle(client, { t: 'm', rid: replies.length, op, account, name, ...extra }); return replies.at(-1); };
+  assert.equal((await ask('curta', 'X', 'state')).error, 'conta');
+  assert.equal((await ask(seller, 'Vendedor', 'list', { item: 'skin:alien' })).error, 'item');
+  const listed = await ask(seller, 'Vendedor', 'list', { item: 'acc:crown' });
+  assert.equal(listed.ok, true);
+  assert.deepEqual(listed.data.deliveries.at(-1).lock, ['acc:crown']);
+  assert.equal((await ask(seller, 'Vendedor', 'list', { item: 'acc:crown' })).error, 'ocupado');
+  const listing = (await ask(buyer, 'Comprador', 'state')).data.market[0];
+  assert.equal(listing.seller, 'Vendedor');
+  assert.equal((await ask(seller, 'Vendedor', 'offer', { listing: listing.id, coins: 10 })).error, 'proprio');
+  assert.equal((await ask(buyer, 'Comprador', 'offer', { listing: listing.id })).error, 'vazia');
+  const offered = await ask(buyer, 'Comprador', 'offer', { listing: listing.id, coins: 500, items: ['skin:soldier'] });
+  assert.equal(offered.ok, true);
+  assert.deepEqual({ coins: offered.data.deliveries.at(-1).coins, lock: offered.data.deliveries.at(-1).lock }, { coins: -500, lock: ['skin:soldier'] });
+  assert.equal((await ask(buyer, 'Comprador', 'offer', { listing: listing.id, coins: 1 })).error, 'repetida');
+  await ask(rival, 'Rival', 'offer', { listing: listing.id, coins: 900 });
+  const mine = (await ask(seller, 'Vendedor', 'state')).data.listings[0];
+  assert.equal(mine.offers.length, 2);
+  const rivalOffer = mine.offers.find(offer => offer.buyer === 'Rival');
+  await ask(seller, 'Vendedor', 'refuse', { listing: listing.id, offer: rivalOffer.id });
+  assert.equal((await ask(rival, 'Rival', 'state')).data.deliveries.at(-1).coins, 900, 'Recusar devolve as moedas');
+  assert.equal((await ask(buyer, 'Comprador', 'state')).data.market.length, 1, 'Recusar deixa o anuncio no ar');
+  const buyerOffer = (await ask(seller, 'Vendedor', 'state')).data.listings[0].offers[0];
+  await ask(seller, 'Vendedor', 'accept', { listing: listing.id, offer: buyerOffer.id });
+  const sold = (await ask(seller, 'Vendedor', 'state')).data;
+  assert.equal(sold.listings.length, 0);
+  const paid = sold.deliveries.at(-1);
+  assert.deepEqual({ coins: paid.coins, add: paid.add, remove: paid.remove }, { coins: 500, add: ['skin:soldier'], remove: ['acc:crown'] });
+  const got = (await ask(buyer, 'Comprador', 'state')).data.deliveries.at(-1);
+  assert.deepEqual({ add: got.add, remove: got.remove }, { add: ['acc:crown'], remove: ['skin:soldier'] });
+  const pending = (await ask(buyer, 'Comprador', 'state')).data.deliveries;
+  assert.ok(pending.length > 0);
+  await ask(buyer, 'Comprador', 'ack', { ids: pending.map(delivery => delivery.id) });
+  assert.equal((await ask(buyer, 'Comprador', 'state')).data.deliveries.length, 0, 'Entrega confirmada sai da fila');
+  await ask(seller, 'Vendedor', 'list', { item: 'skin:banana' });
+  const second = (await ask(rival, 'Rival', 'state')).data.market[0];
+  await ask(rival, 'Rival', 'offer', { listing: second.id, coins: 40 });
+  const offerId = (await ask(rival, 'Rival', 'state')).data.offers[0].id;
+  await ask(rival, 'Rival', 'cancel', { offer: offerId });
+  assert.equal((await ask(rival, 'Rival', 'state')).data.deliveries.at(-1).coins, 40, 'Cancelar devolve as moedas');
+  await ask(rival, 'Rival', 'offer', { listing: second.id, items: ['acc:hat'] });
+  await ask(seller, 'Vendedor', 'withdraw', { listing: second.id });
+  assert.deepEqual((await ask(rival, 'Rival', 'state')).data.deliveries.at(-1).unlock, ['acc:hat'], 'Retirar o anuncio devolve as ofertas');
+  assert.equal((await ask(rival, 'Rival', 'state')).data.market.length, 0);
+});
+
+test('a loja de trocas sobrevive a reinicio do servidor', async () => {
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'vesper-'));
+  const file = path.join(folder, 'market.json');
+  await new Market(new FileStore(file)).handle({ send() {} }, { t: 'm', op: 'list', account: 'd'.repeat(32), name: 'Guino', item: 'skin:penguin' });
+  let seen = null;
+  await new Market(new FileStore(file)).handle({ send: message => { seen = message; } }, { t: 'm', op: 'state', account: 'e'.repeat(32), name: 'Outro' });
+  assert.equal(seen.data.market.length, 1);
+  assert.equal(seen.data.market[0].item, 'skin:penguin');
+  fs.rmSync(folder, { recursive: true, force: true });
+});
+
+function fakeDatabase() {
+  const db = { value: null, holder: null, waiting: [], down: false };
+  const free = holder => {
+    if (db.holder !== holder) return;
+    db.holder = null;
+    const next = db.waiting.shift();
+    if (next) next();
+  };
+  const check = () => { if (db.down) throw new Error('banco fora do ar'); };
+  db.Pool = class {
+    constructor(options) { db.options = options; }
+    on() {}
+    async query(sql) {
+      check();
+      if (sql.includes('CREATE TABLE') && !db.value) db.value = { listings: [], deliveries: {} };
+      return { rows: [] };
+    }
+    async connect() {
+      check();
+      const holder = {};
+      let draft = null;
+      return {
+        async query(sql, params) {
+          check();
+          if (sql.endsWith('FOR UPDATE')) {
+            while (db.holder) await new Promise(resolve => db.waiting.push(resolve));
+            db.holder = holder;
+          }
+          if (sql.startsWith('SELECT')) return { rows: [{ value: JSON.parse(JSON.stringify(db.value)) }] };
+          if (sql.startsWith('UPDATE')) draft = JSON.parse(params[0]);
+          if (sql === 'COMMIT' && draft) db.value = draft;
+          if (sql === 'COMMIT' || sql === 'ROLLBACK') free(holder);
+          return { rows: [] };
+        },
+        release() { free(holder); }
+      };
+    }
+  };
+  return db;
+}
+
+test('com banco de dados a loja fica salva, duas instancias nao perdem ofertas e queda do banco nao apaga nada', async () => {
+  const db = fakeDatabase();
+  const replies = [];
+  const client = { send: message => replies.push(message) };
+  const open = () => new Market(new PgStore('postgres://vesper', db.Pool));
+  const ask = async (market, account, op, extra = {}) => { await market.handle(client, { t: 'm', op, account, name: 'Guino', ...extra }); return replies.at(-1); };
+  const first = open(), second = open();
+  const seller = 'a'.repeat(32);
+  const listed = await ask(first, seller, 'list', { item: 'acc:crown' });
+  assert.equal(listed.ok, true);
+  assert.equal(db.options.connectionString, 'postgres://vesper');
+  const id = listed.data.listings[0].id;
+  await Promise.all(['b', 'c', 'd', 'e'].map((letter, index) => ask(index % 2 ? first : second, letter.repeat(32), 'offer', { listing: id, coins: 100 + index })));
+  assert.equal((await ask(second, seller, 'state')).data.listings[0].offers.length, 4, 'Ofertas ao mesmo tempo em duas instancias nao se perdem');
+  db.down = true;
+  assert.equal((await ask(first, seller, 'withdraw', { listing: id })).error, 'servidor');
+  assert.equal((await ask(open(), seller, 'state')).error, 'servidor');
+  db.down = false;
+  const again = open();
+  assert.equal((await ask(again, seller, 'state')).data.listings[0].offers.length, 4, 'Reinicio e queda do banco nao apagam a loja');
+  assert.equal((await ask(again, 'b'.repeat(32), 'state')).data.deliveries.at(-1).coins, -100);
 });
 
 (async () => {

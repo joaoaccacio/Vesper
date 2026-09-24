@@ -2,7 +2,7 @@
   'use strict';
 
   const Arena = typeof window === 'object' ? window.VesperArena : null;
-  const { ARENA, WEAPONS, SKINS, ACCESSORIES, CONFIG, clamp, weaponFor, coinsFor, bonusOf, accessoriesOf, segmentHit, bounds } = Arena;
+  const { ARENA, WEAPONS, SKINS, ACCESSORIES, CONFIG, clamp, weaponFor, coinsFor, bonusOf, accessoriesOf, tradeKeyOf, segmentHit, bounds } = Arena;
   const TAU = Math.PI * 2;
   const STORE = Object.freeze({ profile: 'vesper.online.v1' });
 
@@ -57,13 +57,39 @@
     return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
   }
 
+  const itemOf = key => {
+    const [kind, id] = key.split(':');
+    return { kind, id };
+  };
+  const hasItem = (profile, key) => {
+    const { kind, id } = itemOf(key);
+    return kind === 'skin' ? profile.owned.includes(id) : profile.accessories.includes(id);
+  };
+  const addItem = (profile, key) => {
+    const { kind, id } = itemOf(key);
+    if (kind === 'skin' && !profile.owned.includes(id)) profile.owned.push(id);
+    if (kind === 'acc' && !profile.accessories.includes(id)) profile.accessories.push(id);
+  };
+  const removeItem = (profile, key) => {
+    const { kind, id } = itemOf(key);
+    if (kind === 'skin') {
+      profile.owned = profile.owned.filter(item => item !== id);
+      if (profile.skin === id) profile.skin = 'alien';
+    } else {
+      profile.accessories = profile.accessories.filter(item => item !== id);
+      profile.worn = profile.worn.filter(item => item !== id);
+    }
+  };
+  const keysOf = list => (Array.isArray(list) ? [...new Set(list.map(tradeKeyOf).filter(Boolean))] : []);
+  const randomHex = size => Array.from(crypto.getRandomValues(new Uint8Array(size)), byte => byte.toString(16).padStart(2, '0')).join('');
+
   const Profile = {
     load() {
       const saved = readJson(STORE.profile, {});
       const available = SKINS.map(skin => skin.id);
       const owned = available.filter(id => id === 'alien' || (Array.isArray(saved.owned) && saved.owned.includes(id)));
       const coins = Number.isFinite(saved.coins) && saved.coins > 0 ? Math.floor(saved.coins) : 0;
-      const accessories = accessoriesOf(saved.accessories);
+      const accessories = ACCESSORIES.filter(item => Array.isArray(saved.accessories) && saved.accessories.includes(item.id)).map(item => item.id);
       return {
         coins, owned,
         skin: owned.includes(saved.skin) ? saved.skin : 'alien',
@@ -71,15 +97,74 @@
         accessories,
         worn: accessoriesOf(saved.worn).filter(id => accessories.includes(id)),
         daily: Number.isInteger(saved.daily) ? clamp(saved.daily, 0, DAILY_REWARDS.length) : 0,
-        lastClaim: typeof saved.lastClaim === 'string' ? saved.lastClaim.slice(0, 10) : ''
+        lastClaim: typeof saved.lastClaim === 'string' ? saved.lastClaim.slice(0, 10) : '',
+        account: /^[a-f0-9]{32}$/.test(saved.account) ? saved.account : '',
+        locked: keysOf(saved.locked),
+        applied: Array.isArray(saved.applied) ? saved.applied.filter(id => typeof id === 'string').slice(-100) : []
       };
     },
     save(profile) {
       writeJson(STORE.profile, {
-        version: 3, coins: profile.coins, owned: profile.owned, skin: profile.skin, name: profile.name,
-        accessories: profile.accessories, worn: profile.worn, daily: profile.daily, lastClaim: profile.lastClaim
+        version: 4, coins: profile.coins, owned: profile.owned, skin: profile.skin, name: profile.name,
+        accessories: profile.accessories, worn: profile.worn, daily: profile.daily, lastClaim: profile.lastClaim,
+        account: profile.account, locked: profile.locked, applied: profile.applied
       });
       return profile;
+    },
+    account() {
+      const profile = Profile.load();
+      if (!profile.account) {
+        profile.account = randomHex(16);
+        Profile.save(profile);
+      }
+      return profile.account;
+    },
+    has(key) {
+      const item = tradeKeyOf(key);
+      return Boolean(item) && hasItem(Profile.load(), item);
+    },
+    grant(key) {
+      const profile = Profile.load();
+      const item = tradeKeyOf(key);
+      if (item) addItem(profile, item);
+      return Profile.save(profile);
+    },
+    revoke(key) {
+      const profile = Profile.load();
+      const item = tradeKeyOf(key);
+      if (item) {
+        removeItem(profile, item);
+        profile.locked = profile.locked.filter(entry => entry !== item);
+      }
+      return Profile.save(profile);
+    },
+    adjustCoins(amount) {
+      const profile = Profile.load();
+      profile.coins = Math.max(0, profile.coins + Math.round(Number(amount) || 0));
+      return Profile.save(profile);
+    },
+    tradeable() {
+      const profile = Profile.load();
+      const keys = keysOf([...profile.owned.map(id => 'skin:' + id), ...profile.accessories.map(id => 'acc:' + id)]);
+      return keys.filter(key => !profile.locked.includes(key));
+    },
+    applyDeliveries(deliveries) {
+      const profile = Profile.load();
+      const applied = [];
+      const notes = [];
+      for (const delivery of Array.isArray(deliveries) ? deliveries : []) {
+        if (!delivery || typeof delivery.id !== 'string') continue;
+        applied.push(delivery.id);
+        if (profile.applied.includes(delivery.id)) continue;
+        profile.coins = Math.max(0, profile.coins + (Math.round(Number(delivery.coins)) || 0));
+        for (const key of keysOf(delivery.remove)) removeItem(profile, key);
+        for (const key of keysOf(delivery.add)) addItem(profile, key);
+        const unlock = keysOf(delivery.unlock);
+        profile.locked = keysOf([...profile.locked.filter(key => !unlock.includes(key)), ...keysOf(delivery.lock)]).filter(key => hasItem(profile, key));
+        profile.applied = [...profile.applied, delivery.id].slice(-100);
+        if (delivery.note) notes.push(String(delivery.note));
+      }
+      return { profile: Profile.save(profile), applied, notes };
     },
     priceOf(id) {
       const skin = SKINS.find(item => item.id === id);
@@ -124,7 +209,7 @@
       if (reward.type === 'coins') profile.coins += reward.amount;
       if (reward.type === 'accessory' && !profile.accessories.includes(reward.id)) {
         profile.accessories.push(reward.id);
-        profile.worn.push(reward.id);
+        profile.worn = accessoriesOf([reward.id, ...profile.worn]);
       }
       if (reward.type === 'skin' && !profile.owned.includes(reward.id)) profile.owned.push(reward.id);
       profile.daily++;
@@ -134,7 +219,18 @@
     toggleAccessory(id) {
       const profile = Profile.load();
       if (!profile.accessories.includes(id)) return { ok: false, profile };
-      profile.worn = profile.worn.includes(id) ? profile.worn.filter(item => item !== id) : [...profile.worn, id];
+      profile.worn = profile.worn.includes(id) ? profile.worn.filter(item => item !== id) : accessoriesOf([id, ...profile.worn]);
+      return { ok: true, profile: Profile.save(profile) };
+    },
+    buyAccessory(id) {
+      const profile = Profile.load();
+      const item = ACCESSORIES.find(entry => entry.id === id);
+      if (!item || !Number.isFinite(item.price)) return { ok: false, reason: 'unknown', profile };
+      if (profile.accessories.includes(id)) return { ok: false, reason: 'owned', profile };
+      if (profile.coins < item.price) return { ok: false, reason: 'coins', profile, missing: item.price - profile.coins };
+      profile.coins -= item.price;
+      profile.accessories.push(id);
+      profile.worn = accessoriesOf([id, ...profile.worn]);
       return { ok: true, profile: Profile.save(profile) };
     }
   };
@@ -286,6 +382,63 @@
     } }
   ]);
 
+  class Link {
+    constructor() {
+      this.socket = null;
+      this.ready = null;
+      this.waiting = new Map();
+      this.next = 1;
+    }
+
+    open() {
+      if (this.ready) return this.ready;
+      this.ready = new Promise((resolve, reject) => {
+        if (typeof WebSocket !== 'function') { reject(new Error('sem-websocket')); return; }
+        let socket;
+        try { socket = new WebSocket(defaultServer()); } catch (_) { reject(new Error('conexao')); return; }
+        const timer = setTimeout(() => { reject(new Error('tempo')); this.close(); }, 8000);
+        this.socket = socket;
+        socket.onopen = () => { clearTimeout(timer); resolve(this); };
+        socket.onmessage = event => {
+          let message;
+          try { message = JSON.parse(event.data); } catch (_) { return; }
+          const entry = message && this.waiting.get(message.rid);
+          if (!entry) return;
+          clearTimeout(entry.timer);
+          this.waiting.delete(message.rid);
+          entry.resolve(message);
+        };
+        socket.onerror = () => { clearTimeout(timer); reject(new Error('conexao')); };
+        socket.onclose = () => { clearTimeout(timer); reject(new Error('conexao')); this.close(); };
+      });
+      this.ready.catch(() => this.close());
+      return this.ready;
+    }
+
+    request(message) {
+      return this.open().then(() => new Promise((resolve, reject) => {
+        const rid = this.next++;
+        const timer = setTimeout(() => { this.waiting.delete(rid); reject(new Error('tempo')); }, 12000);
+        this.waiting.set(rid, { resolve, reject, timer });
+        this.socket.send(JSON.stringify({ ...message, rid }));
+      }));
+    }
+
+    close() {
+      const socket = this.socket;
+      this.socket = null;
+      this.ready = null;
+      const waiting = [...this.waiting.values()];
+      this.waiting.clear();
+      for (const entry of waiting) { clearTimeout(entry.timer); entry.reject(new Error('conexao')); }
+      if (!socket) return;
+      socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;
+      try { socket.close(); } catch (_) {  }
+    }
+  }
+
+  VesperGame.Server = new Link();
+
   VesperGame.ONLINE = Object.freeze({
     ARENA, WEAPONS, SKINS, ACCESSORIES, DAILY_REWARDS, CONFIG, weaponFor, coinsFor, bonusOf, skinCatalog,
     localDay, defaultServer, normalizeServer
@@ -342,8 +495,15 @@
     this._firing = false;
     this._inputTimer = 0;
     this._joined = false;
+    this._room = options.room === 'create' ? { t: 'create' } : options.room ? { t: 'enter', code: String(options.room) } : { t: 'join' };
     this._openSocket(server, name, skin);
     return { server, connecting: true };
+  };
+
+  VesperGame.prototype.startPrivateMatch = function () {
+    if (this._mode !== 'online' || !this._socket || this._socket.readyState !== 1 || this._joined) return false;
+    this._socket.send(JSON.stringify({ t: 'start' }));
+    return true;
   };
 
   VesperGame.prototype._openSocket = function (server, name, skin) {
@@ -358,7 +518,8 @@
     socket.onopen = () => {
       let token = '';
       try { token = sessionStorage.getItem(this._tokenKey) || ''; } catch (_) { token = ''; }
-      socket.send(JSON.stringify({ t: 'join', name, skin, token, acc: this._onlineAcc }));
+      const room = this._room.t === 'join' ? { t: 'join', token } : this._room;
+      socket.send(JSON.stringify({ ...room, name, skin, acc: this._onlineAcc }));
     };
     socket.onmessage = event => {
       let message;
@@ -396,11 +557,16 @@
   VesperGame.prototype._onServerMessage = function (message) {
     if (!message || this._mode !== 'online') return;
     if (message.t === 'joined') { this._onJoined(message); return; }
+    if (message.t === 'lobby') {
+      clearTimeout(this._connectTimer);
+      if (this.callbacks.onPrivateLobby) this.callbacks.onPrivateLobby({ code: message.code, host: Boolean(message.host), hostId: message.hostId, you: message.you, players: Array.isArray(message.players) ? message.players : [] });
+      return;
+    }
     if (message.t === 'over') { this._onMatchOver(message); return; }
     if (this._state === 'results') return;
     if (message.t === 's') { this._onSnapshot(message); return; }
     if (message.t === 'ev') { this._onEvents(message.e || []); return; }
-    if (message.t === 'closed') { this._onlineFail('sala'); return; }
+    if (message.t === 'closed') { this._onlineFail(message.reason === 'host' ? 'host' : 'sala'); return; }
     if (message.t === 'error' && !this._joined) this._onlineFail(message.reason || 'servidor');
   };
 
@@ -739,7 +905,7 @@
     this.crates = [];
     this.me = null;
     this._mapId = VesperGame.MAPS.some(map => map.id === this._onlineReturnMap) ? this._onlineReturnMap : VesperGame.MAPS[0].id;
-    const hero = VesperGame.CHARACTERS.find(item => item.id === this._onlineReturnCharacter && item.unlockType !== 'coins');
+    const hero = VesperGame.CHARACTERS.find(item => item.id === this._onlineReturnCharacter && (item.both || item.unlockType !== 'coins'));
     this._character = hero ? hero.id : VesperGame.CHARACTERS[0].id;
   };
 
@@ -772,7 +938,7 @@
   VesperGame.prototype.setCharacter = function (id) {
     const character = VesperGame.CHARACTERS.find(item => item.id === id);
     if (!character) return false;
-    if (character.unlockType !== 'daily' && (character.unlockType === 'coins') !== (this._mode === 'online')) return false;
+    if (!character.both && (character.unlockType === 'coins') !== (this._mode === 'online')) return false;
     return baseSetCharacter.call(this, id);
   };
 
@@ -1025,7 +1191,7 @@
     ctx.save();
     ctx.scale(fighter.facing, 1);
     this._drawCharacter(ctx, fighter.characterId, fighter.steps);
-    if (fighter.acc.includes('hat')) this._drawHat(ctx, fighter.characterId);
+    this._drawHeadwear(ctx, fighter.characterId, fighter.acc);
     ctx.restore();
     this._drawFighterWeapon(ctx, fighter);
     if (fighter.hurt > 0) {

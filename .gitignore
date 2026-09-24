@@ -4,3 +4,5 @@
 
 # O projeto deve permanecer em pasta, sem pacotes ZIP
 /*.zip
+data/
+node_modules/

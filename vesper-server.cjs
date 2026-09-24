@@ -5,6 +5,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const VesperArena = require('./vesper-arena.js');
+const { Market, FileStore, PgStore } = require('./vesper-market.cjs');
 
 const { Arena, CONFIG, coinsFor } = VesperArena;
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
@@ -12,6 +13,9 @@ const PORT = Number(process.env.PORT) || 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 const PAGE = path.join(__dirname, 'VESPER', 'index.html');
 const MAX_PAYLOAD = 16384;
+const DATA = process.env.VESPER_DATA_DIR || path.join(__dirname, 'data');
+const DATABASE = process.env.DATABASE_URL || '';
+const ADMIN = Object.freeze({ salt: '23e3b3e4ec47b5105c6c01993378439a', hash: 'bf597fc6a828b379103117aea7c27fe9397058451309c2c3bf3c7ad529c7e287', rounds: 600000, tries: 5, window: 600000 });
 
 function encodeFrame(opcode, payload) {
   const body = Buffer.isBuffer(payload) ? payload : Buffer.from(String(payload), 'utf8');
@@ -150,9 +154,12 @@ class Connection {
 }
 
 class Room {
-  constructor(number, hub) {
+  constructor(number, hub, code = '') {
     this.number = number;
     this.hub = hub;
+    this.code = code;
+    this.started = !code;
+    this.hostId = 0;
     this.arena = new Arena();
     this.clients = new Map();
     this.createdAt = Date.now();
@@ -164,7 +171,41 @@ class Room {
 
   get age() { return (Date.now() - this.createdAt) / 1000; }
   get humans() { return this.arena.humans; }
-  get accepting() { return !this.over && this.age < CONFIG.joinSeconds && this.humans < CONFIG.capacity; }
+  get accepting() { return !this.code && !this.over && this.age < CONFIG.joinSeconds && this.humans < CONFIG.capacity; }
+
+  joinedMessage(client, fighter, resumed = false) {
+    const message = {
+      t: 'joined', id: fighter.id, room: this.number, capacity: CONFIG.capacity,
+      remaining: Number(this.arena.remaining.toFixed(2)), token: client.token,
+      roster: this.arena.roster(), crates: this.arena.crateState()
+    };
+    if (resumed) message.resumed = true;
+    return message;
+  }
+
+  sendLobby() {
+    const players = this.arena.roster().map(({ id, name, skin, acc }) => ({ id, name, skin, acc }));
+    for (const [id, client] of this.clients) client.send({ t: 'lobby', code: this.code, you: id, host: id === this.hostId, hostId: this.hostId, players });
+  }
+
+  start(client) {
+    if (this.started || this.over || client.fighterId !== this.hostId) return;
+    this.started = true;
+    this.createdAt = Date.now();
+    this.lastTick = Date.now();
+    for (const [id, member] of this.clients) member.send(this.joinedMessage(member, this.arena.fighters.find(fighter => fighter.id === id)));
+  }
+
+  closeLobby() {
+    for (const client of this.clients.values()) {
+      client.room = null;
+      client.fighterId = 0;
+      client.send({ t: 'closed', reason: 'host' });
+    }
+    this.clients.clear();
+    this.over = true;
+    this.dispose();
+  }
 
   add(client, profile) {
     if (this.arena.fighters.length >= CONFIG.capacity) {
@@ -176,11 +217,9 @@ class Room {
     client.room = this;
     client.fighterId = fighter.id;
     this.clients.set(fighter.id, client);
-    client.send({
-      t: 'joined', id: fighter.id, room: this.number, capacity: CONFIG.capacity,
-      remaining: Number(this.arena.remaining.toFixed(2)), token: client.token,
-      roster: this.arena.roster(), crates: this.arena.crateState()
-    });
+    if (!this.hostId) this.hostId = fighter.id;
+    if (this.started) client.send(this.joinedMessage(client, fighter));
+    else this.sendLobby();
     return fighter;
   }
 
@@ -194,6 +233,9 @@ class Room {
       return;
     }
     this.arena.leave(fighterId);
+    if (this.started || this.over) return;
+    if (fighterId === this.hostId) this.closeLobby();
+    else this.sendLobby();
   }
 
   broadcast(message) {
@@ -204,8 +246,8 @@ class Room {
     const now = Date.now();
     const dt = Math.min(0.25, Math.max(0, (now - this.lastTick) / 1000));
     this.lastTick = now;
-    if (this.over) return;
-    if (!this.botsReady && this.age >= CONFIG.botFill) {
+    if (this.over || !this.started) return;
+    if (!this.code && !this.botsReady && this.age >= CONFIG.botFill) {
       this.botsReady = true;
       this.arena.fill();
     }
@@ -235,14 +277,69 @@ class Room {
     for (const client of this.clients.values()) client.send({ t: 'closed' });
     this.clients.clear();
     this.hub.rooms.delete(this.number);
+    if (this.code) this.hub.codes.delete(this.code);
   }
 }
 
 class Hub {
-  constructor() {
+  constructor(options = {}) {
     this.rooms = new Map();
+    this.codes = new Map();
     this.sessions = new Map();
+    this.attempts = new Map();
     this.nextRoom = 1;
+    this.market = new Market(options.dataDir === null ? new FileStore('') : DATABASE ? new PgStore(DATABASE) : new FileStore(path.join(options.dataDir || DATA, 'market.json')));
+  }
+
+  profileOf(message) {
+    return {
+      name: String(message.name || 'Jogador').trim().slice(0, 14) || 'Jogador',
+      skin: String(message.skin || 'alien'),
+      acc: Array.isArray(message.acc) ? message.acc.slice(0, 8).map(String) : []
+    };
+  }
+
+  createRoom(client, message) {
+    if (client.room) return;
+    let code;
+    do { code = String(crypto.randomInt(0, 1000000)).padStart(6, '0'); } while (this.codes.has(code));
+    const room = new Room(this.nextRoom++, this, code);
+    this.rooms.set(room.number, room);
+    this.codes.set(code, room);
+    client.token = crypto.randomBytes(12).toString('hex');
+    room.add(client, this.profileOf(message));
+  }
+
+  enterRoom(client, message) {
+    if (client.room) return;
+    const room = this.codes.get(String(message.code || '').replace(/\D/g, '').slice(0, 6));
+    if (!room || room.over) { client.send({ t: 'error', reason: 'code' }); return; }
+    if (room.started) { client.send({ t: 'error', reason: 'started' }); return; }
+    if (room.arena.fighters.length >= CONFIG.capacity) { client.send({ t: 'error', reason: 'full' }); return; }
+    client.token = crypto.randomBytes(12).toString('hex');
+    room.add(client, this.profileOf(message));
+  }
+
+  checkAdmin(client, message) {
+    const now = Date.now();
+    const fresh = list => (list || []).filter(time => now - time < ADMIN.window);
+    const mine = fresh(this.attempts.get(client.address));
+    const all = fresh(this.attempts.get('*'));
+    const blocked = mine.length >= ADMIN.tries ? mine : all.length >= ADMIN.tries * 6 ? all : null;
+    if (blocked) {
+      client.send({ t: 'admin', rid: message.rid, ok: false, wait: Math.ceil((ADMIN.window - (now - blocked[0])) / 60000) });
+      return;
+    }
+    mine.push(now);
+    all.push(now);
+    if (this.attempts.size > 1000) for (const [key, list] of this.attempts) if (!fresh(list).length) this.attempts.delete(key);
+    this.attempts.set(client.address, mine);
+    this.attempts.set('*', all);
+    crypto.pbkdf2(String(message.key || '').slice(0, 64), Buffer.from(ADMIN.salt, 'hex'), ADMIN.rounds, 32, 'sha256', (error, derived) => {
+      const ok = !error && crypto.timingSafeEqual(derived, Buffer.from(ADMIN.hash, 'hex'));
+      if (ok) this.attempts.delete(client.address);
+      client.send({ t: 'admin', rid: message.rid, ok });
+    });
   }
 
   roomFor() {
@@ -264,25 +361,16 @@ class Hub {
     client.room = room;
     client.fighterId = fighter.id;
     room.clients.set(fighter.id, client);
-    client.send({
-      t: 'joined', id: fighter.id, room: room.number, capacity: CONFIG.capacity,
-      remaining: Number(room.arena.remaining.toFixed(2)), token, resumed: true,
-      roster: room.arena.roster(), crates: room.arena.crateState()
-    });
+    client.send(room.joinedMessage(client, fighter, true));
     return fighter;
   }
 
   join(client, message) {
     if (client.room) return;
-    const profile = {
-      name: String(message.name || 'Jogador').trim().slice(0, 14) || 'Jogador',
-      skin: String(message.skin || 'alien'),
-      acc: Array.isArray(message.acc) ? message.acc.slice(0, 8).map(String) : []
-    };
     if (message.token && this.resume(client, message.token)) return;
     const room = this.roomFor();
     client.token = crypto.randomBytes(12).toString('hex');
-    const fighter = room.add(client, profile);
+    const fighter = room.add(client, this.profileOf(message));
     if (!fighter) client.send({ t: 'error', reason: 'full' });
   }
 
@@ -291,6 +379,7 @@ class Hub {
     const room = client.room;
     const fighterId = client.fighterId;
     const token = client.token;
+    if (!room.started) { room.remove(fighterId, false); return; }
     room.remove(fighterId, true);
     this.sessions.set(token, { room: room.number, fighterId, expires: Date.now() + CONFIG.reconnectSeconds * 1000 });
     setTimeout(() => {
@@ -304,7 +393,12 @@ class Hub {
 
   handle(client, message) {
     if (message.t === 'join') { this.join(client, message); return; }
+    if (message.t === 'create') { this.createRoom(client, message); return; }
+    if (message.t === 'enter') { this.enterRoom(client, message); return; }
+    if (message.t === 'admin') { this.checkAdmin(client, message); return; }
+    if (message.t === 'm') { this.market.handle(client, message); return; }
     if (!client.room || !client.fighterId) return;
+    if (message.t === 'start') { client.room.start(client); return; }
     if (message.t === 'in') {
       client.room.arena.input(client.fighterId, message.x, message.y, message.f);
       return;
@@ -318,7 +412,7 @@ class Hub {
 
   stats() {
     return {
-      rooms: [...this.rooms.values()].map(room => ({
+      rooms: [...this.rooms.values()].filter(room => !room.code).map(room => ({
         number: room.number, humans: room.humans, bots: room.arena.bots,
         remaining: Math.round(room.arena.remaining), over: room.over
       })),
@@ -343,8 +437,8 @@ function serveGame(response) {
   });
 }
 
-function createServer() {
-  const hub = new Hub();
+function createServer(options = {}) {
+  const hub = new Hub(options);
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, 'http://localhost');
     if (url.pathname === '/status') {
@@ -371,7 +465,8 @@ function createServer() {
       'Sec-WebSocket-Accept: ' + accept,
       '\r\n'
     ].join('\r\n'));
-    const client = { room: null, fighterId: 0, token: '' };
+    const forwarded = String(request.headers['x-forwarded-for'] || '').split(',').pop().trim();
+    const client = { room: null, fighterId: 0, token: '', address: forwarded || request.socket.remoteAddress || 'local' };
     const connection = new Connection(socket, message => hub.handle(client, message), () => hub.drop(client));
     client.send = value => connection.send(value);
     client.connection = connection;
@@ -387,6 +482,10 @@ if (require.main === module) {
   server.listen(PORT, HOST, () => {
     process.stdout.write('VESPER online em http://' + (HOST === '0.0.0.0' ? '127.0.0.1' : HOST) + ':' + PORT + '\n');
   });
+  server.hub.market.store.setup().then(
+    () => process.stdout.write('Trocas guardadas ' + (DATABASE ? 'no banco de dados' : 'em ' + path.join(DATA, 'market.json')) + '\n'),
+    error => process.stderr.write('Trocas sem banco de dados: ' + error.message + '\n')
+  );
   for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { server.closeAll(); process.exit(0); });
 }
 

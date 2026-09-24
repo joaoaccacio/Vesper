@@ -774,7 +774,7 @@ class VesperGame {
     if (this._mapTileCache.has(id)) return this._mapTileCache.get(id);
     const tile = document.createElement('canvas'); tile.width = tile.height = 512;
     const ctx = tile.getContext('2d');
-    const colors = { castle: '#25262e', egypt: '#967649', swamp: '#183b32', halloween: '#272135', sea: '#16414c', snow: '#7d8d9f' };
+    const colors = { castle: '#25262e', egypt: '#967649', swamp: '#183b32', halloween: '#272135', sea: '#16414c', snow: '#7d8d9f', city: '#1f2229', west: '#a47a4b' };
     ctx.fillStyle = colors[id]; ctx.fillRect(0, 0, 512, 512);
     if (id === 'castle') {
       for (let row = -1; row < 10; row++) {
@@ -837,6 +837,39 @@ class VesperGame {
         const x = this._hash(i, 5, 93) * 512, y = this._hash(i, 6, 93) * 512;
         ctx.beginPath(); ctx.moveTo(x - 3, y); ctx.lineTo(x + 3, y); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 3); ctx.stroke();
       }
+    } else if (id === 'city') {
+      const shades = ['#23262e', '#20232a', '#262a32', '#1e2128'];
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          ctx.fillStyle = shades[Math.floor(this._hash(col, row, 95) * shades.length)];
+          ctx.fillRect(col * 64 + 1, row * 64 + 1, 62, 62);
+        }
+      }
+      ctx.strokeStyle = '#17191e'; ctx.lineWidth = 2;
+      for (let n = 0; n <= 512; n += 64) { ctx.beginPath(); ctx.moveTo(n, 0); ctx.lineTo(n, 512); ctx.moveTo(0, n); ctx.lineTo(512, n); ctx.stroke(); }
+      for (let i = 0; i < 9; i++) {
+        const x = this._hash(i, 3, 97) * 512, y = this._hash(i, 4, 97) * 512;
+        ctx.fillStyle = 'rgba(96,120,170,.08)';
+        ctx.beginPath(); ctx.ellipse(x, y, 16 + this._hash(i, 5, 97) * 26, 6 + this._hash(i, 6, 97) * 7, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (id === 'west') {
+      ctx.strokeStyle = 'rgba(92,60,34,.28)'; ctx.lineWidth = 1;
+      for (let i = 0; i < 14; i++) {
+        let x = this._hash(i, 2, 99) * 512, y = this._hash(i, 3, 99) * 512;
+        ctx.beginPath(); ctx.moveTo(x, y);
+        for (let k = 0; k < 4; k++) { x += (this._hash(i, k, 101) - 0.5) * 40; y += (this._hash(i, k, 103) - 0.5) * 40; ctx.lineTo(x, y); }
+        ctx.stroke();
+      }
+      for (let i = 0; i < 40; i++) {
+        const x = this._hash(i, 5, 99) * 512, y = this._hash(i, 6, 99) * 512;
+        ctx.fillStyle = i % 3 ? 'rgba(120,88,54,.5)' : 'rgba(214,180,128,.45)';
+        ctx.beginPath(); ctx.ellipse(x, y, 1.5 + this._hash(i, 7, 99) * 3, 1 + this._hash(i, 8, 99) * 2, 0, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.strokeStyle = '#8a7a45'; ctx.lineWidth = 1;
+      for (let i = 0; i < 26; i++) {
+        const x = this._hash(i, 9, 99) * 512, y = this._hash(i, 10, 99) * 512;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y - 7); ctx.moveTo(x, y); ctx.lineTo(x + 1, y - 9); ctx.moveTo(x, y); ctx.lineTo(x + 5, y - 6); ctx.stroke();
+      }
     } else {
       for (let i = 0; i < 95; i++) {
         const x = this._hash(i, 11) * 512, y = this._hash(i, 12) * 512;
@@ -866,7 +899,9 @@ class VesperGame {
       swamp: ['willow', 'stump', 'reeds', 'log', 'willow'],
       halloween: ['pumpkin', 'tomb', 'fence', 'deadTree', 'lantern'],
       sea: ['coral', 'seaweed', 'rock', 'anchor', 'urn'],
-      snow: ['pine', 'pine', 'rock', 'iceCrystal', 'lantern']
+      snow: ['pine', 'pine', 'rock', 'iceCrystal', 'lantern'],
+      city: ['lamp', 'car', 'hydrant', 'trashcan', 'bench'],
+      west: ['cactus', 'barrel', 'haybale', 'cactus', 'cowskull']
     };
     const features = [];
     for (let x = -3; x <= 3; x++) {
@@ -893,6 +928,15 @@ class VesperGame {
     } else if (id === 'snow') {
       features.push({ x: -1000, y: 760, kind: 'cabin', scale: 2.2 }, { x: 1150, y: -780, kind: 'cabin', scale: 1.8 }, { x: 0, y: -1000, kind: 'iceCrystal', scale: 2.6 });
       for (let i = 0; i < 10; i++) features.push({ x: -2000 + i * 440, y: 520 + Math.sin(i * 1.3) * 140, kind: 'pine', scale: 1.6 + (i % 3) * 0.25 });
+    } else if (id === 'city') {
+      features.push({ x: 0, y: -1180, kind: 'tower', scale: 2.4 });
+      for (const [x, y] of [[-1650, -1150], [-900, -1150], [900, -1150], [1650, -1150], [-1650, 1150], [-900, 1150], [900, 1150], [1650, 1150]]) features.push({ x, y, kind: 'building', scale: 1.9, seed: x + y });
+      for (const y of [-1300, -350, 350, 1300]) features.push({ x: -210, y, kind: 'lamp', scale: 1.5 }, { x: 210, y, kind: 'lamp', scale: 1.5 });
+      for (const [x, y] of [[-620, -640], [760, -760], [-1300, 640], [1250, 760]]) features.push({ x, y, kind: 'car', scale: 1.5, seed: x });
+    } else if (id === 'west') {
+      features.push({ x: 0, y: -1150, kind: 'saloon', scale: 2.4 }, { x: -1250, y: 620, kind: 'watertower', scale: 2.1 }, { x: 1200, y: -620, kind: 'wagon', scale: 1.9 }, { x: 1350, y: 1050, kind: 'wagon', scale: 1.6 });
+      for (const [x, y] of [[-1650, -1050], [-1500, -1180], [1650, -1150], [-1700, 1200], [1600, 400], [-600, 1250]]) features.push({ x, y, kind: 'cactus', scale: 1.9 });
+      for (const [x, y] of [[-300, -900], [320, -880], [-340, 300], [360, 520]]) features.push({ x, y, kind: 'barrel', scale: 1.4 });
     } else {
       features.push({ x: 0, y: -1130, kind: 'hauntedhouse', scale: 2.6 }, { x: -600, y: 320, kind: 'pumpkin', scale: 2.6 }, { x: 650, y: 230, kind: 'pumpkin', scale: 2.1 }, { x: -1200, y: -660, kind: 'deadTree', scale: 2.3 });
       for (let i = 0; i < 9; i++) features.push({ x: 950 + (i % 3) * 100, y: 660 + Math.floor(i / 3) * 95, kind: 'tomb', scale: 1.1 });
@@ -1010,6 +1054,49 @@ class VesperGame {
           ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 40, y - 18); ctx.lineTo(x + 70, y + 6); ctx.moveTo(x + 40, y - 18); ctx.lineTo(x + 52, y - 46); ctx.stroke();
         }
       }
+    } else if (id === 'city') {
+      const roads = [{ x: -170, y: bounds.top, w: 340, h: bounds.height }, { x: bounds.left, y: -870, w: bounds.width, h: 300 }, { x: bounds.left, y: 570, w: bounds.width, h: 300 }];
+      for (const road of roads) {
+        ctx.fillStyle = '#15171c'; ctx.fillRect(road.x, road.y, road.w, road.h);
+        ctx.strokeStyle = '#3a3e47'; ctx.lineWidth = 6; ctx.strokeRect(road.x, road.y, road.w, road.h);
+      }
+      ctx.strokeStyle = '#c9a44c'; ctx.lineWidth = 4; ctx.setLineDash([46, 38]);
+      ctx.beginPath(); ctx.moveTo(0, bounds.top); ctx.lineTo(0, bounds.bottom); ctx.moveTo(bounds.left, -720); ctx.lineTo(bounds.right, -720); ctx.moveTo(bounds.left, 720); ctx.lineTo(bounds.right, 720); ctx.stroke();
+      ctx.setLineDash([]);
+      for (const y of [-720, 720]) {
+        ctx.fillStyle = '#15171c'; ctx.fillRect(-170, y - 150, 340, 300);
+        ctx.fillStyle = '#d7d4cb';
+        for (let n = -150; n < 150; n += 30) { ctx.fillRect(-230, y + n + 6, 48, 16); ctx.fillRect(182, y + n + 6, 48, 16); }
+        for (let n = -150; n < 150; n += 30) { ctx.fillRect(n + 6, y - 212, 16, 48); ctx.fillRect(n + 6, y + 164, 16, 48); }
+      }
+      for (const park of [{ x: -1100, y: 0 }, { x: 1150, y: -20 }]) {
+        ctx.fillStyle = '#1b2b21'; ctx.fillRect(park.x - 420, park.y - 240, 840, 480);
+        ctx.strokeStyle = '#34453a'; ctx.lineWidth = 5; ctx.strokeRect(park.x - 420, park.y - 240, 840, 480);
+        ctx.fillStyle = '#2c3a31'; ctx.fillRect(park.x - 420, park.y - 22, 840, 44);
+        for (let i = 0; i < 10; i++) {
+          ctx.fillStyle = i % 2 ? '#22382a' : '#2a4432';
+          ctx.beginPath(); ctx.arc(park.x - 360 + (i % 5) * 180, park.y + (i < 5 ? -150 : 150), 44, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    } else if (id === 'west') {
+      for (const [x, y, rx, ry] of [[-1700, -1250, 520, 260], [1750, 1250, 560, 280], [1800, -1250, 420, 220]]) {
+        ctx.fillStyle = 'rgba(150,82,50,.35)'; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0.1, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(110,58,36,.45)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(x, y, rx * 0.8, ry * 0.8, 0.1, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.fillStyle = '#bb9563'; ctx.fillRect(-190, bounds.top + 24, 380, bounds.height - 48);
+      ctx.strokeStyle = 'rgba(112,78,46,.5)'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(-60, bounds.top); ctx.lineTo(-60, bounds.bottom); ctx.moveTo(60, bounds.top); ctx.lineTo(60, bounds.bottom); ctx.stroke();
+      for (const x of [-250, 190]) {
+        ctx.fillStyle = '#6b4a2e'; ctx.fillRect(x, bounds.top + 24, 60, bounds.height - 48);
+        ctx.strokeStyle = '#4a3220'; ctx.lineWidth = 2;
+        const from = Math.max(view.top, bounds.top), to = Math.min(view.bottom, bounds.bottom);
+        for (let y = Math.floor(from / 22) * 22; y < to; y += 22) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 60, y); ctx.stroke(); }
+      }
+      const from = Math.max(view.left, bounds.left), to = Math.min(view.right, bounds.right);
+      ctx.fillStyle = '#5a3d26';
+      for (let x = Math.floor(from / 38) * 38; x < to; x += 38) ctx.fillRect(x, 860, 16, 90);
+      ctx.strokeStyle = '#8d9097'; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(bounds.left, 882); ctx.lineTo(bounds.right, 882); ctx.moveTo(bounds.left, 928); ctx.lineTo(bounds.right, 928); ctx.stroke();
     } else {
       ctx.fillStyle = '#34303e';
       ctx.beginPath(); ctx.moveTo(-100, bounds.top); ctx.bezierCurveTo(-160, -740, 130, -450, -90, 160); ctx.bezierCurveTo(-250, 700, 170, 1050, -70, bounds.bottom); ctx.lineTo(100, bounds.bottom); ctx.bezierCurveTo(330, 980, -80, 740, 80, 200); ctx.bezierCurveTo(290, -450, 10, -780, 100, bounds.top); ctx.closePath(); ctx.fill();
@@ -1033,7 +1120,8 @@ class VesperGame {
     const light = (x, y, color, radius = 36) => {
       const g = ctx.createRadialGradient(x, y, 1, x, y, radius); g.addColorStop(0, color); g.addColorStop(1, color.slice(0, 7) + '00'); ctx.fillStyle = g; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
     };
-    oval('#060b1445', 6, 12, kind === 'pyramid' ? 125 : 42, kind === 'pyramid' ? 44 : 15);
+    const compact = ['lamp', 'hydrant', 'trashcan', 'barrel', 'cowskull'].includes(kind);
+    oval('#060b1445', compact ? 3 : 6, compact ? 4 : 12, kind === 'pyramid' ? 125 : compact ? 18 : 42, kind === 'pyramid' ? 44 : compact ? 6 : 15);
     if (kind === 'pillar' || kind === 'obelisk') {
       const egypt = kind === 'obelisk';
       poly(egypt ? '#716044' : '#272934', [[-24, 8], [24, 8], [29, 20], [-29, 20]]);
@@ -1238,6 +1326,120 @@ class VesperGame {
         poly(color, [[x - 6, 6], [tipX, tipY], [x + 6, 6]]);
         line('#e8f6fc', 1, [[x - 1, 4], [tipX, tipY + 4]]);
       }
+    } else if (kind === 'lamp') {
+      light(14, 2, '#ffd98a22', 64);
+      light(15, -80, '#ffd98a3a', 60);
+      rect('#23262d', -3, -78, 6, 84);
+      rect('#3a3e47', -8, 2, 16, 6);
+      poly('#2b2f37', [[-3, -80], [16, -88], [18, -84], [0, -76]]);
+      poly('#ffe6a8', [[10, -84], [20, -86], [19, -81], [10, -80]]);
+      oval('#fff2c8', 15, -82, 4, 2);
+    } else if (kind === 'car') {
+      const paint = ['#6b2f33', '#2f4a6b', '#4a4f57', '#2f5a45'][Math.abs(Math.round(seed)) % 4];
+      poly(paint, [[-46, 2], [-44, -16], [-26, -20], [-16, -34], [18, -34], [30, -20], [46, -16], [48, 2]]);
+      poly('#1b2430', [[-12, -31], [0, -31], [0, -21], [-20, -21]]);
+      poly('#1b2430', [[4, -31], [15, -31], [24, -21], [4, -21]]);
+      line('rgba(170,200,230,.35)', 1.5, [[-8, -29], [-13, -23]]);
+      line('rgba(255,255,255,.14)', 2, [[-43, -16], [-26, -19], [30, -19], [45, -15]]);
+      rect('#ffe6a0', 43, -14, 5, 4);
+      light(50, -12, '#ffe6a030', 22);
+      rect('#b8333a', -48, -14, 4, 4);
+      for (const x of [-28, 28]) { oval('#0f1216', x, 2, 9, 9); oval('#5b6068', x, 2, 4, 4); }
+    } else if (kind === 'hydrant') {
+      rect('#8f2226', -8, -2, 16, 6);
+      poly('#b8333a', [[-6, -2], [-6, -24], [6, -24], [6, -2]]);
+      oval('#c9474d', 0, -24, 7, 4);
+      rect('#8f2226', -10, -16, 20, 5);
+      oval('#e0c070', 0, -28, 2, 2);
+    } else if (kind === 'trashcan') {
+      poly('#4c525c', [[-12, 4], [-14, -28], [14, -28], [12, 4]]);
+      for (const x of [-7, 0, 7]) line('#3a3f47', 1.5, [[x, 2], [x, -26]]);
+      poly('#5d646f', [[-16, -28], [16, -28], [13, -34], [-13, -34]]);
+      rect('#3a3f47', -4, -38, 8, 4);
+    } else if (kind === 'bench') {
+      for (const x of [-26, 22]) rect('#2b2f37', x, -14, 4, 18);
+      for (const y of [-16, -10]) rect('#6b4a30', -32, y, 64, 4);
+      for (const y of [-30, -24]) rect('#7a5638', -32, y, 64, 4);
+      rect('#2b2f37', -30, -30, 3, 18); rect('#2b2f37', 27, -30, 3, 18);
+    } else if (kind === 'building' || kind === 'tower') {
+      const tower = kind === 'tower';
+      const w = tower ? 90 : 120, h = tower ? 240 : 160;
+      rect('#1b1e25', -w / 2, -h, w, h);
+      rect('#23272f', -w / 2, -h, w * 0.18, h);
+      rect('#2c3039', -w / 2 - 6, -h - 8, w + 12, 10);
+      for (let row = 0; row < (tower ? 11 : 6); row++) {
+        for (let col = 0; col < (tower ? 4 : 5); col++) {
+          const lit = this._hash(col + seed, row, 119) > 0.55;
+          const x = -w / 2 + 12 + col * (tower ? 19 : 21.5), y = -h + 16 + row * 21;
+          rect(lit ? '#f4c86a' : '#11141a', x, y, tower ? 11 : 13, 12);
+          if (lit) light(x + 6, y + 6, '#f4c86a18', 18);
+        }
+      }
+      rect('#11141a', -12, -30, 24, 30);
+      if (tower) {
+        rect('#2c3039', -3, -h - 70, 6, 62);
+        light(0, -h - 72, '#ff4d4d55', 18);
+        oval('#ff5a5a', 0, -h - 72, 4, 4);
+      } else {
+        rect('#3a3e47', w / 2 - 34, -h - 30, 22, 22);
+        line('#2c3039', 2, [[w / 2 - 30, -h - 8], [w / 2 - 30, -h]]);
+      }
+    } else if (kind === 'cactus') {
+      poly('#3e6b3a', [[-9, 4], [-9, -64], [-4, -72], [4, -72], [9, -64], [9, 4]]);
+      poly('#3e6b3a', [[-9, -30], [-24, -30], [-24, -52], [-17, -56], [-15, -38], [-9, -38]]);
+      poly('#3e6b3a', [[9, -40], [24, -40], [24, -62], [17, -66], [15, -48], [9, -48]]);
+      line('#5f9152', 2, [[-4, -64], [-4, 0]]);
+      line('#5f9152', 1.6, [[-20, -50], [-20, -34]]);
+      line('#5f9152', 1.6, [[20, -60], [20, -44]]);
+      for (let y = -60; y < 0; y += 10) { line('#d9d2a6', 0.8, [[-9, y], [-12, y - 2]]); line('#d9d2a6', 0.8, [[9, y + 4], [12, y + 2]]); }
+      oval('#e0647a', 0, -73, 4, 3);
+    } else if (kind === 'barrel') {
+      oval('#5a3a22', 0, -2, 15, 5);
+      poly('#7a5230', [[-14, -2], [-16, -20], [-14, -38], [14, -38], [16, -20], [14, -2]]);
+      for (const y of [-8, -32]) rect('#4b4f56', -15, y, 30, 3);
+      oval('#8e6238', 0, -38, 14, 4.5);
+      oval('#5a3a22', 0, -38, 10, 3);
+    } else if (kind === 'haybale') {
+      poly('#b8943f', [[-30, 4], [-30, -24], [30, -24], [30, 4]]);
+      poly('#d6b25a', [[-30, -24], [-22, -34], [38, -34], [30, -24]]);
+      poly('#a07f34', [[30, 4], [30, -24], [38, -34], [38, -6]]);
+      for (const x of [-12, 12]) line('#7a5a2a', 1.6, [[x, 4], [x, -24], [x + 8, -34]]);
+      for (let i = 0; i < 12; i++) line('#e6c878', 0.8, [[-28 + i * 5, -22], [-26 + i * 5, -18]]);
+    } else if (kind === 'cowskull') {
+      oval('#e9e1cc', 0, -6, 11, 8);
+      oval('#e9e1cc', 0, 2, 7, 6);
+      poly('#e9e1cc', [[-9, -10], [-24, -18], [-26, -24], [-18, -16], [-7, -13]]);
+      poly('#e9e1cc', [[9, -10], [24, -18], [26, -24], [18, -16], [7, -13]]);
+      oval('#3a2e24', -4, -7, 2.6, 3);
+      oval('#3a2e24', 4, -7, 2.6, 3);
+      oval('#3a2e24', -2, 4, 1.2, 1.6);
+      oval('#3a2e24', 2, 4, 1.2, 1.6);
+    } else if (kind === 'saloon') {
+      rect('#6b4a2e', -90, -110, 180, 110);
+      rect('#7d5836', -110, -150, 220, 50);
+      for (let y = -104; y < 0; y += 10) line('#5a3d25', 1.5, [[-90, y], [90, y]]);
+      rect('#2e1f14', -96, -150, 192, 4);
+      rect('#e6d3a4', -60, -140, 120, 28);
+      ctx.fillStyle = '#5a2a1c'; ctx.font = 'bold 20px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('SALOON', 0, -125);
+      rect('#4a3220', -104, -60, 208, 8);
+      for (const x of [-100, -40, 36, 96]) rect('#4a3220', x, -60, 5, 60);
+      rect('#2a1c12', -18, -46, 36, 46);
+      poly('#8a6238', [[-17, -40], [-1, -40], [-1, -16], [-17, -12]]);
+      poly('#8a6238', [[17, -40], [1, -40], [1, -16], [17, -12]]);
+      for (const x of [-66, 46]) { rect('#231810', x, -94, 20, 24); rect('#f0b060', x + 2, -92, 16, 20); light(x + 10, -82, '#f2b25a30', 30); }
+    } else if (kind === 'watertower') {
+      for (const x of [-26, 20]) rect('#5a3d26', x, -70, 6, 74);
+      line('#5a3d26', 3, [[-24, -10], [24, -50]]);
+      line('#5a3d26', 3, [[24, -10], [-24, -50]]);
+      poly('#7a5230', [[-34, -70], [-34, -120], [34, -120], [34, -70]]);
+      for (const y of [-80, -110]) rect('#3f3326', -35, y, 70, 3);
+      poly('#5a3d26', [[-38, -120], [0, -142], [38, -120]]);
+    } else if (kind === 'wagon') {
+      for (const x of [-26, 26]) { oval('#3a2a1c', x, -4, 12, 12); oval('#b8945c', x, -4, 9, 9); oval('#3a2a1c', x, -4, 3, 3); for (let a = 0; a < 6; a++) line('#3a2a1c', 1, [[x, -4], [x + Math.cos(a) * 9, -4 + Math.sin(a) * 9]]); }
+      rect('#6b4a2e', -40, -24, 80, 14);
+      poly('#e8dcc0', [[-36, -24], [-36, -46], [-20, -60], [20, -60], [36, -46], [36, -24]]);
+      for (const x of [-18, 0, 18]) line('#c2b494', 1.2, [[x, -24], [x, -58]]);
+      line('#6b4a2e', 2, [[40, -16], [62, -10]]);
     } else if (kind === 'cabin') {
       rect('#4a3526', -46, -38, 92, 46);
       for (let y = -32; y < 6; y += 8) line('#3a281c', 2, [[-46, y], [46, y]]);
@@ -1249,7 +1451,7 @@ class VesperGame {
     }
   }
   _drawWorldBoundary(ctx, id, bounds, view) {
-    const palette = { castle: ['#1a1d27', '#77707a'], egypt: ['#67563e', '#cbb078'], swamp: ['#152c27', '#56644a'], halloween: ['#211c2e', '#796079'], sea: ['#0e2a33', '#4f8a8f'], snow: ['#4b596b', '#c3d1dd'] }[id];
+    const palette = { castle: ['#1a1d27', '#77707a'], egypt: ['#67563e', '#cbb078'], swamp: ['#152c27', '#56644a'], halloween: ['#211c2e', '#796079'], sea: ['#0e2a33', '#4f8a8f'], snow: ['#4b596b', '#c3d1dd'], city: ['#14161c', '#4d5463'], west: ['#5b3f25', '#c79b62'] }[id];
     ctx.strokeStyle = palette[0]; ctx.lineWidth = 48; ctx.strokeRect(bounds.left, bounds.top, bounds.width, bounds.height);
     ctx.strokeStyle = palette[1]; ctx.lineWidth = 3; ctx.strokeRect(bounds.left + 24, bounds.top + 24, bounds.width - 48, bounds.height - 48);
     const post = (x, y) => {
@@ -1292,10 +1494,11 @@ class VesperGame {
   drawMapPreview(canvas, id) {
     const map = VesperGame.MAPS.find(item => item.id === id); if (!map) return;
     const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
-    const colors = { castle: ['#1c1c2b', '#51404f'], egypt: ['#444b59', '#b18a51'], swamp: ['#102e2c', '#3c6750'], halloween: ['#24223f', '#795160'], sea: ['#0b2638', '#1d5a63'], snow: ['#27324b', '#8fa2b8'] }[id];
+    const colors = { castle: ['#1c1c2b', '#51404f'], egypt: ['#444b59', '#b18a51'], swamp: ['#102e2c', '#3c6750'], halloween: ['#24223f', '#795160'], sea: ['#0b2638', '#1d5a63'], snow: ['#27324b', '#8fa2b8'], city: ['#070a16', '#1e2640'], west: ['#3b2a4a', '#d9884a'] }[id];
     ctx.save(); ctx.setTransform(w / 480, 0, 0, h / 190, 0, 0); ctx.clearRect(0, 0, 480, 190);
     const sky = ctx.createLinearGradient(0, 0, 0, 190); sky.addColorStop(0, colors[0]); sky.addColorStop(1, colors[1]); ctx.fillStyle = sky; ctx.fillRect(0, 0, 480, 190);
-    ctx.fillStyle = id === 'egypt' ? '#e4c995' : '#c8c1b580'; ctx.beginPath(); ctx.arc(362, 42, id === 'egypt' ? 23 : 20, 0, Math.PI * 2); ctx.fill();
+    const sunny = id === 'egypt' || id === 'west';
+    ctx.fillStyle = id === 'west' ? '#f2b25a' : sunny ? '#e4c995' : '#c8c1b580'; ctx.beginPath(); ctx.arc(362, id === 'west' ? 96 : 42, sunny ? 23 : 20, 0, Math.PI * 2); ctx.fill();
     const ground = ctx.createLinearGradient(0, 115, 0, 190); ground.addColorStop(0, '#10182400'); ground.addColorStop(1, '#080e18d9'); ctx.fillStyle = ground; ctx.fillRect(0, 100, 480, 90);
     const feature = (kind, x, y, scale, alpha = 1) => { ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale); ctx.globalAlpha = alpha; this._drawMapFeature(ctx, id, kind, x); ctx.restore(); };
     if (id === 'castle') {
@@ -1321,6 +1524,17 @@ class VesperGame {
       ctx.fillStyle = '#6f8199'; ctx.beginPath(); ctx.moveTo(0, 140); ctx.lineTo(90, 70); ctx.lineTo(170, 125); ctx.lineTo(260, 55); ctx.lineTo(360, 130); ctx.lineTo(480, 80); ctx.lineTo(480, 190); ctx.lineTo(0, 190); ctx.fill();
       ctx.fillStyle = '#c4d0dc'; for (const [x, y] of [[90, 70], [260, 55], [480, 80]]) { ctx.beginPath(); ctx.moveTo(x - 22, y + 18); ctx.lineTo(x, y); ctx.lineTo(x + 22, y + 18); ctx.fill(); }
       feature('pine', 70, 182, 1.2); feature('cabin', 250, 170, 1.05); feature('pine', 400, 186, 1.35); feature('iceCrystal', 150, 186, .8); feature('lantern', 330, 182, .7);
+    } else if (id === 'city') {
+      for (let i = 0; i < 9; i++) {
+        const x = i * 56 - 10, height = 60 + this._hash(i, 5) * 70;
+        ctx.fillStyle = i % 2 ? '#121624' : '#171b2b'; ctx.fillRect(x, 150 - height, 52, height);
+        for (let y = 162 - height; y < 140; y += 14) for (let wx = x + 8; wx < x + 46; wx += 12) if (this._hash(wx, y, 7) > 0.55) { ctx.fillStyle = '#f4c86a90'; ctx.fillRect(wx, y, 5, 7); }
+      }
+      feature('tower', 250, 172, .55); feature('lamp', 110, 186, .9); feature('car', 330, 188, .9); feature('hydrant', 60, 186, .8); feature('lamp', 430, 186, .9);
+    } else if (id === 'west') {
+      ctx.fillStyle = '#6b3b3a'; ctx.beginPath(); ctx.moveTo(0, 150); ctx.lineTo(30, 100); ctx.lineTo(140, 100); ctx.lineTo(165, 150); ctx.moveTo(300, 150); ctx.lineTo(330, 112); ctx.lineTo(440, 112); ctx.lineTo(470, 150); ctx.fill();
+      ctx.fillStyle = '#b8895a'; ctx.fillRect(0, 150, 480, 40);
+      feature('saloon', 250, 180, .62); feature('cactus', 70, 186, 1.05); feature('barrel', 380, 188, .9); feature('cactus', 440, 188, .8); feature('cowskull', 150, 188, .8);
     } else {
       feature('deadTree', 89, 160, 1.35, .6); feature('hauntedhouse', 254, 158, 1.05); feature('tomb', 369, 176, .8); feature('pumpkin', 122, 177, .9); feature('pumpkin', 405, 186, .65); feature('fence', 184, 190, .8);
     }
@@ -1488,7 +1702,7 @@ class VesperGame {
     this._walkPose(ctx, p.steps, p.walk || 0);
     ctx.scale(p.facing, 1);
     this._drawCharacter(ctx, this._character, p.steps);
-    if (this._accessories.includes('hat')) this._drawHat(ctx, this._character);
+    this._drawHeadwear(ctx, this._character, this._accessories);
     ctx.restore();
   }
   _followPet(owner, dt) {
@@ -2123,6 +2337,8 @@ VesperGame.MAPS = Object.freeze([
   { id: 'swamp', name: 'Pântano', subtitle: 'Lagoas e cabanas', unlockCharacter: 'zombie', bossName: 'ZUMBI', width: 4800, height: 3600, accent: '#79b99b' },
   { id: 'halloween', name: 'Modo Halloween', subtitle: 'Abóboras e cemitério', unlockCharacter: 'jack', bossName: 'JACK O’ LANTERN', width: 4800, height: 3600, accent: '#eaa05f' },
   { id: 'sea', name: 'Fundo do Mar', subtitle: 'Naufrágio e recifes', unlockCharacter: 'kraken', bossName: 'KRAKEN', width: 4800, height: 3600, accent: '#5fb8c4' },
-  { id: 'snow', name: 'Montanhas Geladas', subtitle: 'Neve e pinheiros', unlockCharacter: 'yeti', bossName: 'YETI', width: 4800, height: 3600, accent: '#a9c8e6' }
+  { id: 'snow', name: 'Montanhas Geladas', subtitle: 'Neve e pinheiros', unlockCharacter: 'yeti', bossName: 'YETI', width: 4800, height: 3600, accent: '#a9c8e6' },
+  { id: 'city', name: 'Cidade Sombria', subtitle: 'Ruas à noite', unlockCharacter: 'darkmouse', bossName: 'DARK MOUSE', width: 4800, height: 3600, accent: '#8f9bd6' },
+  { id: 'west', name: 'Velho Oeste', subtitle: 'Poeira e saloons', unlockCharacter: 'sheriff', bossName: 'XERIFE', width: 4800, height: 3600, accent: '#d9a05a' }
 ].map(map => Object.freeze(map)));
 window.VesperGame = VesperGame;

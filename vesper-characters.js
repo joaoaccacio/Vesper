@@ -24,6 +24,16 @@
     gradient.addColorStop(0, color); gradient.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = gradient; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   };
+  const star = (ctx, color, x, y, radius) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const angle = -Math.PI / 2 + i * Math.PI / 5;
+      const reach = i % 2 ? radius * 0.45 : radius;
+      ctx.lineTo(x + Math.cos(angle) * reach, y + Math.sin(angle) * reach);
+    }
+    ctx.closePath(); ctx.fill();
+  };
   const boots = (ctx, stride, trousers, leather) => {
     ctx.fillStyle = trousers;
     ctx.fillRect(-8 + stride, 6, 5, 10); ctx.fillRect(3 - stride, 6, 5, 10);
@@ -705,6 +715,136 @@
       line(ctx, '#f0d9c8', 0.9, [[-8.4, -4.6], [-5.8, -3.8]]);
       line(ctx, '#9e2f2c', 0.8, [[-9.6, -5.8], [11, -5.8]]);
       flipper(10.8, -0.38 - flap);
+    },
+
+    sheriff(ctx, steps) {
+      const stride = Math.sin(steps) * 1.6;
+      const swing = Math.sin(steps) * 1.2;
+      boots(ctx, stride, '#3e5163', '#5b3a22');
+      oval(ctx, '#cfc7ae', -9.6 + stride, 18.2, 1.3, 1.3);
+      oval(ctx, '#cfc7ae', 10.4 - stride, 18.2, 1.3, 1.3);
+      polygon(ctx, '#b99d74', [[-8, -8], [-12.4, 1.6 - swing], [-9.6, 3.2 - swing], [-5.4, -4.6]]);
+      oval(ctx, '#d7a37b', -11.2, 3.6 - swing, 2.3, 2.3);
+      polygon(ctx, '#cbb58d', [[-8.4, -10], [8.4, -10], [9.2, 8], [-9.2, 8]]);
+      polygon(ctx, '#6d4a2d', [[-8.8, -9.8], [-2.4, -9.2], [-1.2, 7.8], [-9.6, 7.8]]);
+      polygon(ctx, '#6d4a2d', [[8.8, -9.8], [2.8, -9.2], [1.6, 7.8], [9.6, 7.8]]);
+      line(ctx, '#8f6a45', 0.8, [[-7.8, -7.4], [-8.2, 6.4]]);
+      star(ctx, '#e2b64d', 5.4, -3.4, 3.4);
+      oval(ctx, '#fff1b8', 5.4, -3.4, 0.8, 0.8);
+      ctx.fillStyle = '#3b281a'; ctx.fillRect(-9.6, 6.2, 19.2, 3.2);
+      ctx.fillStyle = '#d8b35e'; ctx.fillRect(-1.8, 6, 3.6, 3.6);
+      polygon(ctx, '#4a3220', [[7.2, 8.4], [11.8, 8.4], [11.2, 15.4], [7.8, 15.4]]);
+      polygon(ctx, '#6a6f78', [[8.2, 8.6], [10.8, 8.6], [11.6, 5.4], [8.8, 5]]);
+      polygon(ctx, '#ab3b31', [[-6.2, -11], [7.4, -11], [3.2, -6.4], [0.6, -4.2], [-2, -6.4]]);
+      polygon(ctx, '#b99d74', [[6, -8], [12.6, -1.4 + swing], [10.4, 1.6 + swing], [5, -4.2]]);
+      oval(ctx, '#d7a37b', 12, 1.2 + swing, 2.3, 2.3);
+      oval(ctx, '#d7a37b', 1, -17, 7.4, 7.8);
+      oval(ctx, '#c28d67', -4.8, -16.4, 1.8, 2.8);
+      oval(ctx, '#2a1d14', 2, -18.4, 0.9, 1.1);
+      oval(ctx, '#2a1d14', 5.8, -18.4, 0.9, 1.1);
+      line(ctx, '#5a3a22', 1, [[0.6, -20.4], [3, -20.8]]);
+      line(ctx, '#5a3a22', 1, [[4.8, -20.8], [7.2, -20.4]]);
+      oval(ctx, '#c28d67', 7.8, -15.6, 1.6, 1.4);
+      polygon(ctx, '#5a3a22', [[0.4, -13.6], [3.6, -14.6], [7.4, -14], [10, -11.4], [7.6, -12.4], [3.8, -12.6], [0.8, -11.6], [-1, -12.8]]);
+      polygon(ctx, '#6a4526', [[-7.4, -22], [-6.8, -30], [-3.4, -33], [0, -31.4], [3.6, -33], [7, -30], [7.8, -22]]);
+      polygon(ctx, '#86592f', [[-6.8, -30], [-3.4, -33], [0, -31.4], [-1, -23], [-7.2, -22.6]]);
+      ctx.fillStyle = '#2f1f13'; ctx.fillRect(-7.4, -24.8, 15.2, 2.4);
+      polygon(ctx, '#5a3b20', [[-15, -24.4], [-10.6, -20.8], [0, -19.6], [10.6, -20.8], [15.6, -24.4], [11.8, -22.6], [0, -21.4], [-11, -22.6]]);
+      polygon(ctx, '#8f6236', [[-15, -24.4], [-11, -22.6], [0, -21.4], [11.8, -22.6], [15.6, -24.4], [12.6, -25], [0, -23.2], [-12, -25]]);
+    },
+
+    darkmouse(ctx, steps) {
+      const stride = Math.sin(steps) * 2;
+      const swing = Math.sin(steps) * 1.8;
+      const ink = '#151515', paper = '#ebe7dc';
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(-5, 5); ctx.quadraticCurveTo(-15, 3, -16, 10); ctx.quadraticCurveTo(-17, 16, -11.5, 16.5); ctx.stroke();
+      line(ctx, ink, 2, [[-2.6, 7], [-3.8 + stride, 15]]);
+      line(ctx, ink, 2, [[2.6, 7], [3.8 - stride, 15]]);
+      oval(ctx, '#262626', -4.6 + stride, 16.8, 5.2, 2.6);
+      oval(ctx, '#262626', 5.4 - stride, 16.8, 5.2, 2.6);
+      oval(ctx, '#7a7a7a', -3.2 + stride, 15.9, 1.8, 0.7);
+      oval(ctx, '#7a7a7a', 6.8 - stride, 15.9, 1.8, 0.7);
+      line(ctx, ink, 2, [[-4, -4], [-9.4, 2 - swing]]);
+      oval(ctx, ink, -9.8, 2.6 - swing, 2.1, 2.1);
+      oval(ctx, ink, 0, -2.4, 6, 7);
+      polygon(ctx, '#555555', [[-6.6, 0.6], [6.6, 0.6], [7, 8], [1.2, 8.4], [0, 5.8], [-1.2, 8.4], [-7, 8]]);
+      oval(ctx, paper, -2.6, 3.2, 1.2, 1.4);
+      oval(ctx, paper, 2.6, 3.2, 1.2, 1.4);
+      line(ctx, ink, 2, [[4, -4], [10, 1.2 + swing]]);
+      oval(ctx, ink, 10.4, 1.8 + swing, 2.1, 2.1);
+      oval(ctx, ink, -6.8, -27.2, 5.8, 5.8);
+      oval(ctx, ink, 7.8, -27.6, 5.8, 5.8);
+      oval(ctx, ink, 0.6, -17.4, 8.4, 8.2);
+      oval(ctx, paper, 2.6, -18.8, 4.2, 4.8);
+      oval(ctx, paper, 7.2, -14.6, 5.4, 3.4);
+      oval(ctx, paper, 3.4, -13.6, 3.6, 2.8);
+      oval(ctx, ink, 12.2, -15.4, 1.9, 1.5);
+      for (const x of [1.4, 4.8]) {
+        oval(ctx, ink, x, -19.8, 1.2, 2.5);
+        polygon(ctx, paper, [[x + 0.2, -21.4], [x + 1.3, -20.6], [x + 0.5, -20]]);
+      }
+      ctx.strokeStyle = ink; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(4.2, -12.8); ctx.quadraticCurveTo(7.6, -10.4, 11, -12.6); ctx.stroke();
+    },
+
+    soldier(ctx, steps) {
+      const stride = Math.sin(steps) * 1.6;
+      const swing = Math.sin(steps) * 1.2;
+      boots(ctx, stride, '#4d5a33', '#24211c');
+      polygon(ctx, '#56663a', [[-8, -8], [-12.4, 1.6 - swing], [-9.6, 3.4 - swing], [-5.4, -4.4]]);
+      oval(ctx, '#c99a74', -11.2, 3.8 - swing, 2.3, 2.3);
+      polygon(ctx, '#5b6b3b', [[-8.6, -10], [8.6, -10], [9.4, 8], [-9.4, 8]]);
+      for (const [x, y, rx, ry, color] of [[-5, -5, 2.6, 1.6, '#3f4b27'], [4, -7, 2.2, 1.4, '#7a8a4c'], [-2, 2, 2.8, 1.6, '#7a8a4c'], [5, 3, 2.4, 1.6, '#3f4b27'], [-6.4, 5, 1.8, 1.2, '#3f4b27']]) oval(ctx, color, x, y, rx, ry);
+      line(ctx, '#3a2f22', 2.2, [[-8, -9], [7.6, 6]]);
+      polygon(ctx, '#4a5530', [[-9.4, 2], [-4.6, 2], [-4.6, 7.4], [-9.4, 7.4]]);
+      ctx.fillStyle = '#2f2a20'; ctx.fillRect(-9.6, 6.2, 19.2, 3);
+      ctx.fillStyle = '#9ea08a'; ctx.fillRect(-1.6, 6, 3.2, 3.4);
+      line(ctx, '#c9ccd2', 0.7, [[-1.4, -10], [0.4, -6], [2.2, -10]]);
+      oval(ctx, '#c9ccd2', 0.4, -5.4, 1, 1.3);
+      polygon(ctx, '#56663a', [[6, -8], [12.6, -1.2 + swing], [10.4, 1.8 + swing], [5, -4]]);
+      oval(ctx, '#c99a74', 12, 1.4 + swing, 2.3, 2.3);
+      oval(ctx, '#c99a74', 1, -17, 7.2, 7.6);
+      oval(ctx, '#2a1d14', 2.4, -17.6, 0.9, 1.1);
+      oval(ctx, '#2a1d14', 6, -17.6, 0.9, 1.1);
+      line(ctx, '#3a2a1c', 1, [[1.2, -19.6], [3.4, -19.8]]);
+      line(ctx, '#3a2a1c', 1, [[5, -19.8], [7.2, -19.4]]);
+      line(ctx, '#9b6a4e', 0.9, [[3.4, -13.2], [6.4, -13.4]]);
+      line(ctx, '#3a4424', 0.8, [[-5.4, -18], [-3, -12.6], [2, -11.4]]);
+      polygon(ctx, '#4e5d2e', [[-8.6, -19.4], [-8, -24.6], [-4.4, -28.6], [1.4, -29.8], [6.8, -28.2], [9.6, -24], [10.2, -19.4]]);
+      polygon(ctx, '#63733c', [[-7, -24.2], [-3.8, -27.8], [1.4, -28.8], [-0.4, -24], [-6.4, -21.4]]);
+      polygon(ctx, '#3f4b25', [[-9.8, -19.8], [11.2, -19.8], [10.8, -18], [-9.6, -18]]);
+      line(ctx, '#39441f', 0.7, [[-6, -26], [8, -22]]);
+      line(ctx, '#39441f', 0.7, [[-7, -22.4], [7, -27]]);
+    },
+
+    vespermobile(ctx, steps) {
+      const turn = steps * 1.2;
+      ctx.save();
+      ctx.translate(0, 3 - Math.abs(Math.sin(steps * 2)) * 0.6);
+      polygon(ctx, '#0f1014', [[-22, 2], [-20, -14], [-15, -4]]);
+      polygon(ctx, '#1d1f25', [[-21, 0], [-19.6, -11], [-16.4, -4]]);
+      polygon(ctx, '#131418', [[-22, 8], [-21, -2], [-12, -6], [-4, -12], [6, -12], [12, -6], [22, -3], [24, 4], [22, 9]]);
+      line(ctx, '#3b3f4a', 1, [[-20, -2], [-12, -5.4], [-4, -11.2], [6, -11.2], [11.6, -5.4], [21.6, -2.4]]);
+      polygon(ctx, '#23303a', [[-3.4, -11], [5.4, -11], [10, -6], [-6.6, -6]]);
+      polygon(ctx, 'rgba(140,190,220,.35)', [[-2, -10.4], [3, -10.4], [5.6, -6.8], [-3.6, -6.8]]);
+      line(ctx, '#2c2f37', 1.2, [[-19, 3], [18, 3]]);
+      oval(ctx, '#2a2c33', 20.4, 1.2, 3, 3.4);
+      glow(ctx, 'rgba(255,170,60,.45)', 22, 1, 8);
+      oval(ctx, '#f0a33c', 20.8, 1.2, 1.8, 2.2);
+      polygon(ctx, '#ffd98a', [[21, -2.8], [23.4, -1.6], [21.2, -1]]);
+      polygon(ctx, 'rgba(255,120,40,.7)', [[-22, 4], [-27 - Math.sin(turn * 3) * 1.5, 5], [-22, 6]]);
+      polygon(ctx, '#c9a24f', [[-1.6, -1.8], [0, 1.6], [1.6, -1.8], [0.7, -1.8], [0, -0.2], [-0.7, -1.8]]);
+      for (const x of [-13, 13]) {
+        oval(ctx, '#0a0a0c', x, 8.6, 5.4, 5.4);
+        oval(ctx, '#3b3e46', x, 8.6, 3.2, 3.2);
+        ctx.strokeStyle = '#8a8f99'; ctx.lineWidth = 0.9;
+        for (let i = 0; i < 3; i++) {
+          const angle = turn + i * TAU / 3;
+          ctx.beginPath(); ctx.moveTo(x, 8.6); ctx.lineTo(x + Math.cos(angle) * 3, 8.6 + Math.sin(angle) * 3); ctx.stroke();
+        }
+      }
+      ctx.restore();
     }
   };
 
@@ -713,7 +853,8 @@
     mummy: [1, -26.5, 1], zombie: [1, -26.2, 1], jack: [0.6, -28.4, 1.08], kraken: [0.4, -31.4, 1.1],
     yeti: [0.6, -28.4, 1.08], survivor: [1, -27.8, 1], alien: [0.4, -28, 1.04], spider: [13, -10.5, 0.7],
     skeleton: [0.4, -30.2, 1.06], orc: [1, -26.4, 1.04], invisible: [0.6, -21, 1.06], cyborg: [1, -27, 1],
-    plague: [1, -24, 1.1], frankenstein: [1, -26.4, 1.04], banana: [-1.6, -26.8, 0.8], penguin: [1.2, -22, 1]
+    plague: [1, -24, 1.1], frankenstein: [1, -26.4, 1.04], banana: [-1.6, -26.8, 0.8], penguin: [1.2, -22, 1],
+    sheriff: [1, -22.6, 1.08], darkmouse: [0.8, -25, 0.96], soldier: [1, -27.4, 1.04], vespermobile: [1.4, -5.8, 0.78]
   };
 
   function drawHat(ctx) {
@@ -728,14 +869,44 @@
     line(ctx, '#c08a4a', 0.7, [[-13, -3], [-7, -0.8], [0, -0.4]]);
   }
 
-  VesperGame.prototype._drawHat = function (ctx, id) {
+  function drawCap(ctx) {
+    ctx.rotate(-0.22);
+    oval(ctx, 'rgba(0,0,0,.2)', 0, 1, 9, 2);
+    ctx.fillStyle = '#2d5fb4';
+    ctx.beginPath(); ctx.moveTo(-8.4, 0.6); ctx.quadraticCurveTo(-8, -10, 0.4, -10.4); ctx.quadraticCurveTo(8.6, -10, 8.8, 0.6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4a7fd6';
+    ctx.beginPath(); ctx.moveTo(-6.4, -0.4); ctx.quadraticCurveTo(-6, -8.6, 0.4, -9.4); ctx.quadraticCurveTo(-1.6, -4, -2.2, -0.4); ctx.closePath(); ctx.fill();
+    line(ctx, '#1f4588', 0.7, [[0.4, -10.2], [0.8, 0.4]]);
+    oval(ctx, '#1f4588', 0.4, -10.2, 1.3, 0.8);
+    polygon(ctx, '#23509c', [[4, -0.4], [15.6, -1.4], [16.4, 1], [4.2, 1.8]]);
+    polygon(ctx, '#3567c0', [[4, -0.4], [15.6, -1.4], [15.8, -0.4], [4.4, 0.6]]);
+    ctx.fillStyle = '#1b3f7c'; ctx.fillRect(-8.6, -0.8, 13, 1.8);
+  }
+
+  function drawCrown(ctx) {
+    oval(ctx, 'rgba(0,0,0,.2)', 0, 1.2, 8.4, 1.8);
+    polygon(ctx, '#a57a2c', [[-8, 1], [-8.6, -8], [-4.4, -4], [0, -10.4], [4.4, -4], [8.6, -8], [8, 1]]);
+    polygon(ctx, '#e3bb57', [[-7.2, 0.4], [-7.6, -6.6], [-4.2, -3], [0, -9.2], [4.2, -3], [7.6, -6.6], [7.2, 0.4]]);
+    ctx.fillStyle = '#c99a3c'; ctx.fillRect(-7.6, -2.2, 15.2, 3);
+    oval(ctx, '#c2414f', 0, -0.7, 1.3, 1.1);
+    oval(ctx, '#3f7fd0', -4.4, -0.7, 0.9, 0.9);
+    oval(ctx, '#3f7fd0', 4.4, -0.7, 0.9, 0.9);
+    for (const [x, y] of [[-8.6, -8], [0, -10.4], [8.6, -8]]) oval(ctx, '#fff3c6', x, y, 1.1, 1.1);
+    line(ctx, '#fff0bf', 0.6, [[-6.4, -1.8], [-1.6, -1.8]]);
+  }
+
+  const HEADWEAR = { hat: drawHat, cap: drawCap, crown: drawCrown };
+
+  VesperGame.prototype._drawHeadwear = function (ctx, id, accessories) {
+    const piece = accessories.find(item => HEADWEAR[item]);
+    if (!piece) return;
     const [x, y, size] = HAT_SPOTS[id] || [1, -27, 1];
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(-0.08);
+    if (piece === 'hat') ctx.rotate(-0.08);
     ctx.scale(size, size);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    drawHat(ctx);
+    HEADWEAR[piece](ctx);
     ctx.restore();
   };
 
@@ -788,10 +959,10 @@
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     if (reward.type === 'coins') drawCoins(ctx, reward.amount);
     else if (reward.type === 'gift') drawGift(ctx);
-    else if (reward.type === 'accessory' && reward.id === 'hat') {
+    else if (reward.type === 'accessory' && HEADWEAR[reward.id]) {
       ctx.translate(0, 7);
       ctx.scale(1.6, 1.6);
-      drawHat(ctx);
+      HEADWEAR[reward.id](ctx);
     } else {
       const id = reward.type === 'skin' ? reward.id : characterId;
       const mini = reward.type === 'accessory';
@@ -819,9 +990,13 @@
     { id: 'jack', name: 'Jack o’ Lantern', unlockType: 'map', unlockMap: 'halloween', accent: '#edab66' },
     { id: 'kraken', name: 'Kraken', unlockType: 'map', unlockMap: 'sea', accent: '#6fc3cf' },
     { id: 'yeti', name: 'Yeti', unlockType: 'map', unlockMap: 'snow', accent: '#b9d3ea' },
+    { id: 'darkmouse', name: 'Dark Mouse', unlockType: 'map', unlockMap: 'city', accent: '#cfcac0' },
+    { id: 'sheriff', name: 'Xerife', unlockType: 'map', unlockMap: 'west', accent: '#d9a45c' },
     { id: 'survivor', name: 'Sobrevivente', unlockType: 'all', accent: '#d8c185' },
-    { id: 'banana', name: 'Banana', unlockType: 'daily', unlockDay: 10, accent: '#f1d45c' },
-    { id: 'penguin', name: 'Pinguim', unlockType: 'daily', unlockDay: 15, accent: '#9fc3de' },
+    { id: 'banana', name: 'Banana', unlockType: 'daily', unlockDay: 10, both: true, accent: '#f1d45c' },
+    { id: 'penguin', name: 'Pinguim', unlockType: 'daily', unlockDay: 15, both: true, accent: '#9fc3de' },
+    { id: 'soldier', name: 'Soldado', unlockType: 'coins', both: true, accent: '#8d9c62' },
+    { id: 'vespermobile', name: 'Vesper-Móvel', unlockType: 'coins', both: true, accent: '#9aa3b5' },
     { id: 'alien', name: 'Alien', unlockType: 'coins', accent: '#a4d989' },
     { id: 'spider', name: 'Aranha', unlockType: 'coins', accent: '#bc91c7' },
     { id: 'skeleton', name: 'Esqueleto', unlockType: 'coins', accent: '#d9d1b5' },
@@ -859,7 +1034,7 @@
     oval(ctx, 'rgba(0,0,0,.26)', 0, 18, 22, 6);
     ctx.globalAlpha = locked ? 0.8 : 1;
     this._drawCharacter(ctx, id, 0);
-    if (accessories.includes('hat')) this._drawHat(ctx, id);
+    this._drawHeadwear(ctx, id, accessories);
     if (mini) {
       ctx.translate(-30, 10.5);
       ctx.scale(0.42, 0.42);

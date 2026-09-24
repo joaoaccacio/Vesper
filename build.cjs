@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const output = path.join(__dirname, 'index.html');
 let html = fs.readFileSync(output, 'utf8');
-for (const name of ['engine', 'characters', 'enemies', 'arena', 'online', 'ui']) {
+for (const name of ['engine', 'characters', 'enemies', 'arena', 'online', 'trades', 'admin', 'ui']) {
   const file = `vesper-${name}.js`;
   const source = fs.readFileSync(path.join(__dirname, file), 'utf8');
   new vm.Script(source, { filename: file });
@@ -13,7 +13,7 @@ for (const name of ['engine', 'characters', 'enemies', 'arena', 'online', 'ui'])
   if (!expression.test(html)) throw new Error(`Missing ${name} module in index.html`);
   html = html.replace(expression, () => `<script data-module="${name}">\n${source}\n  </script>`);
 }
-for (const name of ['online', 'campaign']) {
+for (const name of ['online', 'admin', 'campaign']) {
   const css = fs.readFileSync(path.join(__dirname, `vesper-${name}.css`), 'utf8');
   const expression = new RegExp(`<style data-module="${name}">[\\s\\S]*?<\\/style>`);
   if (!expression.test(html)) throw new Error(`Missing ${name} stylesheet in index.html`);

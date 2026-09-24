@@ -34,12 +34,16 @@
     { id: 'plague', price: 600, skill: { id: 'poison', value: 0.4, label: 'Tiros envenenam por 3s' } },
     { id: 'cyborg', price: 700, skill: { id: 'projectile', value: 1, label: '+1 projétil' } },
     { id: 'banana', price: null, skill: null },
-    { id: 'penguin', price: null, skill: null }
+    { id: 'penguin', price: null, skill: null },
+    { id: 'soldier', price: 350, skill: null },
+    { id: 'vespermobile', price: 7000, skill: null }
   ].map(skin => Object.freeze(skin)));
 
   const ACCESSORIES = Object.freeze([
-    { id: 'hat', name: 'Chapéu de Cowboy' },
-    { id: 'mini', name: 'Mini Você' }
+    { id: 'hat', name: 'Chapéu de Cowboy', slot: 'head', price: null },
+    { id: 'mini', name: 'Mini Você', slot: 'pet', price: null },
+    { id: 'cap', name: 'Boné Azul', slot: 'head', price: 800 },
+    { id: 'crown', name: 'Coroa', slot: 'head', price: 3000 }
   ].map(accessory => Object.freeze(accessory)));
 
   const BOT_NAMES = Object.freeze([
@@ -85,7 +89,21 @@
   const killXpFor = level => 10 + level * 6;
   const weaponFor = level => WEAPONS[clamp(Math.floor(level), 1, CONFIG.levelCap) - 1];
   const skinFor = id => SKINS.find(skin => skin.id === id) || SKINS[0];
-  const accessoriesOf = list => (Array.isArray(list) ? ACCESSORIES.filter(item => list.includes(item.id)).map(item => item.id) : []);
+  const accessoriesOf = list => {
+    if (!Array.isArray(list)) return [];
+    const picked = [];
+    for (const id of list) {
+      const item = ACCESSORIES.find(entry => entry.id === id);
+      if (item && !picked.some(other => other.slot === item.slot)) picked.push(item);
+    }
+    return ACCESSORIES.filter(item => picked.includes(item)).map(item => item.id);
+  };
+  const tradeKeyOf = key => {
+    const [kind, id] = String(key).split(':');
+    if (kind === 'skin' && id !== 'alien' && SKINS.some(skin => skin.id === id)) return 'skin:' + id;
+    if (kind === 'acc' && ACCESSORIES.some(item => item.id === id)) return 'acc:' + id;
+    return null;
+  };
 
   const coinsFor = (rank, level, kills) =>
     (rank === 1 ? 60 : rank === 2 ? 42 : rank === 3 ? 32 : Math.max(6, 26 - rank)) + level * 3 + kills * 2;
@@ -214,7 +232,7 @@
         bot,
         level: 1, xp: 0, nextXp: nextXpFor(1), humanKills: 0, botKills: 0,
         hp: 1, maxHp: 1,
-        acc: bot ? ACCESSORIES.filter(() => this.random() < CONFIG.botAccessory).map(item => item.id) : accessoriesOf(options.acc),
+        acc: bot ? this.botAccessories() : accessoriesOf(options.acc),
         x: 0, y: 0, aim: 0, kills: 0, deaths: 0,
         alive: true, respawn: 0, spawnGuard: CONFIG.spawnGuard,
         fireTimer: 0, heavyShots: 0, heavyHit: false, aimDistance: Infinity,
@@ -229,6 +247,14 @@
       this.fighters.push(fighter);
       this.events.push({ e: 'join', id: fighter.id, name: fighter.name, skin: fighter.skin, bot: fighter.bot, acc: fighter.acc });
       return fighter;
+    }
+
+    botAccessories() {
+      const heads = ACCESSORIES.filter(item => item.slot === 'head');
+      const picked = [];
+      if (this.random() < CONFIG.botAccessory) picked.push(heads[Math.floor(this.random() * heads.length)].id);
+      if (this.random() < CONFIG.botAccessory) picked.push('mini');
+      return accessoriesOf(picked);
     }
 
     leave(id) {
@@ -607,7 +633,7 @@
 
   const VesperArena = Object.freeze({
     TAU, ARENA, WEAPONS, SKINS, ACCESSORIES, BOT_NAMES, CONFIG, ZONES, bounds,
-    clamp, nextXpFor, killXpFor, weaponFor, skinFor, accessoriesOf, coinsFor, bonusOf, maxHpFor, segmentHit, Arena
+    clamp, nextXpFor, killXpFor, weaponFor, skinFor, accessoriesOf, tradeKeyOf, coinsFor, bonusOf, maxHpFor, segmentHit, Arena
   });
 
   if (typeof module === 'object' && module.exports) module.exports = VesperArena;
