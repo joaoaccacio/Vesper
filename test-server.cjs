@@ -746,6 +746,9 @@ test('contas: criar, entrar, sessao, sair, salvar perfil e senha nunca guardada 
     for (const name of ['ab', 'a b', 'Admin', 'administrador1', 'Vesper', 'x'.repeat(15), '<script>', '', 'Guin\u043e', 'Guino\u200b']) {
       assert.equal((await client.ask({ t: 'acct', op: 'register', name, password: 'segredo1' })).error, 'nome', 'Nome recusado: ' + name);
     }
+    assert.equal((await later.ask({ t: 'acct', op: 'register', name: 'ADM', password: 'segredo1' })).ok, true, 'O primeiro a registrar ADM fica com o nome');
+    assert.equal((await later.ask({ t: 'acct', op: 'register', name: 'adm', password: 'segredo1' })).error, 'existe', 'Ninguem mais usa ADM');
+    for (const name of ['ADM1', 'A.D.M', 'adm_', 'Admin']) assert.equal((await later.ask({ t: 'acct', op: 'register', name, password: 'segredo1' })).error, 'nome', 'Imitacao de ADM recusada: ' + name);
     assert.equal((await client.ask({ t: 'acct', op: 'register', name: 'Curta', password: '12345' })).error, 'senha');
     assert.equal((await client.ask({ t: 'acct', op: 'register', name: 'Longa', password: 'x'.repeat(73) })).error, 'senha');
     assert.equal((await client.ask({ t: 'acct', op: 'register', name: 'Objeto', password: { length: 9 } })).error, 'senha');

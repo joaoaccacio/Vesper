@@ -168,7 +168,7 @@ const OPERATIONS = {
   async register(client, message) {
     const name = cleanName(message.name);
     const password = typeof message.password === 'string' ? message.password : '';
-    if (!NAME.test(name) || RESERVED.test(name.toLowerCase().replace(/[^\p{L}]/gu, ''))) return { ok: false, error: 'nome' };
+    if (!NAME.test(name) || (RESERVED.test(name.toLowerCase().replace(/[^\p{L}]/gu, '')) && name.toLowerCase() !== 'adm')) return { ok: false, error: 'nome' };
     if (password.length < LIMIT.minPassword || password.length > LIMIT.maxPassword) return { ok: false, error: 'senha' };
     const lower = password.toLowerCase();
     if (WEAK.has(lower) || lower === name.toLowerCase() || /^(.)\1+$/.test(password)) return { ok: false, error: 'fraca' };
