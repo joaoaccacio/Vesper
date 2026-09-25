@@ -27,3 +27,14 @@
 #letter-overlay{z-index:30}
 @media(max-width:650px){.admin-panel{padding:28px 16px}.admin-results li{flex-wrap:wrap}.admin-results li div{flex-basis:calc(100% - 62px)}.admin-results input{flex:1;width:auto;min-width:0}.admin-results li button:first-of-type{margin-left:auto}.admin-art{width:44px;height:44px}}
 @media(prefers-reduced-motion:reduce){.admin-panel *{animation:none!important;transition:none!important}}
+.admin-tabs{display:flex;gap:6px;max-width:760px;margin:0 auto 18px}
+.admin-tab{padding:7px 16px;border:1px solid #2f1f57;border-radius:999px;background:transparent;color:#a894df;font-size:12px;letter-spacing:.8px}.admin-tab:hover{border-color:#5b3fa8;color:#e1d6ff}
+.admin-tab.is-active{border-color:#8b6cf0;background:linear-gradient(180deg,#8b6cf033,#6d4bd11f);color:#f4efff}
+.admin-player{max-width:760px;margin:0 auto 16px}
+.admin-find{display:flex;gap:10px}.admin-user{flex:1;min-width:0;padding:14px 18px;border:1px solid #4a3290;border-radius:12px;outline:none;background:#120a22d9;color:#f4efff;font-size:15px}.admin-user:focus{border-color:#a78bfa;box-shadow:0 0 0 4px #a78bfa2e}
+.admin-find button,.admin-card button{padding:8px 18px;border:1px solid #8b6cf0;border-radius:999px;background:linear-gradient(180deg,#8b6cf0,#6d4bd1);color:#fff;font-size:12px;letter-spacing:.5px}
+.admin-card{display:flex;align-items:center;gap:14px;margin-top:12px;padding:14px 16px;border:1px solid #3b2670;border-radius:14px;background:linear-gradient(135deg,#1d1236e6,#0f0a1ce6)}
+.admin-card div{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}.admin-card strong{font-size:17px;color:#f4efff}.admin-card span{font-size:12px;color:#a894df}
+.admin-card button.is-admin{background:transparent;color:#cdbcff}
+.admin-card button.is-danger{border-color:#e0567a;background:linear-gradient(180deg,#e0567a,#b43a5c)}.admin-card button.is-danger.is-armed{box-shadow:0 0 0 3px #e0567a40;background:linear-gradient(180deg,#f06a8c,#c9416a)}
+@media(max-width:650px){.admin-card{flex-wrap:wrap}.admin-card div{flex-basis:100%}}

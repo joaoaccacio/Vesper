@@ -99,7 +99,9 @@
     return ACCESSORIES.filter(item => picked.includes(item)).map(item => item.id);
   };
   const tradeKeyOf = key => {
-    const [kind, id] = String(key).split(':');
+    const parts = String(key).split(':');
+    if (parts.length !== 2) return null;
+    const [kind, id] = parts;
     if (kind === 'skin' && id !== 'alien' && SKINS.some(skin => skin.id === id)) return 'skin:' + id;
     if (kind === 'acc' && ACCESSORIES.some(item => item.id === id)) return 'acc:' + id;
     return null;

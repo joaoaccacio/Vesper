@@ -9,9 +9,15 @@ const failures = [];
 let passed = 0;
 function test(name, run) {
   if (!isMain) return;
-  try { run(); ++passed; process.stdout.write(`PASS ${name}\n`); }
-  catch (error) { failures.push({ name, error }); process.stderr.write(`FAIL ${name}: ${error.stack}\n`); }
+  const pass = () => { ++passed; process.stdout.write(`PASS ${name}\n`); };
+  const fail = error => { failures.push({ name, error }); process.stderr.write(`FAIL ${name}: ${error.stack}\n`); };
+  try {
+    const result = run();
+    if (result && typeof result.then === 'function') result.then(pass, fail); else pass();
+  } catch (error) { fail(error); }
 }
+const SIGNED = Object.freeze({ 'vesper.account.v1': JSON.stringify({ name: 'Guino', session: 'Z3Vpbm8.abc', admin: false }) });
+const settle = () => new Promise(resolve => setImmediate(resolve));
 function close(actual, expected, tolerance = 1e-7, label = '') {
   assert.ok(Number.isFinite(actual) && Math.abs(actual - expected) <= tolerance,
     `${label} expected ${expected}, got ${actual}; tolerance ${tolerance}`);
@@ -137,7 +143,7 @@ function harness({ width = 1200, height = 800, dpr = 1, seed = 1707, source = 'm
     for (const callback of callbacks) callback(now);
   };
   const online = (options = {}) => {
-    game.startOnline({ name: options.name || 'Guino', skin: options.skin || 'alien', acc: options.acc, server: 'ws://teste:1' });
+    game.startOnline({ name: options.name || 'Guino', session: options.session, skin: options.skin || 'alien', acc: options.acc, server: 'ws://teste:1' });
     const socket = sockets[sockets.length - 1];
     socket.open();
     const roster = options.roster || [
@@ -844,13 +850,15 @@ function uiHarness(stored = {}, { blocked = false } = {}) {
     window: browser, document: doc, HTMLElement: Element, VesperGame: FakeGame,
     location: { protocol: 'file:' }, crypto: require('node:crypto').webcrypto,
     ResizeObserver: class { observe() {} },
-    localStorage: { getItem: key => { if(blocked)throw new Error('Storage unavailable'); return key in stored ? stored[key] : null; }, setItem: (key, value) => { if(blocked)throw new Error('Storage unavailable'); stored[key] = String(value); } },
+    localStorage: { getItem: key => { if(blocked)throw new Error('Storage unavailable'); return key in stored ? stored[key] : null; }, setItem: (key, value) => { if(blocked)throw new Error('Storage unavailable'); stored[key] = String(value); }, removeItem: key => { delete stored[key]; } },
     sessionStorage: { getItem: () => null, setItem() {} },
     WebSocket: class { constructor() { this.readyState = 0; } send() {} close() {} },
     queueMicrotask: callback => microtasks.push(callback),
     requestAnimationFrame: callback => { frames.set(++frameId, callback); return frameId; },
     cancelAnimationFrame: id => frames.delete(id),
     setTimeout: (callback, delay) => { timers.set(++timerId, { callback, delay }); return timerId; },
+    setInterval: () => 0,
+    clearInterval() {},
     clearTimeout: id => timers.delete(id), console
   };
   vm.createContext(sandbox);
@@ -868,6 +876,7 @@ function uiHarness(stored = {}, { blocked = false } = {}) {
   FakeGame.prototype.leaveOnline = function () { this._mode = null; this.toMenu(); };
   FakeGame.prototype.setFiring = function (firing) { this.firing = Boolean(firing); };
   for (const name of ['vesper-trades.js', 'vesper-admin.js', 'vesper-ui.js']) vm.runInContext(fs.readFileSync(path.join(root, name), 'utf8'), sandbox, { filename: name });
+  ui.sandbox = sandbox;
   return ui;
 }
 test('real UI handles keyboard/touch and independently maintains all live boss health bars', () => {
@@ -1241,9 +1250,9 @@ test('theme animations preserve combat randomness and base enemy balance on ever
 test('the Online client mirrors the server snapshot instead of simulating the match', () => {
   const h = harness();
   const arena = h.sandbox.VesperArena;
-  const socket = h.online({ name: 'Guino', skin: 'orc' });
+  const socket = h.online({ name: 'Guino', session: 'Z3Vpbm8.abc', skin: 'orc' });
   assert.equal(socket.url, 'ws://teste:1');
-  assert.deepEqual({ ...socket.sent[0], acc: Array.from(socket.sent[0].acc) }, { t: 'join', name: 'Guino', skin: 'orc', token: '', acc: [] });
+  assert.deepEqual({ ...socket.sent[0], acc: Array.from(socket.sent[0].acc) }, { t: 'join', session: 'Z3Vpbm8.abc', skin: 'orc', token: '', acc: [] }, 'O nome vem da conta no servidor, nao do jogo');
   assert.equal(h.game.state, 'playing');
   assert.equal(h.game.onlineActive, true);
   assert.equal(h.game.fighters.length, 3);
@@ -1456,7 +1465,7 @@ test('Online skins stay in the Online mode and campaign heroes stay in the campa
 });
 test('Online coins buy skins in the shop and the chosen skin enters the match', () => {
   const wallet = JSON.stringify({ version: 2, coins: 400, owned: ['alien'], skin: 'alien', name: '', server: 'ws://antigo:1' });
-  const ui = uiHarness({ 'vesper.online.v1': wallet });
+  const ui = uiHarness({ ...SIGNED, 'vesper.online.v1': wallet });
   ui.nodes.get('characters-btn').fire('click');
   const cards = ui.nodes.get('coin-grid').children;
   const orc = cards.find(card => card.dataset.characterId === 'orc');
@@ -1469,21 +1478,17 @@ test('Online coins buy skins in the shop and the chosen skin enters the match', 
   assert.ok(cyborg.classList.contains('is-locked'), 'Sem moedas a skin continua travada');
   ui.nodes.get('online-btn').fire('click');
   assert.equal(ui.nodes.get('online-skin-name').textContent, 'Orc');
-  ui.nodes.get('online-name').value = 'G';
-  ui.nodes.get('online-form').fire('submit');
-  assert.equal(ui.nodes.get('online-error').hidden, false);
-  ui.nodes.get('online-name').value = 'Guino';
+  assert.equal(ui.nodes.get('online-account-name').textContent, 'Guino');
   ui.nodes.get('online-form').fire('submit');
   assert.equal(ui.nodes.get('online-loading-view').hidden, false);
-  assert.deepEqual({ ...ui.game.onlineOptions, acc: Array.from(ui.game.onlineOptions.acc) }, { name: 'Guino', skin: 'orc', acc: [] }, 'O endereco salvo antigo nao prende o jogador em outro servidor');
+  assert.deepEqual({ ...ui.game.onlineOptions, acc: Array.from(ui.game.onlineOptions.acc) }, { name: 'Guino', session: 'Z3Vpbm8.abc', skin: 'orc', acc: [] }, 'O endereco salvo antigo nao prende o jogador em outro servidor');
   assert.equal('server' in JSON.parse(ui.stored['vesper.online.v1']), false);
   assert.equal(/servidor/i.test(ui.nodes.get('online-loading-step').textContent), false);
   assert.equal(ui.game.state, 'playing');
 });
 test('the Online HUD hides who is a bot and fires on the space bar', () => {
-  const ui = uiHarness();
+  const ui = uiHarness({ ...SIGNED });
   ui.nodes.get('online-btn').fire('click');
-  ui.nodes.get('online-name').value = 'Guino';
   ui.nodes.get('online-form').fire('submit');
   const hud = respawn => ({
     online: true, hp: 210, maxHp: 300, xp: 5, nextXp: 35, level: 4, kills: 4, elapsed: 120,
@@ -1515,9 +1520,8 @@ test('the Online HUD hides who is a bot and fires on the space bar', () => {
   assert.equal(ui.nodes.get('online-hud').hidden, true);
 });
 test('the final ranking screen pays the coins without marking bots and starts another match', () => {
-  const ui = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 2, coins: 70, owned: ['alien'], skin: 'alien', name: 'Guino', server: '' }) });
+  const ui = uiHarness({ ...SIGNED, 'vesper.online.v1': JSON.stringify({ version: 2, coins: 70, owned: ['alien'], skin: 'alien', name: 'Guino', server: '' }) });
   ui.nodes.get('online-btn').fire('click');
-  ui.nodes.get('online-name').value = 'Guino';
   ui.nodes.get('online-form').fire('submit');
   assert.equal(ui.nodes.get('pause-restart-btn').hidden, true);
   const you = { rank: 1, name: 'Guino', level: 9, kills: 11, you: true, bot: false };
@@ -1727,7 +1731,7 @@ test('the daily prize waits on the main menu with a gold counter and the letter 
 });
 test('accessories are equipped from their own screen and reach both modes', () => {
   const wallet = { version: 3, coins: 0, owned: ['alien', 'banana'], skin: 'alien', name: 'Guino', accessories: ['hat'], worn: [], daily: 15, lastClaim: '2000-01-01' };
-  const ui = uiHarness({ 'vesper.online.v1': JSON.stringify(wallet) });
+  const ui = uiHarness({ ...SIGNED, 'vesper.online.v1': JSON.stringify(wallet) });
   ui.nodes.get('characters-btn').fire('click');
   ui.nodes.get('accessories-btn').fire('click');
   assert.equal(ui.nodes.get('menu').dataset.view, 'accessories');
@@ -1748,7 +1752,6 @@ test('accessories are equipped from their own screen and reach both modes', () =
   assert.equal(ui.stored['vesper.character.v1'], 'banana');
   ui.nodes.get('characters-back-btn').fire('click');
   ui.nodes.get('online-btn').fire('click');
-  ui.nodes.get('online-name').value = 'Guino';
   ui.nodes.get('online-form').fire('submit');
   assert.equal(ui.game.onlineOptions.skin, 'banana');
   assert.deepEqual(Array.from(ui.game.onlineOptions.acc), ['hat'], 'O Online recebe os acessorios em uso');
@@ -1882,7 +1885,7 @@ test('the admin panel masks the password and suggests the closest item name', ()
   assert.ok(ui.game.rewardArts >= 4);
 });
 test('private rooms show the code and who joined with each skin', () => {
-  const ui = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 4, coins: 0, owned: ['alien'], skin: 'alien', name: 'Guino', daily: 15, lastClaim: '2000-01-01' }) });
+  const ui = uiHarness({ ...SIGNED, 'vesper.online.v1': JSON.stringify({ version: 4, coins: 0, owned: ['alien'], skin: 'alien', name: 'Guino', daily: 15, lastClaim: '2000-01-01' }) });
   ui.nodes.get('private-btn').fire('click');
   assert.equal(ui.nodes.get('menu').dataset.view, 'private');
   ui.nodes.get('private-code').value = '12';
@@ -1900,6 +1903,163 @@ test('private rooms show the code and who joined with each skin', () => {
   assert.equal(list[1].children[1].children[0].textContent, 'Amiga');
   assert.equal(list[1].children[1].children[1].textContent, 'Pinguim');
   assert.equal(list[0].children[1].children[2].textContent, 'CRIADOR · VOCÊ');
+});
+test('online, private rooms and trade offers ask for a quick account and the badge shows who is signed in', async () => {
+  const ui = uiHarness({ 'vesper.online.v1': JSON.stringify({ version: 4, coins: 40, owned: ['alien'], skin: 'alien', name: '', account: 'f'.repeat(32), daily: 15, lastClaim: '2000-01-01' }) });
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.ok(/id="account-overlay"[^]*?É rápido/.test(html), 'O aviso diz que criar conta e rapido');
+  const sent = [];
+  ui.sandbox.VesperGame.Server.request = async message => {
+    sent.push(message);
+    if (message.op === 'register') return message.name === 'Ocupado' ? { ok: false, error: 'existe' } : { ok: true, name: message.name, admin: false, session: 'Z3Vpbm8.novo' };
+    if (message.op === 'login') return { ok: true, name: 'Guino', admin: false, session: 'Z3Vpbm8.velho', profile: { coins: 900, owned: ['alien', 'orc'], skin: 'orc', name: 'Guino', stamp: 5 } };
+    return { ok: true, data: { market: [{ id: 'x1', item: 'acc:crown', seller: 'Amiga', offered: false }], listings: [], offers: [], deliveries: [] } };
+  };
+  assert.equal(ui.nodes.get('account-badge').hidden, true, 'Sem conta nao aparece nada no canto');
+  ui.nodes.get('online-btn').fire('click');
+  assert.equal(ui.nodes.get('account-overlay').hidden, false, 'Jogo Online pede conta');
+  assert.equal(ui.nodes.get('menu').dataset.view, 'main');
+  ui.nodes.get('account-no-btn').fire('click');
+  assert.equal(ui.nodes.get('account-overlay').hidden, true);
+  assert.equal(ui.nodes.get('menu').dataset.view, 'main', 'Agora nao deixa tudo como estava');
+  ui.nodes.get('private-btn').fire('click');
+  ui.nodes.get('account-yes-btn').fire('click');
+  assert.equal(ui.nodes.get('menu').dataset.view, 'account');
+  assert.equal(ui.nodes.get('account-title').textContent, 'Criar conta');
+  ui.nodes.get('account-name').value = 'ab';
+  ui.nodes.get('account-password').value = 'segredo1';
+  ui.nodes.get('account-form').fire('submit');
+  assert.equal(ui.nodes.get('account-error').hidden, false, 'Nome curto nao passa');
+  ui.nodes.get('account-name').value = 'Guino';
+  ui.nodes.get('account-password').value = '123';
+  ui.nodes.get('account-form').fire('submit');
+  assert.equal(ui.nodes.get('account-error').hidden, false, 'Senha curta nao passa');
+  assert.equal(sent.length, 0, 'Nada vai para o servidor antes de o formulario estar certo');
+  ui.nodes.get('account-name').value = 'Ocupado';
+  ui.nodes.get('account-password').value = 'segredo1';
+  ui.nodes.get('account-form').fire('submit');
+  await settle();
+  assert.equal(ui.nodes.get('account-error').textContent, 'Esse nome de usuário já existe. Escolha outro ou entre na sua conta.');
+  ui.nodes.get('account-name').value = 'Guino';
+  ui.nodes.get('account-password').value = 'segredo1';
+  ui.nodes.get('account-form').fire('submit');
+  await settle();
+  assert.deepEqual({ op: sent[1].op, name: sent[1].name, legacy: sent[1].legacy, coins: sent[1].profile.coins }, { op: 'register', name: 'Guino', legacy: 'f'.repeat(32), coins: 40 });
+  assert.equal('account' in sent[1].profile, false, 'O codigo antigo nao vai dentro do perfil');
+  assert.equal(ui.nodes.get('menu').dataset.view, 'private', 'Depois de criar a conta segue para o que a pessoa queria');
+  assert.equal(ui.nodes.get('account-badge').hidden, false);
+  assert.equal(ui.nodes.get('account-badge-name').textContent, 'Guino');
+  assert.equal(ui.nodes.get('private-account-name').textContent, 'Guino');
+  assert.equal(ui.stored['vesper.account.v1'].includes('segredo1'), false, 'A senha nunca fica guardada no navegador');
+  ui.nodes.get('private-create-btn').fire('click');
+  assert.deepEqual({ session: ui.game.onlineOptions.session, name: ui.game.onlineOptions.name, room: ui.game.onlineOptions.room }, { session: 'Z3Vpbm8.novo', name: 'Guino', room: 'create' });
+  ui.game.leaveOnline();
+  ui.game.callbacks.onOnlineError('conta');
+  assert.equal(ui.nodes.get('account-badge').hidden, true, 'Sessao vencida tira a conta do navegador');
+  assert.equal(ui.stored['vesper.account.v1'], undefined);
+  ui.nodes.get('private-back-btn').fire('click');
+  ui.nodes.get('online-btn').fire('click');
+  ui.nodes.get('account-login-link').fire('click');
+  assert.equal(ui.nodes.get('account-title').textContent, 'Entrar');
+  ui.nodes.get('account-name').value = 'guino';
+  ui.nodes.get('account-password').value = 'segredo1';
+  ui.nodes.get('account-form').fire('submit');
+  await settle();
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins, 900, 'Entrar traz as moedas salvas na conta');
+  assert.equal(ui.nodes.get('menu').dataset.view, 'online');
+  ui.nodes.get('online-back-btn').fire('click');
+  ui.nodes.get('account-badge').fire('click');
+  assert.equal(ui.nodes.get('account-signed').hidden, false);
+  assert.equal(ui.nodes.get('account-signed-name').textContent, 'Guino');
+  ui.nodes.get('account-logout-btn').fire('click');
+  await settle();
+  assert.equal(ui.nodes.get('account-badge').hidden, true);
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1']).coins || 0, 0, 'Sair da conta limpa o perfil deste navegador');
+  const signedOut = sent.length;
+  ui.nodes.get('trades-btn').fire('click');
+  await settle();
+  const offer = ui.nodes.get('trades-body').children[0].children.at(-1).children[0];
+  assert.equal(offer.textContent, 'FAZER OFERTA', 'Sem conta da para ver a Loja');
+  offer.fire('click');
+  assert.equal(ui.nodes.get('account-overlay').hidden, false, 'Fazer oferta pede conta');
+  assert.equal(sent.slice(signedOut).filter(message => message.t === 'm').every(message => message.session === ''), true, 'Sem conta a Loja pede so a lista publica');
+});
+test('admins open the panel from their account and manage other players on the server', async () => {
+  const ui = uiHarness({ 'vesper.account.v1': JSON.stringify({ name: 'Chefe', session: 'Y2hlZmU.abc', admin: true }) });
+  ui.nodes.get('letter-overlay').hidden = true;
+  const sent = [];
+  let amiga = { name: 'Amiga', admin: false, coins: 120, items: ['skin:orc'] };
+  ui.sandbox.VesperGame.Server.request = async message => {
+    sent.push(message);
+    if (message.op === 'find') return message.name === 'amiga' ? { ok: true, data: amiga } : { ok: false, error: 'nome' };
+    if (message.op === 'role') { amiga = { ...amiga, admin: message.admin }; return { ok: true, data: amiga }; }
+    if (message.op === 'ban') { amiga = { ...amiga, banned: message.banned, admin: false }; return { ok: true, data: amiga }; }
+    return { ok: true, data: amiga };
+  };
+  ui.nodes.get('admin-btn').fire('click');
+  assert.equal(ui.nodes.get('admin-login-overlay').hidden, true, 'Administrador logado nao digita a senha mestra');
+  assert.equal(ui.nodes.get('admin-panel').hidden, false);
+  ui.nodes.get('admin-tab-players').fire('click');
+  assert.equal(ui.nodes.get('admin-player').hidden, false);
+  assert.equal(ui.nodes.get('admin-search').hidden, true, 'A busca de itens espera escolher um jogador');
+  ui.nodes.get('admin-user').value = 'ninguem';
+  ui.nodes.get('admin-find').fire('submit');
+  await settle();
+  assert.equal(ui.nodes.get('admin-log').textContent, 'Não existe jogador com esse nome.');
+  ui.nodes.get('admin-user').value = 'amiga';
+  ui.nodes.get('admin-find').fire('submit');
+  await settle();
+  assert.equal(ui.nodes.get('admin-card-name').textContent, 'Amiga');
+  assert.equal(ui.nodes.get('admin-role-btn').textContent, 'tornar administrador');
+  ui.nodes.get('admin-role-btn').fire('click');
+  await settle();
+  assert.equal(ui.nodes.get('admin-role-btn').textContent, 'remover administrador');
+  assert.deepEqual({ t: sent.at(-1).t, op: sent.at(-1).op, admin: sent.at(-1).admin, session: sent.at(-1).session }, { t: 'staff', op: 'role', admin: true, session: 'Y2hlZmU.abc' });
+  const search = ui.nodes.get('admin-search');
+  search.value = '300 moedas';
+  search.fire('input');
+  const coins = ui.nodes.get('admin-results').children[0];
+  assert.equal(coins.children[3].textContent, 'dar');
+  coins.children[3].fire('click');
+  await settle();
+  assert.deepEqual({ op: sent.at(-1).op, name: sent.at(-1).name, coins: sent.at(-1).coins, take: sent.at(-1).take }, { op: 'give', name: 'Amiga', coins: 300, take: false });
+  assert.match(ui.nodes.get('admin-card-info').textContent, /420 moedas/);
+  search.value = 'presente';
+  search.fire('input');
+  assert.equal(ui.nodes.get('admin-results').children.length === 0 || ui.nodes.get('admin-results').children[0].children[1].children[0].textContent !== 'Presente misterioso', true, 'O presente da carta so vale para a propria conta');
+  search.value = 'orc';
+  search.fire('input');
+  const orc = ui.nodes.get('admin-results').children[0];
+  assert.equal(orc.children[1].children[0].textContent, 'Orc');
+  orc.children[3].fire('click');
+  await settle();
+  assert.deepEqual({ op: sent.at(-1).op, item: sent.at(-1).item, take: sent.at(-1).take }, { op: 'give', item: 'skin:orc', take: true });
+  assert.equal(JSON.parse(ui.stored['vesper.online.v1'] || '{"coins":0}').coins || 0, 0, 'Dar para outra pessoa nao mexe na conta do administrador');
+  const ban = ui.nodes.get('admin-ban-btn');
+  assert.equal(ban.textContent, 'banir');
+  const before = sent.length;
+  ban.fire('click');
+  assert.equal(ban.textContent, 'confirmar banimento', 'Banir pede um segundo clique');
+  assert.equal(sent.length, before, 'O primeiro clique nao bane ninguem');
+  ban.fire('click');
+  await settle();
+  assert.deepEqual({ op: sent.at(-1).op, name: sent.at(-1).name, banned: sent.at(-1).banned }, { op: 'ban', name: 'Amiga', banned: true });
+  assert.match(ui.nodes.get('admin-card-info').textContent, /^Banido/);
+  assert.equal(ban.textContent, 'desbanir');
+  assert.equal(ui.nodes.get('admin-role-btn').hidden, true);
+  ban.fire('click');
+  await settle();
+  assert.equal(sent.at(-1).banned, false, 'Desbanir e um clique so');
+  assert.equal(ban.textContent, 'banir');
+});
+test('a banned account is signed out when the server closes the match', () => {
+  const ui = uiHarness({ ...SIGNED });
+  ui.nodes.get('online-btn').fire('click');
+  ui.nodes.get('online-form').fire('submit');
+  ui.game.callbacks.onOnlineError('banido');
+  assert.equal(ui.nodes.get('account-badge').hidden, true);
+  assert.equal(ui.stored['vesper.account.v1'], undefined);
+  assert.equal(ui.nodes.get('online-error').textContent, 'Esta conta foi banida pela administração.');
 });
 if (isMain) process.on('beforeExit', () => {
   process.stdout.write(`\n${passed} passed; ${failures.length} failed.\n`);

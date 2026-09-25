@@ -5,12 +5,11 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { tradeKeyOf } = require('./vesper-arena.js');
 
-const LIMITS = Object.freeze({ listings: 10, offers: 20, items: 5, coins: 1000000, shown: 120, total: 600, deliveries: 200 });
-const ACCOUNT = /^[a-f0-9]{32}$/;
-const SETUP = `CREATE TABLE IF NOT EXISTS vesper_store (key text PRIMARY KEY, value jsonb NOT NULL);
-INSERT INTO vesper_store (key, value) VALUES ('market', '{"listings":[],"deliveries":{}}') ON CONFLICT (key) DO NOTHING`;
-const READ = "SELECT value FROM vesper_store WHERE key = 'market'";
-const WRITE = "UPDATE vesper_store SET value = $1 WHERE key = 'market'";
+const LIMITS = Object.freeze({ listings: 10, offers: 20, items: 5, coins: 1000000, shown: 120, total: 600, deliveries: 200, bids: 30 });
+const SETUP = 'CREATE TABLE IF NOT EXISTS vesper_store (key text PRIMARY KEY, value jsonb NOT NULL)';
+const READ = 'SELECT value FROM vesper_store WHERE key = $1';
+const CLAIM = "INSERT INTO vesper_store (key, value) VALUES ($1, 'null') ON CONFLICT (key) DO NOTHING";
+const WRITE = 'UPDATE vesper_store SET value = $2 WHERE key = $1';
 
 const ownerOf = account => crypto.createHash('sha256').update(account).digest('hex');
 const makeId = () => crypto.randomBytes(8).toString('hex');
@@ -23,24 +22,29 @@ const shape = saved => ({
 class FileStore {
   constructor(file) {
     this.file = file || '';
-    this.state = shape(null);
+    this.docs = new Map();
     if (!this.file) return;
-    try { this.state = shape(JSON.parse(fs.readFileSync(this.file, 'utf8'))); } catch (_) {}
+    try {
+      const saved = JSON.parse(fs.readFileSync(this.file, 'utf8'));
+      if (saved && typeof saved === 'object' && !Array.isArray(saved)) this.docs = new Map(Object.entries(saved));
+    } catch (_) {}
   }
 
   async setup() {}
 
-  async update(change, write) {
-    if (!write) return change(this.state);
-    const draft = structuredClone(this.state);
+  async update(key, change, write) {
+    const current = this.docs.has(key) ? this.docs.get(key) : null;
+    if (!write) return change(current);
+    const draft = structuredClone(current);
     const result = change(draft);
     if (result.error) return result;
+    const docs = new Map(this.docs).set(key, result.value === undefined ? draft : result.value);
     if (this.file) {
       fs.mkdirSync(path.dirname(this.file), { recursive: true });
-      fs.writeFileSync(this.file + '.tmp', JSON.stringify(draft));
+      fs.writeFileSync(this.file + '.tmp', JSON.stringify(Object.fromEntries(docs)));
       fs.renameSync(this.file + '.tmp', this.file);
     }
-    this.state = draft;
+    this.docs = docs;
     return result;
   }
 }
@@ -67,16 +71,17 @@ class PgStore {
     return this.ready;
   }
 
-  async update(change, write) {
+  async update(key, change, write) {
     await this.setup();
     const client = await this.pool.connect();
     let failure;
     try {
-      if (!write) return change(shape((await client.query(READ)).rows[0]?.value));
+      if (!write) return change((await client.query(READ, [key])).rows[0]?.value ?? null);
       await client.query('BEGIN');
-      const state = shape((await client.query(READ + ' FOR UPDATE')).rows[0]?.value);
-      const result = change(state);
-      if (!result.error) await client.query(WRITE, [JSON.stringify(state)]);
+      await client.query(CLAIM, [key]);
+      const current = (await client.query(READ + ' FOR UPDATE', [key])).rows[0]?.value ?? null;
+      const result = change(current);
+      if (!result.error) await client.query(WRITE, [key, JSON.stringify(result.value === undefined ? current : result.value)]);
       await client.query(result.error ? 'ROLLBACK' : 'COMMIT');
       return result;
     } catch (error) {
@@ -122,8 +127,21 @@ class Book {
         offers: listing.offers.map(offer => ({ id: offer.id, buyer: offer.buyerName, coins: offer.coins, items: offer.items }))
       })),
       offers,
-      deliveries: this.deliveries[me] || []
+      deliveries: me ? this.deliveries[me] || [] : []
     };
+  }
+
+  revokeItem(owner, key) {
+    for (const listing of this.listings.filter(item => item.owner === owner && item.item === key)) {
+      this.listings.splice(this.listings.indexOf(listing), 1);
+      for (const offer of listing.offers) this.refund(offer, 'Anúncio retirado');
+    }
+    for (const listing of this.listings) {
+      for (const offer of listing.offers.filter(item => item.buyer === owner && item.items.includes(key))) {
+        listing.offers.splice(listing.offers.indexOf(offer), 1);
+        this.refund(offer, '');
+      }
+    }
   }
 
   busyItems(me) {
@@ -173,6 +191,7 @@ const OPERATIONS = {
     if (!listing) return 'anuncio';
     if (listing.owner === me) return 'proprio';
     if (listing.offers.some(offer => offer.buyer === me)) return 'repetida';
+    if (listing.offers.length >= LIMITS.bids) return 'lotado';
     const coins = Math.floor(Number(message.coins) || 0);
     if (coins < 0 || coins > LIMITS.coins) return 'moedas';
     const items = [...new Set(Array.isArray(message.items) ? message.items.map(tradeKeyOf) : [])];
@@ -228,20 +247,18 @@ class Market {
     this.store = store;
   }
 
-  async handle(client, message) {
+  async handle(client, message, who) {
     const reply = (ok, data, error) => client.send({ t: 'mr', rid: message.rid, ok, data, error });
-    const account = String(message.account || '');
-    if (!ACCOUNT.test(account)) { reply(false, null, 'conta'); return; }
     const run = Object.prototype.hasOwnProperty.call(OPERATIONS, message.op) ? OPERATIONS[message.op] : null;
     if (!run) { reply(false, null, 'pedido'); return; }
-    const me = ownerOf(account);
-    const name = cleanName(message.name);
+    if (!who && message.op !== 'state') { reply(false, null, 'conta'); return; }
     try {
-      const result = await this.store.update(state => {
+      const result = await this.store.update('market', raw => {
+        const state = shape(raw);
         const book = new Book(state);
-        const error = run.call(book, me, name, message);
-        return error ? { error } : { data: book.view(me) };
-      }, message.op !== 'state');
+        const error = who ? run.call(book, who.owner, cleanName(who.name), message) : '';
+        return error ? { error } : { data: book.view(who ? who.owner : ''), value: state };
+      }, Boolean(who) && message.op !== 'state');
       if (result.error) reply(false, null, result.error);
       else reply(true, result.data);
     } catch (error) {
@@ -250,5 +267,48 @@ class Market {
     }
   }
 }
+
+Market.prototype.rename = function (from, to) {
+  return this.store.update('market', raw => {
+    const state = shape(raw);
+    for (const listing of state.listings) {
+      if (listing.owner === from) listing.owner = to;
+      for (const offer of listing.offers) if (offer.buyer === from) offer.buyer = to;
+    }
+    if (state.deliveries[from]) {
+      state.deliveries[to] = [...(state.deliveries[to] || []), ...state.deliveries[from]];
+      delete state.deliveries[from];
+    }
+    return { value: state };
+  }, true);
+};
+
+Market.prototype.banish = function (owner) {
+  return this.store.update('market', raw => {
+    const state = shape(raw);
+    const book = new Book(state);
+    for (const listing of state.listings.filter(item => item.owner === owner)) {
+      state.listings.splice(state.listings.indexOf(listing), 1);
+      for (const offer of listing.offers) book.refund(offer, 'Anúncio retirado');
+    }
+    for (const listing of state.listings) {
+      for (const offer of listing.offers.filter(item => item.buyer === owner)) {
+        listing.offers.splice(listing.offers.indexOf(offer), 1);
+        book.refund(offer, '');
+      }
+    }
+    return { value: state };
+  }, true);
+};
+
+Market.prototype.grant = function (owner, change, revoke = '') {
+  return this.store.update('market', raw => {
+    const state = shape(raw);
+    const book = new Book(state);
+    if (revoke) book.revokeItem(owner, revoke);
+    book.deliver(owner, change);
+    return { value: state };
+  }, true);
+};
 
 module.exports = { Market, FileStore, PgStore, LIMITS, ownerOf };

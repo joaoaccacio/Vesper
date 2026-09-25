@@ -102,7 +102,7 @@
 @media(max-width:650px){.menu[data-view="online"],.menu[data-view="online-loading"]{align-items:flex-start;padding:62px 15px 26px}.online-panel h2,.online-loading-panel h2{font-size:27px}.online-hint{font-size:10px;margin-top:12px}.online-form{margin-top:20px}.online-meta{margin-top:20px;gap:10px}.online-controls{gap:12px;margin-top:18px}.online-board{width:142px;padding:7px 9px 8px;top:max(64px,calc(env(safe-area-inset-top) + 58px));right:13px}.online-board li{font-size:8px;gap:5px}.online-feed{display:none}.online-weapon{padding:7px 10px;gap:8px;left:13px;bottom:max(140px,env(safe-area-inset-bottom))}.online-weapon canvas{width:64px;height:23px}.online-weapon strong{font-size:15px}.online-results h2{font-size:27px}.results-list li{font-size:10px;gap:8px;padding:7px 10px}}
 @media(max-height:560px) and (orientation:landscape){.menu[data-view="online"],.menu[data-view="online-loading"]{padding:24px 60px 18px}.online-panel h2,.online-loading-panel h2{font-size:26px}.online-hint{display:none}.online-form{margin-top:14px}.online-meta{margin-top:14px}.online-controls{margin-top:12px}.loading-track{margin-top:18px}.online-board{top:62px}.online-feed{top:210px}}
 @media(prefers-reduced-motion:reduce){.loading-fill{transition:none}}
-.menu[data-view="private"],.menu[data-view="lobby"]{align-items:center;background:radial-gradient(ellipse at 50% 18%,#131c18f7,#060c0afa 78%);padding:60px 26px 30px;touch-action:pan-y}
+.menu[data-view="private"],.menu[data-view="lobby"],.menu[data-view="account"]{align-items:center;background:radial-gradient(ellipse at 50% 18%,#131c18f7,#060c0afa 78%);padding:60px 26px 30px;touch-action:pan-y}
 .menu[data-view="trades"]{align-items:flex-start;background:radial-gradient(ellipse at 50% 15%,#162018f0,#070d0bf5 80%);padding:55px 30px 28px;touch-action:pan-y}
 .private-or{margin-top:24px}.private-join{display:flex;gap:10px;align-items:stretch}.private-code{flex:1;min-width:0;text-align:center;font-size:20px;letter-spacing:6px;font-variant-numeric:tabular-nums}.private-join .menu-option{width:auto;min-width:0;padding:0 24px}
 .lobby-code{margin:16px 0 6px;font:normal 54px/1 var(--serif);letter-spacing:12px;color:#f2dfa6;font-variant-numeric:tabular-nums}
@@ -129,6 +129,17 @@
 .trades-offer h3{margin:0 0 14px;font:normal 22px var(--serif);color:#f2dfa6}
 .trades-picks{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin:6px 0 16px}.trades-pick{display:flex;align-items:center;gap:8px;font-size:12px;color:#dcd3b8}
 .trades-offer-actions{display:flex;align-items:center;gap:10px}.trades-offer .primary{min-width:0}
+.online-account{margin:2px 0 12px;font-size:9px;letter-spacing:1.8px;color:#b9ab86}.online-account strong{margin-left:8px;font-size:15px;font-family:var(--serif);letter-spacing:.6px;color:#f1e4c2}
+.account-badge{position:absolute;left:max(22px,env(safe-area-inset-left));top:max(22px,calc(env(safe-area-inset-top) + 16px));display:flex;align-items:center;gap:9px;max-width:230px;height:37px;padding:0 15px 0 4px;border:1px solid #c9bf8f33;border-radius:999px;background:#07130bc7;color:#eadcb8;font-size:12px;font-weight:650;letter-spacing:.4px;transition:background .15s,border-color .15s}
+.account-badge:hover{background:#1c291ce0;border-color:#e5c58259}.account-badge:focus-visible{outline:2px solid #e5c582;outline-offset:3px}
+.account-logo{display:grid;place-items:center;flex:none;width:29px;height:29px;border-radius:50%;background:linear-gradient(140deg,#f2d690,#b98a45);color:#1a140a;box-shadow:inset 0 1px 0 #fff3cf99}
+.account-logo .icon{width:17px;height:17px;stroke-width:1.6}
+.account-badge-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu:not([data-view="main"]) .account-badge{display:none}
+.account-dialog{max-width:440px}.account-copy{margin:10px auto 22px;max-width:360px;color:#cfc4a6;font-size:14px;line-height:1.55}
+.account-link{display:block;margin:14px auto 0;padding:4px 8px;border:0;background:none;color:#d8b774;font-size:12px;letter-spacing:.4px;text-decoration:underline;text-underline-offset:3px}.account-link:hover{color:#f0d596}
+.account-signed{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:22px}
+@media(max-width:650px){.account-badge{left:max(13px,env(safe-area-inset-left));top:max(20px,calc(env(safe-area-inset-top) + 14px));height:33px;max-width:170px}.account-logo{width:25px;height:25px}}
 
 </style>
 <style data-module="admin">
@@ -161,6 +172,17 @@
 #letter-overlay{z-index:30}
 @media(max-width:650px){.admin-panel{padding:28px 16px}.admin-results li{flex-wrap:wrap}.admin-results li div{flex-basis:calc(100% - 62px)}.admin-results input{flex:1;width:auto;min-width:0}.admin-results li button:first-of-type{margin-left:auto}.admin-art{width:44px;height:44px}}
 @media(prefers-reduced-motion:reduce){.admin-panel *{animation:none!important;transition:none!important}}
+.admin-tabs{display:flex;gap:6px;max-width:760px;margin:0 auto 18px}
+.admin-tab{padding:7px 16px;border:1px solid #2f1f57;border-radius:999px;background:transparent;color:#a894df;font-size:12px;letter-spacing:.8px}.admin-tab:hover{border-color:#5b3fa8;color:#e1d6ff}
+.admin-tab.is-active{border-color:#8b6cf0;background:linear-gradient(180deg,#8b6cf033,#6d4bd11f);color:#f4efff}
+.admin-player{max-width:760px;margin:0 auto 16px}
+.admin-find{display:flex;gap:10px}.admin-user{flex:1;min-width:0;padding:14px 18px;border:1px solid #4a3290;border-radius:12px;outline:none;background:#120a22d9;color:#f4efff;font-size:15px}.admin-user:focus{border-color:#a78bfa;box-shadow:0 0 0 4px #a78bfa2e}
+.admin-find button,.admin-card button{padding:8px 18px;border:1px solid #8b6cf0;border-radius:999px;background:linear-gradient(180deg,#8b6cf0,#6d4bd1);color:#fff;font-size:12px;letter-spacing:.5px}
+.admin-card{display:flex;align-items:center;gap:14px;margin-top:12px;padding:14px 16px;border:1px solid #3b2670;border-radius:14px;background:linear-gradient(135deg,#1d1236e6,#0f0a1ce6)}
+.admin-card div{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}.admin-card strong{font-size:17px;color:#f4efff}.admin-card span{font-size:12px;color:#a894df}
+.admin-card button.is-admin{background:transparent;color:#cdbcff}
+.admin-card button.is-danger{border-color:#e0567a;background:linear-gradient(180deg,#e0567a,#b43a5c)}.admin-card button.is-danger.is-armed{box-shadow:0 0 0 3px #e0567a40;background:linear-gradient(180deg,#f06a8c,#c9416a)}
+@media(max-width:650px){.admin-card{flex-wrap:wrap}.admin-card div{flex-basis:100%}}
 
 </style>
 <style data-module="campaign">
@@ -287,14 +309,13 @@
     </div>
     <div id="toast" class="toast faded" role="status" hidden></div>
     <section class="menu" id="menu" aria-label="Menu inicial" data-view="main">
-      <div class="menu-content" id="menu-main"><svg class="icon menu-seal" aria-hidden="true"><use href="#i-sigil"/></svg><h1>VESPER</h1><div class="menu-actions"><button class="primary" id="start-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> JOGO OFFLINE</button><button class="menu-option" id="online-btn"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg> JOGO ONLINE</button><button class="menu-option" id="private-btn"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> SERVIDOR PRIVADO</button><button class="menu-option" id="characters-btn"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg> PERSONAGENS<span class="new-badge" id="characters-new" hidden>NOVO</span></button><button class="menu-option" id="daily-btn"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg> LOGIN DIÁRIO<span class="new-badge daily-count" id="daily-new" hidden>1</span></button><button class="menu-option" id="trades-btn"><svg class="icon" aria-hidden="true"><use href="#i-swap"/></svg> TROCAS</button></div><div class="menu-controls"><span class="desktop-copy"><kbd>WASD</kbd> / setas</span><span class="mobile-copy">Controle por toque</span><span><svg class="icon" aria-hidden="true"><use href="#i-blade"/></svg>Ataque automático</span></div><p class="best">RECORDE <strong id="best-time">—</strong></p></div><button class="admin-corner" id="admin-btn" title="Painel de Administrador" aria-label="Painel de Administrador"><svg class="icon" aria-hidden="true"><use href="#i-laptop"/></svg></button>
+      <div class="menu-content" id="menu-main"><svg class="icon menu-seal" aria-hidden="true"><use href="#i-sigil"/></svg><h1>VESPER</h1><div class="menu-actions"><button class="primary" id="start-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> JOGO OFFLINE</button><button class="menu-option" id="online-btn"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg> JOGO ONLINE</button><button class="menu-option" id="private-btn"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> SERVIDOR PRIVADO</button><button class="menu-option" id="characters-btn"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg> PERSONAGENS<span class="new-badge" id="characters-new" hidden>NOVO</span></button><button class="menu-option" id="daily-btn"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg> LOGIN DIÁRIO<span class="new-badge daily-count" id="daily-new" hidden>1</span></button><button class="menu-option" id="trades-btn"><svg class="icon" aria-hidden="true"><use href="#i-swap"/></svg> TROCAS</button></div><div class="menu-controls"><span class="desktop-copy"><kbd>WASD</kbd> / setas</span><span class="mobile-copy">Controle por toque</span><span><svg class="icon" aria-hidden="true"><use href="#i-blade"/></svg>Ataque automático</span></div><p class="best">RECORDE <strong id="best-time">—</strong></p></div><button class="admin-corner" id="admin-btn" title="Painel de Administrador" aria-label="Painel de Administrador"><svg class="icon" aria-hidden="true"><use href="#i-laptop"/></svg></button><button class="account-badge" id="account-badge" hidden><span class="account-logo" aria-hidden="true"><svg class="icon"><use href="#i-sigil"/></svg></span><span class="account-badge-name" id="account-badge-name"></span></button>
       <div class="menu-panel online-panel" id="online-view" role="region" aria-labelledby="online-title" hidden>
         <p class="panel-kicker">JOGO ONLINE</p>
         <h2 id="online-title">Arena Vesper</h2>
         <p class="online-hint">Catedral em Ruínas · 5 minutos · até 15 jogadores</p>
         <form class="online-form" id="online-form" autocomplete="off" novalidate>
-          <label class="online-label" for="online-name">SEU NOME</label>
-          <input class="online-input" id="online-name" type="text" maxlength="14" spellcheck="false" placeholder="Seu nome" aria-describedby="online-error">
+          <p class="online-account">CONTA <strong id="online-account-name"></strong></p>
           <p class="online-error" id="online-error" role="alert" hidden></p>
           <button class="primary" id="online-play-btn" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> ENTRAR NA PARTIDA</button>
         </form>
@@ -305,13 +326,31 @@
         <p class="online-controls"><span><kbd>WASD</kbd> mover</span><span><kbd>Espaço</kbd> atirar</span><span><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>mira automática</span></p>
         <button class="secondary back-btn" id="online-back-btn"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg> VOLTAR</button>
       </div>
+      <div class="menu-panel online-panel account-panel" id="account-view" role="region" aria-labelledby="account-title" hidden>
+        <p class="panel-kicker">CONTA VESPER</p>
+        <h2 id="account-title">Criar conta</h2>
+        <p class="online-hint" id="account-hint">É rápido: escolha um nome de usuário e uma senha.</p>
+        <form class="online-form" id="account-form" novalidate>
+          <label class="online-label" for="account-name">NOME DE USUÁRIO</label>
+          <input class="online-input" id="account-name" type="text" maxlength="14" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="3 a 14 letras ou números">
+          <label class="online-label" for="account-password">SENHA</label>
+          <input class="online-input" id="account-password" type="password" maxlength="72" autocomplete="new-password" placeholder="Pelo menos 6 caracteres">
+          <p class="online-error" id="account-error" role="alert" hidden></p>
+          <button class="primary" id="account-submit-btn" type="submit">CRIAR CONTA</button>
+        </form>
+        <div class="account-signed" id="account-signed" hidden>
+          <p class="online-account">CONECTADO COMO <strong id="account-signed-name"></strong></p>
+          <button class="menu-option" id="account-logout-btn">SAIR DA CONTA</button>
+        </div>
+        <button class="account-link" id="account-switch-btn">Já tenho conta · entrar</button>
+        <button class="secondary back-btn" id="account-back-btn"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg> VOLTAR</button>
+      </div>
       <div class="menu-panel online-panel" id="private-view" role="region" aria-labelledby="private-title" hidden>
         <p class="panel-kicker">SERVIDOR PRIVADO</p>
         <h2 id="private-title">Jogue com seus amigos</h2>
         <p class="online-hint">Sem bots · 5 minutos · até 15 jogadores</p>
         <div class="online-form">
-          <label class="online-label" for="private-name">SEU NOME</label>
-          <input class="online-input" id="private-name" type="text" maxlength="14" spellcheck="false" placeholder="Seu nome">
+          <p class="online-account">CONTA <strong id="private-account-name"></strong></p>
           <button class="primary" id="private-create-btn"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> CRIAR SERVIDOR</button>
           <label class="online-label private-or" for="private-code">OU ENTRE EM UM SERVIDOR COM O CÓDIGO</label>
           <div class="private-join"><input class="online-input private-code" id="private-code" type="text" inputmode="numeric" maxlength="6" spellcheck="false" placeholder="000000"><button class="menu-option" id="private-enter-btn">ENTRAR</button></div>
@@ -393,7 +432,8 @@
     <div class="overlay" id="gameover-overlay" hidden><section class="dialog gameover-dialog" role="dialog" aria-modal="true" aria-labelledby="gameover-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-skull"/></svg><h2 id="gameover-title">FIM DE JOGO</h2><div class="final-stats"><div><strong id="final-time">00:00</strong><span>TEMPO</span></div><div><strong id="final-kills">0</strong><span>ABATES</span></div><div><strong id="final-bosses">0</strong><span>CHEFES</span></div><div><strong id="final-level">1</strong><span>NÍVEL</span></div></div><button class="primary" id="restart-btn">TENTAR NOVAMENTE</button><p id="record-note" class="record-note"></p><p id="unlock-note" class="unlock-note" hidden></p><button class="secondary" id="gameover-menu-btn">MENU INICIAL</button></section></div>
     <div class="overlay" id="victory-overlay" hidden><section class="dialog victory-dialog" role="dialog" aria-modal="true" aria-labelledby="victory-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-crown"/></svg><p class="dialog-kicker">FASE CONCLUÍDA</p><h2 id="victory-title">Vitória!</h2><div class="victory-stats"><div><strong id="victory-time">04:00</strong><span>TEMPO</span></div><div><strong id="victory-kills">0</strong><span>ABATES</span></div><div><strong id="victory-level">1</strong><span>NÍVEL</span></div></div><div class="victory-unlocks" id="victory-unlocks"></div><div class="victory-buttons"><button class="primary" id="victory-map-btn">ESCOLHER MAPA</button><button class="secondary" id="victory-characters-btn">VER PERSONAGENS</button></div><button class="secondary" id="victory-retry-btn">JOGAR NOVAMENTE</button></section></div>
     <div class="overlay" id="admin-login-overlay" hidden><section class="dialog admin-login" role="dialog" aria-modal="true" aria-labelledby="admin-login-title"><p class="dialog-kicker">ACESSO RESTRITO</p><h2 id="admin-login-title">Painel de Administrador</h2><input class="online-input admin-key" id="admin-key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Senha" aria-label="Senha"><p class="online-error" id="admin-error" role="alert" hidden></p><button class="primary" id="admin-enter-btn">ENTRAR</button><button class="secondary" id="admin-cancel-btn">CANCELAR</button></section></div>
-    <div class="admin-panel" id="admin-panel" role="dialog" aria-modal="true" aria-labelledby="admin-title" hidden><header class="admin-top"><h2 id="admin-title">painel</h2><button class="admin-close" id="admin-close-btn">sair</button></header><input class="admin-search" id="admin-search" type="text" autocomplete="off" spellcheck="false" placeholder="O que você quer pegar ou remover da sua conta?" aria-label="Buscar item"><p class="admin-hint" id="admin-hint"></p><ul class="admin-results" id="admin-results"></ul><p class="admin-log" id="admin-log" aria-live="polite"></p></div>
+    <div class="admin-panel" id="admin-panel" role="dialog" aria-modal="true" aria-labelledby="admin-title" hidden><header class="admin-top"><h2 id="admin-title">painel</h2><button class="admin-close" id="admin-close-btn">sair</button></header><nav class="admin-tabs" aria-label="Seções do painel"><button class="admin-tab is-active" id="admin-tab-me" aria-pressed="true">minha conta</button><button class="admin-tab" id="admin-tab-players" aria-pressed="false">jogadores</button></nav><div class="admin-player" id="admin-player" hidden><form class="admin-find" id="admin-find" autocomplete="off"><input class="admin-user" id="admin-user" type="text" maxlength="14" spellcheck="false" autocapitalize="off" placeholder="Nome de usuário do jogador" aria-label="Nome de usuário do jogador"><button type="submit" id="admin-find-btn">abrir</button></form><div class="admin-card" id="admin-card" hidden><div><strong id="admin-card-name"></strong><span id="admin-card-info"></span></div><button id="admin-role-btn"></button><button id="admin-ban-btn"></button></div></div><input class="admin-search" id="admin-search" type="text" autocomplete="off" spellcheck="false" placeholder="O que você quer pegar ou remover da sua conta?" aria-label="Buscar item"><p class="admin-hint" id="admin-hint"></p><ul class="admin-results" id="admin-results"></ul><p class="admin-log" id="admin-log" aria-live="polite"></p></div>
+    <div class="overlay" id="account-overlay" hidden><section class="dialog account-dialog" role="dialog" aria-modal="true" aria-labelledby="account-prompt-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-sigil"/></svg><p class="dialog-kicker">CONTA VESPER</p><h2 id="account-prompt-title">Você precisa de uma conta</h2><p class="account-copy">Para jogar online, criar salas e anunciar ou fazer ofertas nas Trocas, crie sua conta. É rápido: só um nome de usuário e uma senha.</p><button class="primary" id="account-yes-btn">CRIAR CONTA</button><button class="secondary" id="account-no-btn">AGORA NÃO</button><button class="account-link" id="account-login-link">Já tenho conta · entrar</button></section></div>
     <div class="overlay letter-overlay" id="letter-overlay" hidden><section class="letter" role="dialog" aria-modal="true" aria-labelledby="letter-title"><p class="letter-from" id="letter-title">Do ADM para Você:</p><p class="letter-body">Você está sendo uma das primeiras pessoas a jogar esse jogo, parabéns</p><button class="secondary letter-close" id="letter-close-btn">FECHAR</button></section></div>
     <div class="overlay" id="online-results-overlay" hidden><section class="dialog online-results" role="dialog" aria-modal="true" aria-labelledby="online-results-title"><svg class="icon dialog-seal" aria-hidden="true"><use href="#i-crown"/></svg><p class="dialog-kicker" id="online-results-kicker">FIM DA PARTIDA</p><h2 id="online-results-title">Ranking final</h2><ol class="results-list" id="online-results-list"></ol><p class="results-reward" id="online-results-reward"></p><div class="victory-buttons"><button class="primary" id="online-again-btn"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg> JOGAR NOVAMENTE</button><button class="secondary" id="online-skins-btn">SKINS DO ONLINE</button></div><button class="secondary" id="online-menu-btn">MENU INICIAL</button></section></div>
   </main>
@@ -4724,7 +4764,9 @@ window.VesperGame = VesperGame;
     return ACCESSORIES.filter(item => picked.includes(item)).map(item => item.id);
   };
   const tradeKeyOf = key => {
-    const [kind, id] = String(key).split(':');
+    const parts = String(key).split(':');
+    if (parts.length !== 2) return null;
+    const [kind, id] = parts;
     if (kind === 'skin' && id !== 'alien' && SKINS.some(skin => skin.id === id)) return 'skin:' + id;
     if (kind === 'acc' && ACCESSORIES.some(item => item.id === id)) return 'acc:' + id;
     return null;
@@ -5273,7 +5315,7 @@ window.VesperGame = VesperGame;
   const Arena = typeof window === 'object' ? window.VesperArena : null;
   const { ARENA, WEAPONS, SKINS, ACCESSORIES, CONFIG, clamp, weaponFor, coinsFor, bonusOf, accessoriesOf, tradeKeyOf, segmentHit, bounds } = Arena;
   const TAU = Math.PI * 2;
-  const STORE = Object.freeze({ profile: 'vesper.online.v1' });
+  const STORE = Object.freeze({ profile: 'vesper.online.v1', account: 'vesper.account.v1' });
 
   function readJson(key, fallback) {
     try {
@@ -5286,6 +5328,8 @@ window.VesperGame = VesperGame;
   function writeJson(key, value) {
     try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; }
   }
+
+  const served = () => typeof location === 'object' && /^https?:$/.test(location.protocol || '');
 
   function defaultServer() {
     if (typeof location === 'object' && /^https?:$/.test(location.protocol || '') && location.host) {
@@ -5350,7 +5394,6 @@ window.VesperGame = VesperGame;
     }
   };
   const keysOf = list => (Array.isArray(list) ? [...new Set(list.map(tradeKeyOf).filter(Boolean))] : []);
-  const randomHex = size => Array.from(crypto.getRandomValues(new Uint8Array(size)), byte => byte.toString(16).padStart(2, '0')).join('');
 
   const Profile = {
     load() {
@@ -5369,24 +5412,28 @@ window.VesperGame = VesperGame;
         lastClaim: typeof saved.lastClaim === 'string' ? saved.lastClaim.slice(0, 10) : '',
         account: /^[a-f0-9]{32}$/.test(saved.account) ? saved.account : '',
         locked: keysOf(saved.locked),
-        applied: Array.isArray(saved.applied) ? saved.applied.filter(id => typeof id === 'string').slice(-100) : []
+        applied: Array.isArray(saved.applied) ? saved.applied.filter(id => typeof id === 'string').slice(-100) : [],
+        stamp: Number.isFinite(saved.stamp) ? saved.stamp : 0
       };
     },
     save(profile) {
+      profile.stamp = Date.now();
       writeJson(STORE.profile, {
         version: 4, coins: profile.coins, owned: profile.owned, skin: profile.skin, name: profile.name,
         accessories: profile.accessories, worn: profile.worn, daily: profile.daily, lastClaim: profile.lastClaim,
-        account: profile.account, locked: profile.locked, applied: profile.applied
+        account: profile.account, locked: profile.locked, applied: profile.applied, stamp: profile.stamp
       });
+      Account.touch();
       return profile;
     },
-    account() {
-      const profile = Profile.load();
-      if (!profile.account) {
-        profile.account = randomHex(16);
-        Profile.save(profile);
-      }
-      return profile.account;
+    snapshot() {
+      const { account, ...rest } = Profile.load();
+      return rest;
+    },
+    adopt(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object') return Profile.load();
+      writeJson(STORE.profile, { ...snapshot, version: 4, account: Profile.load().account });
+      return Profile.load();
     },
     has(key) {
       const item = tradeKeyOf(key);
@@ -5501,6 +5548,82 @@ window.VesperGame = VesperGame;
       profile.accessories.push(id);
       profile.worn = accessoriesOf([id, ...profile.worn]);
       return { ok: true, profile: Profile.save(profile) };
+    }
+  };
+
+  let pushTimer = null;
+  const Account = {
+    onChange: null,
+    state() {
+      const saved = readJson(STORE.account, null);
+      if (!saved || typeof saved.session !== 'string' || !saved.session || typeof saved.name !== 'string') return null;
+      return { name: saved.name.slice(0, 14), session: saved.session.slice(0, 200), admin: saved.admin === true };
+    },
+    signedIn() {
+      return Boolean(Account.state());
+    },
+    session() {
+      const state = Account.state();
+      return state ? state.session : '';
+    },
+    remember(reply, session) {
+      const name = String(reply.name || '').slice(0, 14);
+      writeJson(STORE.account, { name, session, admin: reply.admin === true });
+      if (Profile.load().name !== name) Profile.setName(name);
+    },
+    clear() {
+      clearTimeout(pushTimer);
+      try { localStorage.removeItem(STORE.account); } catch (_) {  }
+      writeJson(STORE.profile, { version: 4, account: Profile.load().account });
+    },
+    async register(name, password) {
+      const profile = Profile.load();
+      const reply = await VesperGame.Server.request({ t: 'acct', op: 'register', name, password, profile: Profile.snapshot(), legacy: profile.account });
+      if (reply.ok) Account.remember(reply, reply.session);
+      return reply;
+    },
+    async login(name, password) {
+      const reply = await VesperGame.Server.request({ t: 'acct', op: 'login', name, password });
+      if (reply.ok) {
+        if (reply.profile) Profile.adopt(reply.profile);
+        Account.remember(reply, reply.session);
+      }
+      return reply;
+    },
+    async refresh() {
+      const state = Account.state();
+      if (!state) return null;
+      const reply = await VesperGame.Server.request({ t: 'acct', op: 'me', session: state.session });
+      if (reply.ok) {
+        if (reply.profile && Number(reply.profile.stamp) > Profile.load().stamp) Profile.adopt(reply.profile);
+        Account.remember(reply, state.session);
+      } else if (reply.error === 'sessao') Account.clear();
+      return reply;
+    },
+    async logout() {
+      const state = Account.state();
+      clearTimeout(pushTimer);
+      if (state && served()) {
+        await Account.push();
+        await VesperGame.Server.request({ t: 'acct', op: 'logout', session: state.session }).catch(() => null);
+      }
+      Account.clear();
+    },
+    touch() {
+      if (!served() || !Account.state()) return;
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(Account.push, 2000);
+    },
+    async push() {
+      const state = Account.state();
+      if (!state) return;
+      let reply = null;
+      try { reply = await VesperGame.Server.request({ t: 'acct', op: 'save', session: state.session, profile: Profile.snapshot() }); } catch (_) { return; }
+      if (reply.error === 'velho' && reply.profile) Profile.adopt(reply.profile);
+      else if (reply.error === 'sessao') Account.clear();
+      else if (reply.error === 'devagar') { Account.touch(); return; }
+      else return;
+      if (typeof Account.onChange === 'function') Account.onChange();
     }
   };
 
@@ -5713,6 +5836,7 @@ window.VesperGame = VesperGame;
     localDay, defaultServer, normalizeServer
   });
   VesperGame.OnlineProfile = Profile;
+  VesperGame.Account = Account;
 
   const mapDefinition = Object.getOwnPropertyDescriptor(VesperGame.prototype, 'mapDefinition');
   Object.defineProperty(VesperGame.prototype, 'mapDefinition', {
@@ -5756,6 +5880,7 @@ window.VesperGame = VesperGame;
     this.onlineResults = null;
     this._arenaZones = null;
     this._onlineName = name;
+    this._session = String(options.session || '').slice(0, 200);
     this._onlineSkin = skin;
     this._onlineAcc = accessoriesOf(options.acc);
     this._explosions = [];
@@ -5765,7 +5890,7 @@ window.VesperGame = VesperGame;
     this._inputTimer = 0;
     this._joined = false;
     this._room = options.room === 'create' ? { t: 'create' } : options.room ? { t: 'enter', code: String(options.room) } : { t: 'join' };
-    this._openSocket(server, name, skin);
+    this._openSocket(server, skin);
     return { server, connecting: true };
   };
 
@@ -5775,7 +5900,7 @@ window.VesperGame = VesperGame;
     return true;
   };
 
-  VesperGame.prototype._openSocket = function (server, name, skin) {
+  VesperGame.prototype._openSocket = function (server, skin) {
     const Socket = typeof WebSocket === 'function' ? WebSocket : null;
     if (!Socket) { this._onlineFail('sem-websocket'); return; }
     let socket;
@@ -5788,7 +5913,7 @@ window.VesperGame = VesperGame;
       let token = '';
       try { token = sessionStorage.getItem(this._tokenKey) || ''; } catch (_) { token = ''; }
       const room = this._room.t === 'join' ? { t: 'join', token } : this._room;
-      socket.send(JSON.stringify({ ...room, name, skin, acc: this._onlineAcc }));
+      socket.send(JSON.stringify({ ...room, session: this._session, skin, acc: this._onlineAcc }));
     };
     socket.onmessage = event => {
       let message;
@@ -5835,7 +5960,7 @@ window.VesperGame = VesperGame;
     if (this._state === 'results') return;
     if (message.t === 's') { this._onSnapshot(message); return; }
     if (message.t === 'ev') { this._onEvents(message.e || []); return; }
-    if (message.t === 'closed') { this._onlineFail(message.reason === 'host' ? 'host' : 'sala'); return; }
+    if (message.t === 'closed') { this._onlineFail(['host', 'banido'].includes(message.reason) ? message.reason : 'sala'); return; }
     if (message.t === 'error' && !this._joined) this._onlineFail(message.reason || 'servidor');
   };
 
@@ -6573,15 +6698,16 @@ window.VesperGame = VesperGame;
   'use strict';
   const $ = id => document.getElementById(id);
   const ERRORS = Object.freeze({
-    conta: 'Não foi possível identificar sua conta.', item: 'Esse item não pode ser trocado.', cheio: 'A loja está cheia agora. Tente mais tarde.',
+    conta: 'Entre na sua conta de novo para usar as Trocas.', devagar: 'Muitos pedidos seguidos. Espere alguns segundos.', servidor: 'As Trocas estão fora do ar agora. Tente de novo em instantes.', item: 'Esse item não pode ser trocado.', cheio: 'A loja está cheia agora. Tente mais tarde.',
     limite: 'Você chegou ao limite de anúncios ou ofertas.', ocupado: 'Esse item já está em outro anúncio ou oferta.',
-    anuncio: 'Esse anúncio não existe mais.', proprio: 'Esse anúncio é seu.', repetida: 'Você já fez uma oferta nesse anúncio.',
+    anuncio: 'Esse anúncio não existe mais.', proprio: 'Esse anúncio é seu.', repetida: 'Você já fez uma oferta nesse anúncio.', lotado: 'Esse anúncio já recebeu ofertas demais. Tente outro.',
     moedas: 'Quantidade de moedas inválida.', vazia: 'Ofereça moedas ou algum item.', oferta: 'Essa oferta não existe mais.',
     conexao: 'Sem conexão com o servidor.', tempo: 'O servidor demorou para responder.', 'sem-websocket': 'Este navegador não tem suporte às Trocas.'
   });
 
-  VesperGame.createTrades = ({ game, toast, onChange }) => {
+  VesperGame.createTrades = ({ game, toast, onChange, needAccount }) => {
     const Profile = VesperGame.OnlineProfile;
+    const Account = VesperGame.Account;
     const tabs = [...document.querySelectorAll('.trades-tab')];
     let view = { market: [], listings: [], offers: [] };
     let tab = 'market';
@@ -6685,10 +6811,12 @@ window.VesperGame = VesperGame;
     }
 
     async function call(op, payload) {
-      const profile = Profile.load();
-      const identity = { t: 'm', account: Profile.account(), name: profile.name || 'Jogador' };
+      const identity = { t: 'm', session: Account.session() };
       let reply = await VesperGame.Server.request({ ...identity, op, ...payload });
-      if (!reply.ok) throw new Error(reply.error || 'conexao');
+      if (!reply.ok) {
+        if (reply.error === 'conta') { Account.clear(); onChange(); }
+        throw new Error(reply.error || 'conexao');
+      }
       const result = Profile.applyDeliveries(reply.data.deliveries);
       if (result.applied.length) {
         const ack = await VesperGame.Server.request({ ...identity, op: 'ack', ids: result.applied });
@@ -6700,6 +6828,7 @@ window.VesperGame = VesperGame;
     }
 
     async function act(op, payload = {}, success = '') {
+      if (op !== 'state' && !Account.signedIn()) { needAccount(); return; }
       if (busy) return;
       busy = true;
       status('Atualizando…');
@@ -6716,6 +6845,7 @@ window.VesperGame = VesperGame;
     }
 
     function openOffer(listing) {
+      if (!Account.signedIn()) { needAccount(); return; }
       target = listing;
       $('trades-offer-title').textContent = `Oferta por ${nameOf(listing.item)}`;
       $('trades-offer-coins').value = '0';
@@ -6773,7 +6903,7 @@ window.VesperGame = VesperGame;
         VesperGame.Server.close();
       },
       sync() {
-        if (!Profile.load().account) return Promise.resolve();
+        if (!Account.signedIn()) return Promise.resolve();
         return call('state').catch(() => {}).finally(() => { if (!shown) VesperGame.Server.close(); });
       }
     };
@@ -6844,6 +6974,14 @@ window.VesperGame = VesperGame;
     };
   }
 
+  const STAFF_ERRORS = Object.freeze({
+    negado: 'Sem permissão. Feche o painel e entre de novo.', nome: 'Não existe jogador com esse nome.',
+    item: 'Esse item não pode ser enviado.', moedas: 'Quantidade de moedas inválida.',
+    proprio: 'Você não pode tirar o seu próprio cargo.', voce: 'Você não pode banir a sua própria conta.',
+    admin: 'Tire o cargo de administrador antes de banir.', banido: 'Essa conta está banida. Desbana antes de promover.', servidor: 'O servidor está fora do ar agora.',
+    devagar: 'Muitos pedidos seguidos. Espere alguns segundos.', conexao: 'Sem conexão com o servidor.', tempo: 'O servidor demorou para responder.'
+  });
+
   VesperGame.createAdmin = ({ progress, onChange, game, openGift }) => {
     const Profile = VesperGame.OnlineProfile;
     const login = $('admin-login-overlay');
@@ -6852,6 +6990,12 @@ window.VesperGame = VesperGame;
     const results = $('admin-results');
     const key = maskField($('admin-key'));
     let checking = false;
+    let auth = null;
+    let mode = 'me';
+    let target = null;
+    let sending = false;
+    let armed = false;
+    let armTimer = null;
     login.hidden = true;
     panel.hidden = true;
 
@@ -6867,16 +7011,19 @@ window.VesperGame = VesperGame;
       }
       for (const accessory of VesperGame.ONLINE.ACCESSORIES) items.push({ id: 'acc:' + accessory.id, name: accessory.name, kind: 'Acessório', art: { type: 'accessory', id: accessory.id } });
       for (const character of VesperGame.CHARACTERS.filter(item => item.unlockType === 'map')) items.push({ id: 'map:' + character.unlockMap, name: character.name, kind: 'Personagem do offline', art: { type: 'skin', id: character.id } });
-      return items;
+      return mode === 'players' ? items.filter(item => item.id !== 'gift' && !item.id.startsWith('map:')) : items;
     };
 
     const owns = item => {
+      if (mode === 'players') return item.id === 'coins' || target.items.includes(item.id);
       if (item.id === 'coins' || item.id === 'gift') return true;
       if (item.id.startsWith('map:')) return progress.has(item.id.slice(4));
       return Profile.has(item.id);
     };
 
     const log = text => { $('admin-log').textContent = text; };
+    const staff = message => VesperGame.Server.request({ t: 'staff', ...auth, ...message });
+    const failure = error => STAFF_ERRORS[error] || 'Não foi possível completar agora.';
 
     function change(item, add, amount) {
       if (item.id === 'gift') {
@@ -6900,13 +7047,138 @@ window.VesperGame = VesperGame;
       render();
     }
 
+    async function send(item, add, amount) {
+      if (sending || !target) return;
+      const coins = Math.max(0, Math.floor(Number(amount) || 0));
+      if (item.id === 'coins' && !coins) { log('Digite uma quantidade de moedas.'); return; }
+      sending = true;
+      const who = target.name;
+      try {
+        const reply = await staff({ op: 'give', name: who, take: !add, ...(item.id === 'coins' ? { coins } : { item: item.id }) });
+        if (!reply.ok) { log(failure(reply.error)); return; }
+        if (!target || target.name !== who) return;
+        if (item.id === 'coins') target.coins = Math.max(0, target.coins + (add ? coins : -coins));
+        else target.items = add ? [...new Set([...target.items, item.id])] : target.items.filter(id => id !== item.id);
+        const what = item.id === 'coins' ? `${coins.toLocaleString('pt-BR')} moedas` : item.name;
+        log(`${add ? 'Enviado para' : 'Retirado de'} ${who}: ${what}. Muda na conta quando a pessoa abrir o jogo.`);
+        showTarget();
+        render();
+      } catch (error) {
+        log(failure(error.message));
+      } finally {
+        sending = false;
+      }
+    }
+
+    function showTarget() {
+      $('admin-card').hidden = !target;
+      if (!target) return;
+      $('admin-card-name').textContent = target.name;
+      $('admin-card-info').textContent = `${target.banned ? 'Banido' : target.admin ? 'Administrador' : 'Jogador'} · ${target.coins.toLocaleString('pt-BR')} moedas · ${target.items.length} ${target.items.length === 1 ? 'item' : 'itens'}`;
+      $('admin-role-btn').textContent = target.admin ? 'remover administrador' : 'tornar administrador';
+      $('admin-role-btn').className = target.admin ? 'is-admin' : '';
+      $('admin-role-btn').hidden = Boolean(target.banned);
+      $('admin-ban-btn').textContent = target.banned ? 'desbanir' : armed ? 'confirmar banimento' : 'banir';
+      $('admin-ban-btn').className = target.banned ? 'is-admin' : armed ? 'is-danger is-armed' : 'is-danger';
+    }
+
+    async function find(event) {
+      if (event) event.preventDefault();
+      const name = String($('admin-user').value || '').trim();
+      if (!name || sending) return;
+      sending = true;
+      try {
+        const reply = await staff({ op: 'find', name });
+        disarm();
+        target = reply.ok ? reply.data : null;
+        log(reply.ok ? '' : failure(reply.error));
+        showTarget();
+        render();
+        if (target) search.focus({ preventScroll: true });
+      } catch (error) {
+        log(failure(error.message));
+      } finally {
+        sending = false;
+      }
+    }
+
+    async function toggleRole() {
+      if (!target || sending) return;
+      sending = true;
+      const who = target.name;
+      const admin = !target.admin;
+      try {
+        const reply = await staff({ op: 'role', name: who, admin });
+        if (!reply.ok) { log(failure(reply.error)); return; }
+        target = reply.data;
+        log(`${who} ${admin ? 'agora é administrador.' : 'não é mais administrador.'}`);
+        showTarget();
+      } catch (error) {
+        log(failure(error.message));
+      } finally {
+        sending = false;
+      }
+    }
+
+    function disarm() {
+      clearTimeout(armTimer);
+      armed = false;
+    }
+
+    async function toggleBan() {
+      if (!target || sending) return;
+      const banned = !target.banned;
+      if (banned && !armed) {
+        armed = true;
+        showTarget();
+        armTimer = setTimeout(() => { armed = false; showTarget(); }, 4000);
+        return;
+      }
+      disarm();
+      sending = true;
+      const who = target.name;
+      try {
+        const reply = await staff({ op: 'ban', name: who, banned });
+        if (!reply.ok) { log(failure(reply.error)); return; }
+        target = reply.data;
+        log(banned ? `${who} foi banido. A conta não entra mais e os anúncios dela saíram da loja.` : `${who} foi desbanido e pode entrar de novo.`);
+      } catch (error) {
+        log(failure(error.message));
+      } finally {
+        sending = false;
+        showTarget();
+      }
+    }
+
+    function setMode(next) {
+      mode = next;
+      const remote = mode === 'players';
+      $('admin-tab-me').classList.toggle('is-active', !remote);
+      $('admin-tab-players').classList.toggle('is-active', remote);
+      $('admin-tab-me').setAttribute('aria-pressed', String(!remote));
+      $('admin-tab-players').setAttribute('aria-pressed', String(remote));
+      $('admin-player').hidden = !remote;
+      search.placeholder = remote ? 'O que você quer dar ou tirar desse jogador?' : 'O que você quer pegar ou remover da sua conta?';
+      search.value = '';
+      log('');
+      render();
+      (remote && !target ? $('admin-user') : search).focus({ preventScroll: true });
+    }
+
     function render() {
+      const remote = mode === 'players';
+      search.hidden = remote && !target;
+      if (remote && !target) {
+        $('admin-hint').textContent = 'Digite o nome de usuário de um jogador e clique em abrir.';
+        results.replaceChildren();
+        return;
+      }
       const query = search.value;
       const amount = Number((query.match(/\d+/) || [0])[0]);
       const ranked = catalog().map(item => ({ item, score: similarity(query, item.name) }))
         .filter(entry => entry.score >= 0.45).sort((a, b) => b.score - a.score).slice(0, 6);
       const top = ranked[0];
-      $('admin-hint').textContent = !plain(query) ? 'Digite o nome de uma skin, acessório, personagem ou "moedas".'
+      $('admin-hint').textContent = !plain(query) ? (remote ? `O que você quer dar ou tirar de ${target.name}? Digite uma skin, acessório ou "moedas".` : 'Digite o nome de uma skin, acessório, personagem ou "moedas".')
         : !top ? 'Nada encontrado.' : plain(query).replace(/\d+/g, '').trim() !== plain(top.item.name) ? `Você quis dizer: ${top.item.name}?` : '';
       const skin = Profile.load().skin;
       results.replaceChildren(...ranked.map(({ item }) => {
@@ -6920,7 +7192,9 @@ window.VesperGame = VesperGame;
         name.textContent = item.name;
         const kind = document.createElement('span');
         const has = owns(item);
-        kind.textContent = item.id === 'coins' ? `Saldo: ${Profile.load().coins.toLocaleString('pt-BR')}` : item.id === 'gift' ? item.kind : `${item.kind} · ${has ? 'você tem' : 'você não tem'}`;
+        const balance = remote ? target.coins : Profile.load().coins;
+        kind.textContent = item.id === 'coins' ? `Saldo: ${balance.toLocaleString('pt-BR')}` : item.id === 'gift' ? item.kind
+          : `${item.kind} · ${remote ? (has ? 'tem' : 'não tem') : has ? 'você tem' : 'você não tem'}`;
         const info = document.createElement('div');
         info.append(name, kind);
         row.append(art, info);
@@ -6934,13 +7208,21 @@ window.VesperGame = VesperGame;
         for (const add of item.id === 'gift' ? [true] : [true, false]) {
           const button = document.createElement('button');
           button.type = 'button';
-          button.textContent = add ? 'pegar' : 'remover';
+          button.textContent = remote ? (add ? 'dar' : 'tirar') : add ? 'pegar' : 'remover';
           button.disabled = item.id !== 'coins' && item.id !== 'gift' && has === add;
-          button.addEventListener('click', () => change(item, add, input && input.value));
+          button.addEventListener('click', () => (remote ? send(item, add, input && input.value) : change(item, add, input && input.value)));
           row.append(button);
         }
         return row;
       }));
+    }
+
+    function showPanel() {
+      panel.hidden = false;
+      target = null;
+      $('admin-user').value = '';
+      showTarget();
+      setMode('me');
     }
 
     function closeLogin() {
@@ -6951,7 +7233,10 @@ window.VesperGame = VesperGame;
     }
 
     function closePanel() {
+      disarm();
       panel.hidden = true;
+      auth = null;
+      target = null;
       search.value = '';
       log('');
       $('admin-btn').focus({ preventScroll: true });
@@ -6965,11 +7250,10 @@ window.VesperGame = VesperGame;
       $('admin-enter-btn').disabled = true;
       $('admin-error').hidden = true;
       VesperGame.Server.request({ t: 'admin', key: secret }).then(reply => {
-        if (reply.ok) {
+        if (reply.ok && typeof reply.token === 'string') {
+          auth = { token: reply.token };
           closeLogin();
-          panel.hidden = false;
-          render();
-          search.focus({ preventScroll: true });
+          showPanel();
         } else {
           $('admin-error').textContent = reply.wait ? `Muitas tentativas. Tente de novo em ${reply.wait} min.` : 'Senha inválida.';
           $('admin-error').hidden = false;
@@ -6981,7 +7265,6 @@ window.VesperGame = VesperGame;
         checking = false;
         key.clear();
         $('admin-enter-btn').disabled = false;
-        VesperGame.Server.close();
       });
     }
 
@@ -6991,6 +7274,11 @@ window.VesperGame = VesperGame;
     $('admin-enter-btn').addEventListener('click', enter);
     $('admin-cancel-btn').addEventListener('click', closeLogin);
     $('admin-close-btn').addEventListener('click', closePanel);
+    $('admin-tab-me').addEventListener('click', () => setMode('me'));
+    $('admin-tab-players').addEventListener('click', () => setMode('players'));
+    $('admin-find').addEventListener('submit', find);
+    $('admin-role-btn').addEventListener('click', toggleRole);
+    $('admin-ban-btn').addEventListener('click', toggleBan);
     search.addEventListener('input', render);
     window.addEventListener('keydown', event => {
       if (event.code !== 'Escape' || !$('letter-overlay').hidden) return;
@@ -7003,6 +7291,12 @@ window.VesperGame = VesperGame;
 
     return {
       open() {
+        const account = VesperGame.Account.state();
+        if (account && account.admin) {
+          auth = { session: account.session };
+          showPanel();
+          return;
+        }
         key.clear();
         $('admin-error').hidden = true;
         login.hidden = false;
@@ -7026,7 +7320,7 @@ window.VesperGame = VesperGame;
     'difficulty-choices','difficulty-map-name','difficulty-map-subtitle','victory-overlay',
     'minimap-canvas','minimap-name','stage-objective','online-loading-view','online-hud',
     'online-respawn','online-results-overlay','daily-view','daily-grid','accessories-view','accessory-grid',
-    'both-grid','letter-overlay','private-view','lobby-view','trades-view'].map(id => [id, $(id)]));
+    'both-grid','letter-overlay','private-view','lobby-view','trades-view','account-overlay','account-view','account-badge'].map(id => [id, $(id)]));
   const clock = seconds => {
     const total = Math.max(0, Math.floor(seconds));
     return `${Math.floor(total / 60).toString().padStart(2, '0')}:${(total % 60).toString().padStart(2, '0')}`;
@@ -7311,6 +7605,7 @@ window.VesperGame = VesperGame;
     ui['private-view'].hidden = view !== 'private';
     ui['lobby-view'].hidden = view !== 'lobby';
     ui['trades-view'].hidden = view !== 'trades';
+    ui['account-view'].hidden = view !== 'account';
     if (previous === 'trades' && view !== 'trades') trades.hide();
     if (view === 'online') { renderOnline(); startPortraits(); }
     else if (view === 'private') { renderPrivate(); stopPortraits(); }
@@ -7325,12 +7620,14 @@ window.VesperGame = VesperGame;
       startPortraits();
     } else if (view === 'maps') { renderMaps(); startPortraits(); }
     else if (view === 'difficulty') { renderDifficulties(); stopPortraits(); }
+    else if (view === 'account') { renderAccountView(); stopPortraits(); }
     else stopPortraits();
     if (!focus) return;
-    const target = view === 'online' ? $('online-name')
+    const target = view === 'online' ? $('online-play-btn')
+      : view === 'account' ? (Account.signedIn() ? $('account-logout-btn') : $('account-name'))
       : view === 'online-loading' ? $('online-cancel-btn')
       : view === 'characters' ? (cards.get(characterId) || bothCards.get(characterId) || skinCards.get(profile.skin) || bothCards.get(profile.skin))?.button
-      : view === 'private' ? $('private-name')
+      : view === 'private' ? $('private-create-btn')
       : view === 'lobby' ? $('lobby-leave-btn')
       : view === 'trades' ? document.querySelector('.trades-tab')
       : view === 'maps' ? mapCards.get(lastMapId).button
@@ -7528,6 +7825,95 @@ window.VesperGame = VesperGame;
     toast(reward.type === 'coins' ? `+${reward.amount} moedas · saldo ${profile.coins.toLocaleString('pt-BR')}`
       : reward.type === 'accessory' ? `${rewardLabel(reward)} equipado. Troque na tela de Acessórios.`
       : `${characters.find(item => item.id === reward.id).name} liberada no offline e no Online.`, 3200);
+  }
+  function needAccount(next, from = 'main') {
+    if (Account.signedIn()) { next(); return; }
+    accountNext = next;
+    accountReturn = from;
+    accountFocus = document.activeElement;
+    ui['account-overlay'].hidden = false;
+    $('account-yes-btn').focus({ preventScroll: true });
+  }
+  function answerAccount(mode) {
+    ui['account-overlay'].hidden = true;
+    if (!mode) {
+      accountNext = null;
+      accountFocus?.focus?.({ preventScroll: true });
+      return;
+    }
+    accountMode = mode;
+    showMenuView('account');
+  }
+  function accountError(message) {
+    $('account-error').textContent = message;
+    $('account-error').hidden = !message;
+  }
+  function renderAccountView() {
+    const state = Account.state();
+    const login = accountMode === 'login';
+    $('account-form').hidden = Boolean(state);
+    $('account-switch-btn').hidden = Boolean(state);
+    $('account-signed').hidden = !state;
+    $('account-title').textContent = state ? 'Sua conta' : login ? 'Entrar' : 'Criar conta';
+    $('account-hint').textContent = state ? 'Suas moedas e itens ficam salvos na sua conta.'
+      : login ? 'Use o nome de usuário e a senha da sua conta.' : 'É rápido: escolha um nome de usuário e uma senha.';
+    $('account-submit-btn').textContent = login ? 'ENTRAR' : 'CRIAR CONTA';
+    $('account-switch-btn').textContent = login ? 'Não tenho conta · criar agora' : 'Já tenho conta · entrar';
+    $('account-password').setAttribute('autocomplete', login ? 'current-password' : 'new-password');
+    $('account-signed-name').textContent = state ? state.name : '';
+    $('account-password').value = '';
+    accountError('');
+  }
+  function renderBadge() {
+    const state = Account.state();
+    ui['account-badge'].hidden = !state;
+    $('account-badge-name').textContent = state ? state.name : '';
+    ui['account-badge'].setAttribute('aria-label', state ? `Conta de ${state.name}` : 'Conta');
+  }
+  async function submitAccount(event) {
+    if (event) event.preventDefault();
+    if (accountBusy) return;
+    const name = String($('account-name').value || '').normalize('NFKC').trim();
+    const password = String($('account-password').value || '');
+    if (!ACCOUNT_NAME.test(name)) { accountError(ACCOUNT_ERRORS.nome); $('account-name').focus({ preventScroll: true }); return; }
+    if (password.length < 6 || password.length > 72) { accountError(ACCOUNT_ERRORS.senha); $('account-password').focus({ preventScroll: true }); return; }
+    accountBusy = true;
+    $('account-submit-btn').disabled = true;
+    accountError('');
+    try {
+      const login = accountMode === 'login';
+      const reply = login ? await Account.login(name, password) : await Account.register(name, password);
+      if (!reply.ok) {
+        accountError(reply.error === 'espera' ? `Muitas tentativas. Tente de novo em ${reply.wait} min.` : ACCOUNT_ERRORS[reply.error] || 'Não foi possível completar agora.');
+        return;
+      }
+      $('account-password').value = '';
+      refreshAccount();
+      renderBadge();
+      trades.sync();
+      toast(login ? `Bem-vindo de volta, ${reply.name}!` : `Conta criada. Bem-vindo, ${reply.name}!`, 2800);
+      const next = accountNext;
+      accountNext = null;
+      if (next) next(); else showMenuView('main');
+    } catch (error) {
+      accountError(ACCOUNT_ERRORS[error.message] || ACCOUNT_ERRORS.conexao);
+    } finally {
+      accountBusy = false;
+      $('account-submit-btn').disabled = false;
+    }
+  }
+  async function logoutAccount() {
+    if (accountBusy) return;
+    accountBusy = true;
+    $('account-logout-btn').disabled = true;
+    try { await Account.logout(); } finally {
+      accountBusy = false;
+      $('account-logout-btn').disabled = false;
+    }
+    refreshAccount();
+    renderBadge();
+    toast('Você saiu da conta.', 2200);
+    showMenuView('main');
   }
   function openLetter() {
     ui['letter-overlay'].hidden = false;
@@ -7785,7 +8171,33 @@ window.VesperGame = VesperGame;
     try { localStorage.setItem('vesper.character.v1', id); } catch (_) {  }
     renderCharacters();
   }
+  const Account = VesperGame.Account;
+  const ACCOUNT_NAME = /^[A-Za-z0-9À-ÖØ-öø-ÿ_.-]{3,14}$/;
+  const ACCOUNT_ERRORS = {
+    nome: 'Use de 3 a 14 letras, números, ponto, hífen ou sublinhado. Alguns nomes, como admin, são reservados.',
+    senha: 'A senha precisa ter de 6 a 72 caracteres.',
+    fraca: 'Essa senha é fácil demais de adivinhar. Escolha outra.',
+    existe: 'Esse nome de usuário já existe. Escolha outro ou entre na sua conta.',
+    login: 'Nome de usuário ou senha incorretos.',
+    banido: 'Esta conta foi banida pela administração.',
+    ocupado: 'O servidor está ocupado. Tente de novo em instantes.',
+    servidor: 'O servidor está fora do ar agora. Tente de novo em instantes.',
+    devagar: 'Muitos pedidos seguidos. Espere alguns segundos.',
+    codigos: 'Muitos códigos errados seguidos. Espere alguns minutos.',
+    conexao: 'Sem conexão com o servidor. Tente de novo em instantes.',
+    tempo: 'O servidor demorou para responder. Tente de novo.',
+    'sem-websocket': 'Este navegador não consegue criar contas.'
+  };
+  let accountNext = null;
+  let accountReturn = 'main';
+  let accountFocus = null;
+  let accountMode = 'register';
+  let accountBusy = false;
   const ERRORS = {
+    conta: 'Sua sessão expirou. Entre na sua conta de novo.',
+    banido: 'Esta conta foi banida pela administração.',
+    devagar: 'Muitos pedidos seguidos. Espere alguns segundos.',
+    codigos: 'Muitos códigos errados seguidos. Espere alguns minutos.',
     conexao: 'Não foi possível entrar no Online agora. Tente de novo em instantes.',
     tempo: 'A conexão demorou demais. Tente de novo.',
     queda: 'A conexão caiu.',
@@ -7802,29 +8214,23 @@ window.VesperGame = VesperGame;
     $('private-error').hidden = !message;
   }
   function renderPrivate() {
-    if (!$('private-name').value) $('private-name').value = profile.name;
+    $('private-account-name').textContent = Account.state()?.name || '';
     privateError('');
   }
   function openPrivate(room) {
-    const name = String($('private-name').value || '').trim().slice(0, 14);
-    if (name.length < 2) {
-      privateError('Escreva um nome com pelo menos duas letras.');
-      $('private-name').focus({ preventScroll: true });
-      return;
-    }
+    if (!Account.signedIn()) { needAccount(() => showMenuView('private')); return; }
     if (room !== 'create' && !/^\d{6}$/.test(room)) {
       privateError('O código tem 6 números.');
       $('private-code').focus({ preventScroll: true });
       return;
     }
-    profile = VesperGame.OnlineProfile.setName(name);
     roomMode = 'private';
     $('lobby-code').textContent = room === 'create' ? '······' : room;
     $('lobby-hint').textContent = 'Conectando…';
     $('lobby-list').replaceChildren();
     $('lobby-start-btn').hidden = true;
     showMenuView('lobby');
-    game.startOnline({ name: profile.name, skin: profile.skin, acc: profile.worn, room });
+    game.startOnline({ name: Account.state().name, session: Account.session(), skin: profile.skin, acc: profile.worn, room });
   }
   function onPrivateLobby(data) {
     $('lobby-code').textContent = data.code;
@@ -7872,18 +8278,12 @@ window.VesperGame = VesperGame;
     $('online-coins').textContent = profile.coins.toLocaleString('pt-BR');
     $('online-skin-name').textContent = skin.name;
     $('online-skin-skill').textContent = skin.skill ? skin.skill.label : 'Nenhuma habilidade';
-    if (!$('online-name').value) $('online-name').value = profile.name;
+    $('online-account-name').textContent = Account.state()?.name || '';
     showOnlineError('');
   }
   function enterOnline(event) {
     if (event) event.preventDefault();
-    const name = String($('online-name').value || '').trim().slice(0, 14);
-    if (name.length < 2) {
-      showOnlineError('Escreva um nome com pelo menos duas letras.');
-      $('online-name').focus({ preventScroll: true });
-      return;
-    }
-    profile = VesperGame.OnlineProfile.setName(name);
+    if (!Account.signedIn()) { needAccount(() => showMenuView('online')); return; }
     roomMode = 'public';
     showOnlineError('');
     showMenuView('online-loading');
@@ -7892,7 +8292,7 @@ window.VesperGame = VesperGame;
   function connect() {
     $('online-loading-fill').style.width = '35%';
     $('online-loading-step').textContent = 'Preparando a arena';
-    game.startOnline({ name: profile.name, skin: profile.skin, acc: profile.worn });
+    game.startOnline({ name: Account.state().name, session: Account.session(), skin: profile.skin, acc: profile.worn });
   }
   function onOnlineJoined() {
     $('online-loading-fill').style.width = '100%';
@@ -7900,6 +8300,7 @@ window.VesperGame = VesperGame;
   }
   function onOnlineError(reason) {
     nextMenuView = null;
+    if (reason === 'conta' || reason === 'banido') { Account.clear(); refreshAccount(); renderBadge(); }
     const message = ERRORS[reason] || 'Não foi possível entrar na partida.';
     if (roomMode === 'private') {
       showMenuView('private');
@@ -7975,7 +8376,7 @@ window.VesperGame = VesperGame;
     onHud, onLevelUp, onGameOver, onVictory, onState, onOnlineResults, onOnlineJoined, onOnlineError, onPrivateLobby,
     onBossSpawn: boss => toast(boss.finalBoss ? 'CHEFE FINAL' : 'MINICHEFE', 2400)
   });
-  const trades = VesperGame.createTrades({ game, toast, onChange: refreshAccount });
+  const trades = VesperGame.createTrades({ game, toast, onChange: () => { refreshAccount(); renderBadge(); }, needAccount: () => needAccount(() => showMenuView('trades'), 'trades') });
   const admin = VesperGame.createAdmin({
     progress: {
       has: id => completedMaps.has(id),
@@ -7985,11 +8386,14 @@ window.VesperGame = VesperGame;
     game,
     openGift: openLetter
   });
+  Account.onChange = () => { refreshAccount(); renderBadge(); };
+  ui['account-overlay'].hidden = true;
+  renderBadge();
   game.setCharacter(characterId);
   game.setAccessories(profile.worn);
   showMenuView('main', false);
   updateNewBadge();
-  if (/^https?:$/.test(location.protocol)) trades.sync();
+  if (/^https?:$/.test(location.protocol)) Account.refresh().catch(() => null).finally(() => { refreshAccount(); renderBadge(); trades.sync(); });
   function clearTransient() {
     releaseInput();
     options = [];
@@ -8040,16 +8444,19 @@ window.VesperGame = VesperGame;
   $('pause-restart-btn').addEventListener('click', start);
   $('pause-menu-btn').addEventListener('click', toMenu);
   $('gameover-menu-btn').addEventListener('click', toMenu);
-  $('online-btn').addEventListener('click', () => showMenuView('online'));
+  $('online-btn').addEventListener('click', () => needAccount(() => showMenuView('online')));
+  $('account-yes-btn').addEventListener('click', () => answerAccount('register'));
+  $('account-login-link').addEventListener('click', () => answerAccount('login'));
+  $('account-no-btn').addEventListener('click', () => answerAccount(''));
+  $('account-form').addEventListener('submit', submitAccount);
+  $('account-switch-btn').addEventListener('click', () => { accountMode = accountMode === 'login' ? 'register' : 'login'; renderAccountView(); $('account-name').focus({ preventScroll: true }); });
+  $('account-back-btn').addEventListener('click', () => { accountNext = null; showMenuView(accountReturn); });
+  $('account-logout-btn').addEventListener('click', logoutAccount);
+  ui['account-badge'].addEventListener('click', () => { accountReturn = 'main'; showMenuView('account'); });
   $('online-form').addEventListener('submit', enterOnline);
-  $('online-name').addEventListener('keydown', event => {
-    if (event.code !== 'Enter' && event.code !== 'NumpadEnter') return;
-    event.preventDefault();
-    enterOnline(event);
-  });
   $('online-skin-btn').addEventListener('click', () => { charactersReturnView = 'online'; showMenuView('characters'); });
   $('online-cancel-btn').addEventListener('click', () => { game.leaveOnline(); showMenuView('online'); });
-  $('private-btn').addEventListener('click', () => showMenuView('private'));
+  $('private-btn').addEventListener('click', () => needAccount(() => showMenuView('private')));
   $('private-back-btn').addEventListener('click', () => showMenuView('main'));
   $('private-create-btn').addEventListener('click', () => openPrivate('create'));
   $('private-enter-btn').addEventListener('click', () => openPrivate(String($('private-code').value || '').trim()));
@@ -8111,14 +8518,17 @@ window.VesperGame = VesperGame;
       return;
     }
     if (event.repeat) return;
-    if (event.code === 'Escape' && !ui['letter-overlay'].hidden) { event.preventDefault(); closeLetter(); }
+    if (event.code === 'Escape' && !ui['account-overlay'].hidden) { event.preventDefault(); answerAccount(''); }
+    else if (event.code === 'Escape' && !ui['letter-overlay'].hidden) { event.preventDefault(); closeLetter(); }
     else if (event.code === 'Escape' && game.state === 'menu' && menuView !== 'main') {
       event.preventDefault();
       const destination = menuView === 'characters' ? charactersReturnView
         : menuView === 'accessories' ? 'characters'
         : menuView === 'difficulty' ? 'maps'
         : menuView === 'online-loading' ? 'online'
-        : menuView === 'lobby' ? 'private' : 'main';
+        : menuView === 'lobby' ? 'private'
+        : menuView === 'account' ? accountReturn : 'main';
+      if (menuView === 'account') accountNext = null;
       if (menuView === 'online-loading' || menuView === 'lobby') game.leaveOnline();
       showMenuView(destination);
     }

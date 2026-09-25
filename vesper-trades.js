@@ -2,15 +2,16 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const ERRORS = Object.freeze({
-    conta: 'Não foi possível identificar sua conta.', item: 'Esse item não pode ser trocado.', cheio: 'A loja está cheia agora. Tente mais tarde.',
+    conta: 'Entre na sua conta de novo para usar as Trocas.', devagar: 'Muitos pedidos seguidos. Espere alguns segundos.', servidor: 'As Trocas estão fora do ar agora. Tente de novo em instantes.', item: 'Esse item não pode ser trocado.', cheio: 'A loja está cheia agora. Tente mais tarde.',
     limite: 'Você chegou ao limite de anúncios ou ofertas.', ocupado: 'Esse item já está em outro anúncio ou oferta.',
-    anuncio: 'Esse anúncio não existe mais.', proprio: 'Esse anúncio é seu.', repetida: 'Você já fez uma oferta nesse anúncio.',
+    anuncio: 'Esse anúncio não existe mais.', proprio: 'Esse anúncio é seu.', repetida: 'Você já fez uma oferta nesse anúncio.', lotado: 'Esse anúncio já recebeu ofertas demais. Tente outro.',
     moedas: 'Quantidade de moedas inválida.', vazia: 'Ofereça moedas ou algum item.', oferta: 'Essa oferta não existe mais.',
     conexao: 'Sem conexão com o servidor.', tempo: 'O servidor demorou para responder.', 'sem-websocket': 'Este navegador não tem suporte às Trocas.'
   });
 
-  VesperGame.createTrades = ({ game, toast, onChange }) => {
+  VesperGame.createTrades = ({ game, toast, onChange, needAccount }) => {
     const Profile = VesperGame.OnlineProfile;
+    const Account = VesperGame.Account;
     const tabs = [...document.querySelectorAll('.trades-tab')];
     let view = { market: [], listings: [], offers: [] };
     let tab = 'market';
@@ -114,10 +115,12 @@
     }
 
     async function call(op, payload) {
-      const profile = Profile.load();
-      const identity = { t: 'm', account: Profile.account(), name: profile.name || 'Jogador' };
+      const identity = { t: 'm', session: Account.session() };
       let reply = await VesperGame.Server.request({ ...identity, op, ...payload });
-      if (!reply.ok) throw new Error(reply.error || 'conexao');
+      if (!reply.ok) {
+        if (reply.error === 'conta') { Account.clear(); onChange(); }
+        throw new Error(reply.error || 'conexao');
+      }
       const result = Profile.applyDeliveries(reply.data.deliveries);
       if (result.applied.length) {
         const ack = await VesperGame.Server.request({ ...identity, op: 'ack', ids: result.applied });
@@ -129,6 +132,7 @@
     }
 
     async function act(op, payload = {}, success = '') {
+      if (op !== 'state' && !Account.signedIn()) { needAccount(); return; }
       if (busy) return;
       busy = true;
       status('Atualizando…');
@@ -145,6 +149,7 @@
     }
 
     function openOffer(listing) {
+      if (!Account.signedIn()) { needAccount(); return; }
       target = listing;
       $('trades-offer-title').textContent = `Oferta por ${nameOf(listing.item)}`;
       $('trades-offer-coins').value = '0';
@@ -202,7 +207,7 @@
         VesperGame.Server.close();
       },
       sync() {
-        if (!Profile.load().account) return Promise.resolve();
+        if (!Account.signedIn()) return Promise.resolve();
         return call('state').catch(() => {}).finally(() => { if (!shown) VesperGame.Server.close(); });
       }
     };

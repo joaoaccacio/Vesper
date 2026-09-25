@@ -9,7 +9,7 @@
     'difficulty-choices','difficulty-map-name','difficulty-map-subtitle','victory-overlay',
     'minimap-canvas','minimap-name','stage-objective','online-loading-view','online-hud',
     'online-respawn','online-results-overlay','daily-view','daily-grid','accessories-view','accessory-grid',
-    'both-grid','letter-overlay','private-view','lobby-view','trades-view'].map(id => [id, $(id)]));
+    'both-grid','letter-overlay','private-view','lobby-view','trades-view','account-overlay','account-view','account-badge'].map(id => [id, $(id)]));
   const clock = seconds => {
     const total = Math.max(0, Math.floor(seconds));
     return `${Math.floor(total / 60).toString().padStart(2, '0')}:${(total % 60).toString().padStart(2, '0')}`;
@@ -294,6 +294,7 @@
     ui['private-view'].hidden = view !== 'private';
     ui['lobby-view'].hidden = view !== 'lobby';
     ui['trades-view'].hidden = view !== 'trades';
+    ui['account-view'].hidden = view !== 'account';
     if (previous === 'trades' && view !== 'trades') trades.hide();
     if (view === 'online') { renderOnline(); startPortraits(); }
     else if (view === 'private') { renderPrivate(); stopPortraits(); }
@@ -308,12 +309,14 @@
       startPortraits();
     } else if (view === 'maps') { renderMaps(); startPortraits(); }
     else if (view === 'difficulty') { renderDifficulties(); stopPortraits(); }
+    else if (view === 'account') { renderAccountView(); stopPortraits(); }
     else stopPortraits();
     if (!focus) return;
-    const target = view === 'online' ? $('online-name')
+    const target = view === 'online' ? $('online-play-btn')
+      : view === 'account' ? (Account.signedIn() ? $('account-logout-btn') : $('account-name'))
       : view === 'online-loading' ? $('online-cancel-btn')
       : view === 'characters' ? (cards.get(characterId) || bothCards.get(characterId) || skinCards.get(profile.skin) || bothCards.get(profile.skin))?.button
-      : view === 'private' ? $('private-name')
+      : view === 'private' ? $('private-create-btn')
       : view === 'lobby' ? $('lobby-leave-btn')
       : view === 'trades' ? document.querySelector('.trades-tab')
       : view === 'maps' ? mapCards.get(lastMapId).button
@@ -511,6 +514,95 @@
     toast(reward.type === 'coins' ? `+${reward.amount} moedas · saldo ${profile.coins.toLocaleString('pt-BR')}`
       : reward.type === 'accessory' ? `${rewardLabel(reward)} equipado. Troque na tela de Acessórios.`
       : `${characters.find(item => item.id === reward.id).name} liberada no offline e no Online.`, 3200);
+  }
+  function needAccount(next, from = 'main') {
+    if (Account.signedIn()) { next(); return; }
+    accountNext = next;
+    accountReturn = from;
+    accountFocus = document.activeElement;
+    ui['account-overlay'].hidden = false;
+    $('account-yes-btn').focus({ preventScroll: true });
+  }
+  function answerAccount(mode) {
+    ui['account-overlay'].hidden = true;
+    if (!mode) {
+      accountNext = null;
+      accountFocus?.focus?.({ preventScroll: true });
+      return;
+    }
+    accountMode = mode;
+    showMenuView('account');
+  }
+  function accountError(message) {
+    $('account-error').textContent = message;
+    $('account-error').hidden = !message;
+  }
+  function renderAccountView() {
+    const state = Account.state();
+    const login = accountMode === 'login';
+    $('account-form').hidden = Boolean(state);
+    $('account-switch-btn').hidden = Boolean(state);
+    $('account-signed').hidden = !state;
+    $('account-title').textContent = state ? 'Sua conta' : login ? 'Entrar' : 'Criar conta';
+    $('account-hint').textContent = state ? 'Suas moedas e itens ficam salvos na sua conta.'
+      : login ? 'Use o nome de usuário e a senha da sua conta.' : 'É rápido: escolha um nome de usuário e uma senha.';
+    $('account-submit-btn').textContent = login ? 'ENTRAR' : 'CRIAR CONTA';
+    $('account-switch-btn').textContent = login ? 'Não tenho conta · criar agora' : 'Já tenho conta · entrar';
+    $('account-password').setAttribute('autocomplete', login ? 'current-password' : 'new-password');
+    $('account-signed-name').textContent = state ? state.name : '';
+    $('account-password').value = '';
+    accountError('');
+  }
+  function renderBadge() {
+    const state = Account.state();
+    ui['account-badge'].hidden = !state;
+    $('account-badge-name').textContent = state ? state.name : '';
+    ui['account-badge'].setAttribute('aria-label', state ? `Conta de ${state.name}` : 'Conta');
+  }
+  async function submitAccount(event) {
+    if (event) event.preventDefault();
+    if (accountBusy) return;
+    const name = String($('account-name').value || '').normalize('NFKC').trim();
+    const password = String($('account-password').value || '');
+    if (!ACCOUNT_NAME.test(name)) { accountError(ACCOUNT_ERRORS.nome); $('account-name').focus({ preventScroll: true }); return; }
+    if (password.length < 6 || password.length > 72) { accountError(ACCOUNT_ERRORS.senha); $('account-password').focus({ preventScroll: true }); return; }
+    accountBusy = true;
+    $('account-submit-btn').disabled = true;
+    accountError('');
+    try {
+      const login = accountMode === 'login';
+      const reply = login ? await Account.login(name, password) : await Account.register(name, password);
+      if (!reply.ok) {
+        accountError(reply.error === 'espera' ? `Muitas tentativas. Tente de novo em ${reply.wait} min.` : ACCOUNT_ERRORS[reply.error] || 'Não foi possível completar agora.');
+        return;
+      }
+      $('account-password').value = '';
+      refreshAccount();
+      renderBadge();
+      trades.sync();
+      toast(login ? `Bem-vindo de volta, ${reply.name}!` : `Conta criada. Bem-vindo, ${reply.name}!`, 2800);
+      const next = accountNext;
+      accountNext = null;
+      if (next) next(); else showMenuView('main');
+    } catch (error) {
+      accountError(ACCOUNT_ERRORS[error.message] || ACCOUNT_ERRORS.conexao);
+    } finally {
+      accountBusy = false;
+      $('account-submit-btn').disabled = false;
+    }
+  }
+  async function logoutAccount() {
+    if (accountBusy) return;
+    accountBusy = true;
+    $('account-logout-btn').disabled = true;
+    try { await Account.logout(); } finally {
+      accountBusy = false;
+      $('account-logout-btn').disabled = false;
+    }
+    refreshAccount();
+    renderBadge();
+    toast('Você saiu da conta.', 2200);
+    showMenuView('main');
   }
   function openLetter() {
     ui['letter-overlay'].hidden = false;
@@ -768,7 +860,33 @@
     try { localStorage.setItem('vesper.character.v1', id); } catch (_) {  }
     renderCharacters();
   }
+  const Account = VesperGame.Account;
+  const ACCOUNT_NAME = /^[A-Za-z0-9À-ÖØ-öø-ÿ_.-]{3,14}$/;
+  const ACCOUNT_ERRORS = {
+    nome: 'Use de 3 a 14 letras, números, ponto, hífen ou sublinhado. Alguns nomes, como admin, são reservados.',
+    senha: 'A senha precisa ter de 6 a 72 caracteres.',
+    fraca: 'Essa senha é fácil demais de adivinhar. Escolha outra.',
+    existe: 'Esse nome de usuário já existe. Escolha outro ou entre na sua conta.',
+    login: 'Nome de usuário ou senha incorretos.',
+    banido: 'Esta conta foi banida pela administração.',
+    ocupado: 'O servidor está ocupado. Tente de novo em instantes.',
+    servidor: 'O servidor está fora do ar agora. Tente de novo em instantes.',
+    devagar: 'Muitos pedidos seguidos. Espere alguns segundos.',
+    codigos: 'Muitos códigos errados seguidos. Espere alguns minutos.',
+    conexao: 'Sem conexão com o servidor. Tente de novo em instantes.',
+    tempo: 'O servidor demorou para responder. Tente de novo.',
+    'sem-websocket': 'Este navegador não consegue criar contas.'
+  };
+  let accountNext = null;
+  let accountReturn = 'main';
+  let accountFocus = null;
+  let accountMode = 'register';
+  let accountBusy = false;
   const ERRORS = {
+    conta: 'Sua sessão expirou. Entre na sua conta de novo.',
+    banido: 'Esta conta foi banida pela administração.',
+    devagar: 'Muitos pedidos seguidos. Espere alguns segundos.',
+    codigos: 'Muitos códigos errados seguidos. Espere alguns minutos.',
     conexao: 'Não foi possível entrar no Online agora. Tente de novo em instantes.',
     tempo: 'A conexão demorou demais. Tente de novo.',
     queda: 'A conexão caiu.',
@@ -785,29 +903,23 @@
     $('private-error').hidden = !message;
   }
   function renderPrivate() {
-    if (!$('private-name').value) $('private-name').value = profile.name;
+    $('private-account-name').textContent = Account.state()?.name || '';
     privateError('');
   }
   function openPrivate(room) {
-    const name = String($('private-name').value || '').trim().slice(0, 14);
-    if (name.length < 2) {
-      privateError('Escreva um nome com pelo menos duas letras.');
-      $('private-name').focus({ preventScroll: true });
-      return;
-    }
+    if (!Account.signedIn()) { needAccount(() => showMenuView('private')); return; }
     if (room !== 'create' && !/^\d{6}$/.test(room)) {
       privateError('O código tem 6 números.');
       $('private-code').focus({ preventScroll: true });
       return;
     }
-    profile = VesperGame.OnlineProfile.setName(name);
     roomMode = 'private';
     $('lobby-code').textContent = room === 'create' ? '······' : room;
     $('lobby-hint').textContent = 'Conectando…';
     $('lobby-list').replaceChildren();
     $('lobby-start-btn').hidden = true;
     showMenuView('lobby');
-    game.startOnline({ name: profile.name, skin: profile.skin, acc: profile.worn, room });
+    game.startOnline({ name: Account.state().name, session: Account.session(), skin: profile.skin, acc: profile.worn, room });
   }
   function onPrivateLobby(data) {
     $('lobby-code').textContent = data.code;
@@ -855,18 +967,12 @@
     $('online-coins').textContent = profile.coins.toLocaleString('pt-BR');
     $('online-skin-name').textContent = skin.name;
     $('online-skin-skill').textContent = skin.skill ? skin.skill.label : 'Nenhuma habilidade';
-    if (!$('online-name').value) $('online-name').value = profile.name;
+    $('online-account-name').textContent = Account.state()?.name || '';
     showOnlineError('');
   }
   function enterOnline(event) {
     if (event) event.preventDefault();
-    const name = String($('online-name').value || '').trim().slice(0, 14);
-    if (name.length < 2) {
-      showOnlineError('Escreva um nome com pelo menos duas letras.');
-      $('online-name').focus({ preventScroll: true });
-      return;
-    }
-    profile = VesperGame.OnlineProfile.setName(name);
+    if (!Account.signedIn()) { needAccount(() => showMenuView('online')); return; }
     roomMode = 'public';
     showOnlineError('');
     showMenuView('online-loading');
@@ -875,7 +981,7 @@
   function connect() {
     $('online-loading-fill').style.width = '35%';
     $('online-loading-step').textContent = 'Preparando a arena';
-    game.startOnline({ name: profile.name, skin: profile.skin, acc: profile.worn });
+    game.startOnline({ name: Account.state().name, session: Account.session(), skin: profile.skin, acc: profile.worn });
   }
   function onOnlineJoined() {
     $('online-loading-fill').style.width = '100%';
@@ -883,6 +989,7 @@
   }
   function onOnlineError(reason) {
     nextMenuView = null;
+    if (reason === 'conta' || reason === 'banido') { Account.clear(); refreshAccount(); renderBadge(); }
     const message = ERRORS[reason] || 'Não foi possível entrar na partida.';
     if (roomMode === 'private') {
       showMenuView('private');
@@ -958,7 +1065,7 @@
     onHud, onLevelUp, onGameOver, onVictory, onState, onOnlineResults, onOnlineJoined, onOnlineError, onPrivateLobby,
     onBossSpawn: boss => toast(boss.finalBoss ? 'CHEFE FINAL' : 'MINICHEFE', 2400)
   });
-  const trades = VesperGame.createTrades({ game, toast, onChange: refreshAccount });
+  const trades = VesperGame.createTrades({ game, toast, onChange: () => { refreshAccount(); renderBadge(); }, needAccount: () => needAccount(() => showMenuView('trades'), 'trades') });
   const admin = VesperGame.createAdmin({
     progress: {
       has: id => completedMaps.has(id),
@@ -968,11 +1075,14 @@
     game,
     openGift: openLetter
   });
+  Account.onChange = () => { refreshAccount(); renderBadge(); };
+  ui['account-overlay'].hidden = true;
+  renderBadge();
   game.setCharacter(characterId);
   game.setAccessories(profile.worn);
   showMenuView('main', false);
   updateNewBadge();
-  if (/^https?:$/.test(location.protocol)) trades.sync();
+  if (/^https?:$/.test(location.protocol)) Account.refresh().catch(() => null).finally(() => { refreshAccount(); renderBadge(); trades.sync(); });
   function clearTransient() {
     releaseInput();
     options = [];
@@ -1023,16 +1133,19 @@
   $('pause-restart-btn').addEventListener('click', start);
   $('pause-menu-btn').addEventListener('click', toMenu);
   $('gameover-menu-btn').addEventListener('click', toMenu);
-  $('online-btn').addEventListener('click', () => showMenuView('online'));
+  $('online-btn').addEventListener('click', () => needAccount(() => showMenuView('online')));
+  $('account-yes-btn').addEventListener('click', () => answerAccount('register'));
+  $('account-login-link').addEventListener('click', () => answerAccount('login'));
+  $('account-no-btn').addEventListener('click', () => answerAccount(''));
+  $('account-form').addEventListener('submit', submitAccount);
+  $('account-switch-btn').addEventListener('click', () => { accountMode = accountMode === 'login' ? 'register' : 'login'; renderAccountView(); $('account-name').focus({ preventScroll: true }); });
+  $('account-back-btn').addEventListener('click', () => { accountNext = null; showMenuView(accountReturn); });
+  $('account-logout-btn').addEventListener('click', logoutAccount);
+  ui['account-badge'].addEventListener('click', () => { accountReturn = 'main'; showMenuView('account'); });
   $('online-form').addEventListener('submit', enterOnline);
-  $('online-name').addEventListener('keydown', event => {
-    if (event.code !== 'Enter' && event.code !== 'NumpadEnter') return;
-    event.preventDefault();
-    enterOnline(event);
-  });
   $('online-skin-btn').addEventListener('click', () => { charactersReturnView = 'online'; showMenuView('characters'); });
   $('online-cancel-btn').addEventListener('click', () => { game.leaveOnline(); showMenuView('online'); });
-  $('private-btn').addEventListener('click', () => showMenuView('private'));
+  $('private-btn').addEventListener('click', () => needAccount(() => showMenuView('private')));
   $('private-back-btn').addEventListener('click', () => showMenuView('main'));
   $('private-create-btn').addEventListener('click', () => openPrivate('create'));
   $('private-enter-btn').addEventListener('click', () => openPrivate(String($('private-code').value || '').trim()));
@@ -1094,14 +1207,17 @@
       return;
     }
     if (event.repeat) return;
-    if (event.code === 'Escape' && !ui['letter-overlay'].hidden) { event.preventDefault(); closeLetter(); }
+    if (event.code === 'Escape' && !ui['account-overlay'].hidden) { event.preventDefault(); answerAccount(''); }
+    else if (event.code === 'Escape' && !ui['letter-overlay'].hidden) { event.preventDefault(); closeLetter(); }
     else if (event.code === 'Escape' && game.state === 'menu' && menuView !== 'main') {
       event.preventDefault();
       const destination = menuView === 'characters' ? charactersReturnView
         : menuView === 'accessories' ? 'characters'
         : menuView === 'difficulty' ? 'maps'
         : menuView === 'online-loading' ? 'online'
-        : menuView === 'lobby' ? 'private' : 'main';
+        : menuView === 'lobby' ? 'private'
+        : menuView === 'account' ? accountReturn : 'main';
+      if (menuView === 'account') accountNext = null;
       if (menuView === 'online-loading' || menuView === 'lobby') game.leaveOnline();
       showMenuView(destination);
     }

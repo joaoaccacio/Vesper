@@ -4,7 +4,7 @@
   const Arena = typeof window === 'object' ? window.VesperArena : null;
   const { ARENA, WEAPONS, SKINS, ACCESSORIES, CONFIG, clamp, weaponFor, coinsFor, bonusOf, accessoriesOf, tradeKeyOf, segmentHit, bounds } = Arena;
   const TAU = Math.PI * 2;
-  const STORE = Object.freeze({ profile: 'vesper.online.v1' });
+  const STORE = Object.freeze({ profile: 'vesper.online.v1', account: 'vesper.account.v1' });
 
   function readJson(key, fallback) {
     try {
@@ -17,6 +17,8 @@
   function writeJson(key, value) {
     try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; }
   }
+
+  const served = () => typeof location === 'object' && /^https?:$/.test(location.protocol || '');
 
   function defaultServer() {
     if (typeof location === 'object' && /^https?:$/.test(location.protocol || '') && location.host) {
@@ -81,7 +83,6 @@
     }
   };
   const keysOf = list => (Array.isArray(list) ? [...new Set(list.map(tradeKeyOf).filter(Boolean))] : []);
-  const randomHex = size => Array.from(crypto.getRandomValues(new Uint8Array(size)), byte => byte.toString(16).padStart(2, '0')).join('');
 
   const Profile = {
     load() {
@@ -100,24 +101,28 @@
         lastClaim: typeof saved.lastClaim === 'string' ? saved.lastClaim.slice(0, 10) : '',
         account: /^[a-f0-9]{32}$/.test(saved.account) ? saved.account : '',
         locked: keysOf(saved.locked),
-        applied: Array.isArray(saved.applied) ? saved.applied.filter(id => typeof id === 'string').slice(-100) : []
+        applied: Array.isArray(saved.applied) ? saved.applied.filter(id => typeof id === 'string').slice(-100) : [],
+        stamp: Number.isFinite(saved.stamp) ? saved.stamp : 0
       };
     },
     save(profile) {
+      profile.stamp = Date.now();
       writeJson(STORE.profile, {
         version: 4, coins: profile.coins, owned: profile.owned, skin: profile.skin, name: profile.name,
         accessories: profile.accessories, worn: profile.worn, daily: profile.daily, lastClaim: profile.lastClaim,
-        account: profile.account, locked: profile.locked, applied: profile.applied
+        account: profile.account, locked: profile.locked, applied: profile.applied, stamp: profile.stamp
       });
+      Account.touch();
       return profile;
     },
-    account() {
-      const profile = Profile.load();
-      if (!profile.account) {
-        profile.account = randomHex(16);
-        Profile.save(profile);
-      }
-      return profile.account;
+    snapshot() {
+      const { account, ...rest } = Profile.load();
+      return rest;
+    },
+    adopt(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object') return Profile.load();
+      writeJson(STORE.profile, { ...snapshot, version: 4, account: Profile.load().account });
+      return Profile.load();
     },
     has(key) {
       const item = tradeKeyOf(key);
@@ -232,6 +237,82 @@
       profile.accessories.push(id);
       profile.worn = accessoriesOf([id, ...profile.worn]);
       return { ok: true, profile: Profile.save(profile) };
+    }
+  };
+
+  let pushTimer = null;
+  const Account = {
+    onChange: null,
+    state() {
+      const saved = readJson(STORE.account, null);
+      if (!saved || typeof saved.session !== 'string' || !saved.session || typeof saved.name !== 'string') return null;
+      return { name: saved.name.slice(0, 14), session: saved.session.slice(0, 200), admin: saved.admin === true };
+    },
+    signedIn() {
+      return Boolean(Account.state());
+    },
+    session() {
+      const state = Account.state();
+      return state ? state.session : '';
+    },
+    remember(reply, session) {
+      const name = String(reply.name || '').slice(0, 14);
+      writeJson(STORE.account, { name, session, admin: reply.admin === true });
+      if (Profile.load().name !== name) Profile.setName(name);
+    },
+    clear() {
+      clearTimeout(pushTimer);
+      try { localStorage.removeItem(STORE.account); } catch (_) {  }
+      writeJson(STORE.profile, { version: 4, account: Profile.load().account });
+    },
+    async register(name, password) {
+      const profile = Profile.load();
+      const reply = await VesperGame.Server.request({ t: 'acct', op: 'register', name, password, profile: Profile.snapshot(), legacy: profile.account });
+      if (reply.ok) Account.remember(reply, reply.session);
+      return reply;
+    },
+    async login(name, password) {
+      const reply = await VesperGame.Server.request({ t: 'acct', op: 'login', name, password });
+      if (reply.ok) {
+        if (reply.profile) Profile.adopt(reply.profile);
+        Account.remember(reply, reply.session);
+      }
+      return reply;
+    },
+    async refresh() {
+      const state = Account.state();
+      if (!state) return null;
+      const reply = await VesperGame.Server.request({ t: 'acct', op: 'me', session: state.session });
+      if (reply.ok) {
+        if (reply.profile && Number(reply.profile.stamp) > Profile.load().stamp) Profile.adopt(reply.profile);
+        Account.remember(reply, state.session);
+      } else if (reply.error === 'sessao') Account.clear();
+      return reply;
+    },
+    async logout() {
+      const state = Account.state();
+      clearTimeout(pushTimer);
+      if (state && served()) {
+        await Account.push();
+        await VesperGame.Server.request({ t: 'acct', op: 'logout', session: state.session }).catch(() => null);
+      }
+      Account.clear();
+    },
+    touch() {
+      if (!served() || !Account.state()) return;
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(Account.push, 2000);
+    },
+    async push() {
+      const state = Account.state();
+      if (!state) return;
+      let reply = null;
+      try { reply = await VesperGame.Server.request({ t: 'acct', op: 'save', session: state.session, profile: Profile.snapshot() }); } catch (_) { return; }
+      if (reply.error === 'velho' && reply.profile) Profile.adopt(reply.profile);
+      else if (reply.error === 'sessao') Account.clear();
+      else if (reply.error === 'devagar') { Account.touch(); return; }
+      else return;
+      if (typeof Account.onChange === 'function') Account.onChange();
     }
   };
 
@@ -444,6 +525,7 @@
     localDay, defaultServer, normalizeServer
   });
   VesperGame.OnlineProfile = Profile;
+  VesperGame.Account = Account;
 
   const mapDefinition = Object.getOwnPropertyDescriptor(VesperGame.prototype, 'mapDefinition');
   Object.defineProperty(VesperGame.prototype, 'mapDefinition', {
@@ -487,6 +569,7 @@
     this.onlineResults = null;
     this._arenaZones = null;
     this._onlineName = name;
+    this._session = String(options.session || '').slice(0, 200);
     this._onlineSkin = skin;
     this._onlineAcc = accessoriesOf(options.acc);
     this._explosions = [];
@@ -496,7 +579,7 @@
     this._inputTimer = 0;
     this._joined = false;
     this._room = options.room === 'create' ? { t: 'create' } : options.room ? { t: 'enter', code: String(options.room) } : { t: 'join' };
-    this._openSocket(server, name, skin);
+    this._openSocket(server, skin);
     return { server, connecting: true };
   };
 
@@ -506,7 +589,7 @@
     return true;
   };
 
-  VesperGame.prototype._openSocket = function (server, name, skin) {
+  VesperGame.prototype._openSocket = function (server, skin) {
     const Socket = typeof WebSocket === 'function' ? WebSocket : null;
     if (!Socket) { this._onlineFail('sem-websocket'); return; }
     let socket;
@@ -519,7 +602,7 @@
       let token = '';
       try { token = sessionStorage.getItem(this._tokenKey) || ''; } catch (_) { token = ''; }
       const room = this._room.t === 'join' ? { t: 'join', token } : this._room;
-      socket.send(JSON.stringify({ ...room, name, skin, acc: this._onlineAcc }));
+      socket.send(JSON.stringify({ ...room, session: this._session, skin, acc: this._onlineAcc }));
     };
     socket.onmessage = event => {
       let message;
@@ -566,7 +649,7 @@
     if (this._state === 'results') return;
     if (message.t === 's') { this._onSnapshot(message); return; }
     if (message.t === 'ev') { this._onEvents(message.e || []); return; }
-    if (message.t === 'closed') { this._onlineFail(message.reason === 'host' ? 'host' : 'sala'); return; }
+    if (message.t === 'closed') { this._onlineFail(['host', 'banido'].includes(message.reason) ? message.reason : 'sala'); return; }
     if (message.t === 'error' && !this._joined) this._onlineFail(message.reason || 'servidor');
   };
 
